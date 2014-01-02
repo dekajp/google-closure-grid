@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<!--
+Copyright 2010 The Closure Library Authors. All Rights Reserved.
+
+Use of this source code is governed by the Apache License, Version 2.0.
+See the COPYING file for details.
+-->
+<head>
+  <title>Google Closure Grid - pear.ui.Grid</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/toolbar.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/custombutton.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menu.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuitem.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuseparator.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menubutton.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css" />
+  <link rel="stylesheet" href="../src/css/grid.css" />
+ 
+ <style>
+  body {
+  background-color: white;
+  font: normal 10pt Arial, sans-serif;
+  }
+
+ </style>
+  <script src="../lib/closure-library/closure/goog/base.js"></script>
+  <script src="../src/bin/release/pear.grid.js"></script>
+  <!--<script src="../src/pear/peardeps.js"></script>-->
+  <script>
+    goog.require('goog.array');
+    goog.require('goog.debug.DivConsole');
+    goog.require('goog.debug.LogManager');
+    goog.require('goog.dom');
+    goog.require('goog.events');
+    goog.require('goog.events.EventType');
+    goog.require('goog.log');
+    goog.require('goog.object');
+    goog.require('goog.ui.Component');
+    goog.require('goog.Timer');
+    goog.require('goog.ui.Control');
+    goog.require('goog.ui.Container');
+    goog.require('goog.array');
+    goog.require('goog.object');
+    goog.require('pear.ui.Grid');
+  </script>
+
+  <!--<link rel="stylesheet" href="css/demo.css">-->
+  <style>
+    .pear-ui-Grid {
+      border: 1px solid black;
+    }
+    .config-item{
+      display: inline-block;
+      padding:2px 8px 2px 8px;
+      border-color: gray;
+      border-width: 1px 1px 1px 1px;
+      border-style: solid;
+      margin:0px 5px 0px 5px;
+      border-radius:3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>pear.ui.Grid</h1>
+
+   <fieldset class="goog-debug-panel">
+    <legend>Grid Configuration - Reload Grid Each Time</legend>
+    <div id="">
+      <div class="config-item"> AllowPaging <input type="checkbox" id="id_AllowPaging"  checked="true" /> </div>
+      <div class="config-item"> AllowSorting <input type="checkbox" id="id_AllowSorting"  checked="true" /> </div>
+      <div class="config-item"> AllowColumnResize <input type="checkbox" id="id_AllowColumnResize" checked="true" /> </div>
+
+    </div>
+  </fieldset>
+  <br>
+     <fieldset class="goog-debug-panel">
+    <legend>Action</legend>
+    <div id="">
+      <input class="config-item" type="button" id="id_reload" value="Reload"  />
+      <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  checked="true" /> </div>
+    </div>
+  </fieldset>
+ 
+  <br>
+  <!-- This div will have a Sample Component added to its contents. -->
+  <div id="target1" style="width:600px;height:500px">
+  </div>
+  <fieldset class="goog-debug-panel">
+    <legend>Event Log</legend>
+    <div id="log"></div>
+  </fieldset>
+  <div id="perf"></div>
+</body>
+
+ <script>
+
+    var timer = goog.now();
+
+    // Set up a logger.
+    goog.debug.LogManager.getRoot().setLevel(goog.log.Level.ALL);
+    var logger = goog.log.getLogger('demo');
+    var logconsole = new goog.debug.DivConsole(goog.dom.getElement('log'));
+    logconsole.setCapturing(true);
+
+    var EVENTS2 = goog.object.getValues(pear.ui.Grid.EventType);
+    goog.log.fine(logger, 'Listening for: ' + EVENTS2.join(', ') + '.');
+
+    function logEvent(e) {
+      var component = e.target;
+      var caption = (typeof component.getCaption == 'function') ?
+          component.getCaption() : component.getId();
+      logger.info('"' + caption + '" dispatched: ' + e.type);
+      if (isChecked('id_consoledir')){
+        console.dir(e);
+      }
+    }
+
+    function isChecked(id,name){
+      var elem = goog.dom.getElement(id);
+      return  elem.checked;
+    }
+
+
+  var grid;
+  var columns = [
+    {id: "title", headerText: "Title",width:50,datatype:"text"},
+    {id: "duration", headerText: "Duration",width:150,datatype:"text"},
+    {id: "percentcomplete", headerText: "% Complete",width:200,datatype:"number"},
+    {id: "start", headerText: "Start",datatype:"datetime"},
+    {id: "finish", headerText: "Finish",datatype:"datetime"},
+    {id: "effortDriven", headerText: "Effort Driven",datatype:"boolean"}
+  ];
+
+  var load = function () {
+    if (grid){
+      grid.dispose();
+    }
+    var data = [];
+    for (var i = 0; i < 50000; i++) {
+      data[i] = {
+        title: "Task " + i,
+        duration: "5 days",
+        percentcomplete: Math.round(Math.random() * 100),
+        start: "01/01/2009",
+        finish: "01/05/2009",
+        effortDriven: (i % 5 == 0)
+      };
+    }
+
+    var start = +new Date();  // log start timestamp
+
+
+    grid = new pear.ui.Grid();
+    var config = {
+      AllowPaging:isChecked('id_AllowPaging'),
+      AllowSorting:isChecked('id_AllowSorting'),
+      AllowColumnResize:isChecked('id_AllowColumnResize')
+    };
+    config = grid.setConfiguration(config);
+
+    grid.setWidth(800);
+    grid.setHeight(400);
+    dataModel = new pear.data.DataModel (columns,data);
+    grid.setDataView(new pear.data.DataView(dataModel));
+
+    grid.render(goog.dom.getElement('target1'));
+
+
+    var end =  +new Date();  // log end timestamp
+    var diff = end - start;
+
+    console.log('Load Time : '+diff);
+    goog.events.listen(grid, EVENTS2, logEvent);
+  };
+
+  goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
+  
+ </script>
+
+</html>

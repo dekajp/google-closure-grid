@@ -1,0 +1,254 @@
+
+
+
+.pear-grid{
+  border: 1px solid gray;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  position: absolute;
+  overflow:hidden;
+}
+
+.pear-grid-body{
+  overflow:scroll;
+  border-color: gray;
+  border-width: 1px 1px 1px 0px;
+  border-style: solid;
+}
+
+.pear-grid-row-header, .pear-grid-row-footer,
+.pear-grid-body{
+  position: relative;
+  outline:none;
+}
+.pear-grid-row-header, .pear-grid-row-footer
+{
+  background: rgb(230, 230, 230);
+}
+
+.pear-grid-row-footer{
+  padding:2px 2px 2px 2px;
+  display: inline-block;
+  outline: none;
+}
+
+
+.pear-grid-footer-status{
+  display: inline-block;
+  padding:2px 8px 2px 8px;
+  border-color: gray;
+  border-width: 1px 1px 1px 1px;
+  border-style: solid;
+  margin:0px 5px 0px 5px;
+  border-radius:3px;
+}
+
+.pear-grid-pager{
+  display: inline-block;
+ /* padding:2px 8px 2px 8px;
+  margin:0px 5px 0px 5px;*/
+  outline: none;
+}
+
+.pear-grid-pager div{
+  display: inline-block;
+  padding:0px 5px 0px 5px;
+}
+
+.pear-grid-pager-cell{
+  display: inline-block;
+  padding: 2px 8px 2px 8px;
+  border-color: gray;
+  border-width: 1px 1px 1px 1px;
+  border-style: solid;
+  margin: 0px 5px 0px 5px;
+  border-radius: 3px;
+  outline: none;
+}
+
+.pear-grid-pager-cell-hover{
+  border-color: black;
+}
+
+.pear-grid-row-data{
+  position: relative;
+  outline:none;
+}
+
+
+
+.pear-grid-row-data-horizontal{
+  position: relative;
+}
+
+.pear-grid-row-over .pear-grid-cell-data{
+  background: rgb(230, 230, 230);
+}
+.pear-grid-row-data-odd .pear-grid-cell-data{
+  background: rgb(237, 245, 255);
+}
+
+
+
+.pear-grid-cell{
+  position: absolute;
+  border: 1px solid transparent;
+  border-right: 1px dotted silver;
+  border-bottom-color: silver;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  z-index: 1;
+  padding: 1px 2px 2px 1px;
+  margin: 0;
+  white-space: nowrap;
+  cursor: default;
+}
+
+
+.pear-grid-cell-header{
+  display: inline-block;
+  position: absolute;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.pear-grid-cell-header-hover{
+  background: rgb(237, 245, 255);
+}
+
+.pear-grid-cell-header-content{
+  position: relative;
+  display: -moz-inline-box;
+  display: inline-block;
+  text-overflow:ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  float:left;
+}
+.pear-grid-cell-header-sort{
+  position: relative;
+  display: -moz-inline-box;
+  display: inline-block;
+  float: left;
+  outline:none;
+  padding-left:2px;
+  padding-right:2px;
+}
+.pear-grid-cell-header-slidemenu {
+  position: relative;
+  display: -moz-inline-box;
+  display: inline-block;
+  float: right;
+  display: none;
+  outline:none;
+   padding-left:2px;
+  padding-right:2px;
+}
+
+.pear-grid-cell-header-indicators{
+  position: relative;
+  display: -moz-inline-box;
+  display: inline-block;
+  float: left;
+  outline:none;
+  margin-left: 5px;
+};
+
+.pear-grid-cell-header-hover .pear-grid-cell-header-slidemenu{
+   display: inline-block;
+}
+.pear-grid-cell-data-hover{
+  border: 1px solid blue;
+}
+
+.pear-grid-cell-data-selected{
+  border: 1px solid black;
+}
+
+.pear-grid-cell-data{
+  padding-left: 4px;
+  padding-right: 4px;
+  display: inline-block;
+  position: absolute;
+}
+
+
+
+
+.pear-ui-resizable-handle {
+  font-size: 0.1px;
+  position: absolute;
+  display: block;
+  cursor: col-resize;
+}
+
+  .pear-ui-resizable-e {
+    right: 0px;
+    top: 0px;
+    width: 5px;
+    height: 100%;
+    /*cursor: e-resize;*/
+  }
+
+  .pear-ui-resizable-w {
+    left: 0px;
+    top: 0px;
+    width: 5px;
+    height: 100%;
+    cursor: e-resize;
+  }
+
+  .pear-ui-resizable-s {
+    cursor: s-resize;
+    height: 5px;
+    width: 100%;
+    left: 0px;
+    bottom: -5px;
+  }
+
+  .pear-ui-resizable-n {
+    cursor: s-resize;
+    height: 5px;
+    width: 100%;
+    left: 0px;
+    top: -5px;
+    border: 0px solid green;
+  }
+  .pear-ui-resizable-se {
+    cursor: se-resize;
+    height: 10px;
+    width: 10px;
+    right: -5px;
+    bottom: -5px;
+  }
+  .pear-ui-resizable-sw {
+    cursor: sw-resize;
+    height: 10px;
+    width: 10px;
+    left: -5px;
+    bottom: -5px;
+  }
+
+  .pear-ui-resizable-ne {
+    cursor: ne-resize;
+    height: 10px;
+    width: 10px;
+    right: -5px;
+    top: -5px;
+  }
+  .pear-ui-resizable-nw {
+    cursor: nw-resize;
+    height: 10px;
+    width: 10px;
+    left: -5px;
+    top: -5px;
+  }
+
+
+  .pear-ui-resizable-corner{
+    opacity:1;
+  }
