@@ -2,6 +2,8 @@ google-closure-grid (pear.ui.Grid)
 
 version 0.1 (unstable)
 
+Demo : http://dekajp.github.io/demos/index.html
+
 
 `Complete Features`
 
