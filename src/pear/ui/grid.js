@@ -30,6 +30,7 @@
 
 goog.provide('pear.ui.Grid');
 goog.provide('pear.ui.Grid.GridDataCellEvent');
+goog.provide('pear.ui.Grid.GridHeaderCellEvent');
 
 goog.require('goog.Timer');
 goog.require('pear.data.DataModel');
@@ -382,22 +383,37 @@ pear.ui.Grid.prototype.enterDocument = function() {
  * @override
  */
 pear.ui.Grid.prototype.disposeInternal = function() {
-  pear.ui.Grid.superClass_.disposeInternal.call(this);
-  // TODO : better dispose needs to be done
+   // TODO : better dispose needs to be done
   // call dispose on each child
   this.headerRow_.dispose();
-  delete this.headerRow_;
+  this.headerRow_ = null;
   
   goog.array.forEach(this.dataRows_ ,function(value){
     value.dispose();
   })
-  delete this.dataRows_ ;
+  this.dataRows_ = null;
 
-  delete this.body_;
-  delete this.width_ ;
-  delete this.height_ ;
-  delete this.sortColumnIndex_ ;
-  delete this.currentPageIndex_  ;
+  this.body_.dispose();
+  this.body_ = null;
+
+  this.bodyCanvas_.dispose();
+  this.bodyCanvas_ = null;
+
+  this.footerRow_.dispose();
+  this.footerRow_ = null;
+
+  dv = this.getModel();
+  dv.dispose();
+  
+  this.width_ = null;
+  this.height_ = null;
+  this.sortColumnIndex_ = null;
+  this.currentPageIndex_  = null;
+  this.renderedDataRowsCache_= null;
+  this.renderedDataRows_= null;
+
+  pear.ui.Grid.superClass_.disposeInternal.call(this);
+ 
 };
 
 
@@ -703,8 +719,8 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
   var grid = ge.currentTarget;
   var prevSortedCell = this.getSortedHeaderCell();
 
-  var evt = new goog.events.Event(pear.ui.Grid.EventType.BEFORE_SORT,
-      this);
+  var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.BEFORE_SORT,
+      this,headerCell);
   this.dispatchEvent(evt);
 
   if (prevSortedCell && prevSortedCell !== headerCell){
@@ -718,17 +734,16 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
   dv.sort(headerCell.getModel());
   this.redraw();
 
-  evt = new goog.events.Event(pear.ui.Grid.EventType.AFTER_SORT,
-      this);
+  evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.AFTER_SORT,
+      this,headerCell);
   this.dispatchEvent(evt);
 };
 
 pear.ui.Grid.prototype.handleHeaderCellOptionClick_ = function(ge) {
   ge.stopPropagation();
-  var evt = new goog.events.Event(pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK,
-      this);
+   var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK,
+      this,ge.target);
   this.dispatchEvent(evt);
-  
 };
 
 pear.ui.Grid.prototype.handlePageChange_ = function (ge){
@@ -775,7 +790,7 @@ pear.ui.Grid.prototype.updateFooterMsg = function (){;
 
 
 /**
- * Object representing a grid page change event.
+ * Object representing GridDataCellEvent
  *
  * @param {string} type Event type.
  * @param {goog.ui.Control} target
@@ -793,3 +808,23 @@ pear.ui.Grid.GridDataCellEvent = function(type, target, cell) {
   this.cell = cell;
 };
 goog.inherits(pear.ui.Grid.GridDataCellEvent, goog.events.Event);
+
+/**
+ * Object representing GridHeaderCellEvent.
+ *
+ * @param {string} type Event type.
+ * @param {goog.ui.Control} target
+ * @param {pear.ui.HeaderCell} cell
+ * @extends {goog.events.Event}
+ * @constructor
+ * @final
+ */
+pear.ui.Grid.GridHeaderCellEvent = function(type, target, cell) {
+  goog.events.Event.call(this, type, target);
+
+  /**
+   * @type {pear.ui.HeaderCell}
+   */
+  this.cell = cell;
+};
+goog.inherits(pear.ui.Grid.GridHeaderCellEvent, goog.events.Event);

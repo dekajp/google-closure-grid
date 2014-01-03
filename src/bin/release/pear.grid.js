@@ -627,6 +627,11 @@ pear.data.DataModel.prototype.getColumns = function() {
 pear.data.DataModel.prototype.getRows = function() {
   return this.rows_;
 };
+pear.data.DataModel.prototype.disposeInternal = function() {
+  this.columns_ = null;
+  this.rows_ = null;
+  pear.data.DataModel.superClass_.disposeInternal.call(this);
+};
 goog.provide("goog.dom.NodeType");
 goog.dom.NodeType = {ELEMENT:1, ATTRIBUTE:2, TEXT:3, CDATA_SECTION:4, ENTITY_REFERENCE:5, ENTITY:6, PROCESSING_INSTRUCTION:7, COMMENT:8, DOCUMENT:9, DOCUMENT_TYPE:10, DOCUMENT_FRAGMENT:11, NOTATION:12};
 goog.provide("goog.debug.Error");
@@ -8180,6 +8185,11 @@ goog.ui.Component.prototype.columnPosition_ = -1;
 goog.ui.Component.prototype.columnWidth_ = 0;
 goog.ui.Component.prototype.row_ = null;
 goog.ui.Component.prototype.grid_ = null;
+pear.ui.Cell.prototype.disposeInternal = function() {
+  this.grid_ = null;
+  this.row_ = null;
+  pear.ui.Cell.superClass_.disposeInternal.call(this);
+};
 pear.ui.Cell.prototype.enterDocument = function() {
   this.addClassName("pear-grid-cell");
   pear.ui.Cell.superClass_.enterDocument.call(this);
@@ -8273,6 +8283,14 @@ pear.ui.HeaderCell = function(opt_renderer, opt_domHelper) {
 goog.inherits(pear.ui.HeaderCell, pear.ui.Cell);
 pear.ui.HeaderCell.prototype.headerMenu_ = null;
 pear.ui.HeaderCell.prototype.contentCell_ = null;
+pear.ui.HeaderCell.prototype.disposeInternal = function() {
+  if (this.resizable_) {
+    this.resizable_.dispose();
+    this.resizable_ = null;
+  }
+  this.sortDirection_ = null;
+  pear.ui.HeaderCell.superClass_.disposeInternal.call(this);
+};
 pear.ui.HeaderCell.prototype.sortDirection_ = null;
 pear.ui.HeaderCell.prototype.resizable_ = null;
 pear.ui.HeaderCell.prototype.getsortDirection = function() {
@@ -8410,6 +8428,14 @@ pear.data.DataView.prototype.sortField_ = null;
 pear.data.DataView.prototype.sortDirection_ = null;
 pear.data.DataView.prototype.rowidx_ = [];
 pear.data.DataView.prototype.viewrange_ = {start:0, end:0};
+pear.data.DataView.prototype.disposeInternal = function() {
+  this.rowidx_ = null;
+  this.rowViews_ = null;
+  this.grid_ = null;
+  this.datamodel_.dispose();
+  this.datamodel_ = null;
+  pear.data.DataView.superClass_.disposeInternal.call(this);
+};
 pear.data.DataView.prototype.getSortField = function() {
   return this.sortField_;
 };
@@ -8440,6 +8466,7 @@ pear.data.DataView.prototype.getPageSize = function() {
 };
 pear.data.DataView.prototype.init_ = function() {
   this.rowViews_ = [];
+  this.rowidx_ = [];
   this.transformToRowViews_(this.datamodel_.getRows());
   goog.array.forEach(this.rowViews_, function(value, index) {
     this.rowidx_.push(index);
@@ -11255,6 +11282,10 @@ goog.inherits(pear.ui.Row, goog.ui.Container);
 pear.ui.Row.prototype.grid_ = null;
 pear.ui.Row.prototype.height_ = 25;
 pear.ui.Row.prototype.rowPosition_ = -1;
+pear.ui.Row.prototype.disposeInternal = function() {
+  this.grid_ = null;
+  pear.ui.Row.superClass_.disposeInternal.call(this);
+};
 pear.ui.Row.prototype.enterDocument = function() {
   pear.ui.Row.superClass_.enterDocument.call(this);
   var elem = this.getElement();
@@ -11334,6 +11365,11 @@ pear.ui.Pager.prototype.getPageIndex = function() {
 };
 pear.ui.Pager.prototype.createDom = function() {
   this.element_ = goog.dom.createDom("div", "pear-grid-pager");
+};
+pear.ui.Pager.prototype.disposeInternal = function() {
+  this.pagerComboBox_.dispose();
+  this.pagerComboBox_ = null;
+  pear.ui.Pager.superClass_.disposeInternal.call(this);
 };
 pear.ui.Pager.prototype.enterDocument = function() {
   pear.ui.Pager.superClass_.enterDocument.call(this);
@@ -13898,6 +13934,13 @@ pear.ui.FooterRow.prototype.pager_ = null;
 pear.ui.FooterRow.prototype.getPager = function() {
   return this.pager_;
 };
+pear.ui.FooterRow.prototype.disposeInternal = function() {
+  if (this.pager_) {
+    this.pager_.dispose();
+    this.pager_ = null;
+  }
+  pear.ui.FooterRow.superClass_.disposeInternal.call(this);
+};
 pear.ui.FooterRow.prototype.enterDocument = function() {
   pear.ui.FooterRow.superClass_.enterDocument.call(this);
   var config = this.getGrid().getConfiguration();
@@ -13958,6 +14001,9 @@ goog.inherits(pear.ui.DataCell, pear.ui.Cell);
 pear.ui.DataCell.prototype.getContent = function() {
   return String(this.getModel());
 };
+pear.ui.DataCell.prototype.disposeInternal = function() {
+  pear.ui.DataCell.superClass_.disposeInternal.call(this);
+};
 goog.provide("pear.ui.DataRowRenderer");
 goog.require("pear.ui.RowRenderer");
 pear.ui.DataRowRenderer = function() {
@@ -13992,6 +14038,9 @@ pear.ui.DataRow.prototype.getLocationTop = function() {
 };
 pear.ui.DataRow.prototype.setLocationTop = function(top) {
   this.top_ = top;
+};
+pear.ui.DataRow.prototype.disposeInternal = function() {
+  pear.ui.DataRow.superClass_.disposeInternal.call(this);
 };
 pear.ui.DataRow.prototype.enterDocument = function() {
   pear.ui.Row.superClass_.enterDocument.call(this);
@@ -14173,6 +14222,9 @@ goog.inherits(pear.ui.HeaderRow, pear.ui.Row);
 pear.ui.HeaderRow.prototype.addCell = function(cell, opt_render) {
   pear.ui.HeaderRow.superClass_.addCell.call(this, cell, true);
 };
+pear.ui.HeaderRow.prototype.disposeInternal = function() {
+  pear.ui.HeaderRow.superClass_.disposeInternal.call(this);
+};
 pear.ui.HeaderRow.prototype.enterDocument = function() {
   pear.ui.HeaderRow.superClass_.enterDocument.call(this);
 };
@@ -14207,6 +14259,7 @@ pear.ui.HeaderRow.prototype.enterDocument = function() {
 */
 goog.provide("pear.ui.Grid");
 goog.provide("pear.ui.Grid.GridDataCellEvent");
+goog.provide("pear.ui.Grid.GridHeaderCellEvent");
 goog.require("goog.Timer");
 goog.require("pear.data.DataModel");
 goog.require("pear.ui.Body");
@@ -14329,18 +14382,27 @@ pear.ui.Grid.prototype.enterDocument = function() {
   this.renderGrid_();
 };
 pear.ui.Grid.prototype.disposeInternal = function() {
-  pear.ui.Grid.superClass_.disposeInternal.call(this);
   this.headerRow_.dispose();
-  delete this.headerRow_;
+  this.headerRow_ = null;
   goog.array.forEach(this.dataRows_, function(value) {
     value.dispose();
   });
-  delete this.dataRows_;
-  delete this.body_;
-  delete this.width_;
-  delete this.height_;
-  delete this.sortColumnIndex_;
-  delete this.currentPageIndex_;
+  this.dataRows_ = null;
+  this.body_.dispose();
+  this.body_ = null;
+  this.bodyCanvas_.dispose();
+  this.bodyCanvas_ = null;
+  this.footerRow_.dispose();
+  this.footerRow_ = null;
+  dv = this.getModel();
+  dv.dispose();
+  this.width_ = null;
+  this.height_ = null;
+  this.sortColumnIndex_ = null;
+  this.currentPageIndex_ = null;
+  this.renderedDataRowsCache_ = null;
+  this.renderedDataRows_ = null;
+  pear.ui.Grid.superClass_.disposeInternal.call(this);
 };
 pear.ui.Grid.prototype.renderGrid_ = function() {
   goog.style.setSize(this.getElement(), this.width_, this.height_);
@@ -14523,7 +14585,7 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
   var headerCell = ge.target;
   var grid = ge.currentTarget;
   var prevSortedCell = this.getSortedHeaderCell();
-  var evt = new goog.events.Event(pear.ui.Grid.EventType.BEFORE_SORT, this);
+  var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.BEFORE_SORT, this, headerCell);
   this.dispatchEvent(evt);
   if (prevSortedCell && prevSortedCell !== headerCell) {
     prevSortedCell.resetSortDirection();
@@ -14534,12 +14596,12 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
   var dv = this.getDataView();
   dv.sort(headerCell.getModel());
   this.redraw();
-  evt = new goog.events.Event(pear.ui.Grid.EventType.AFTER_SORT, this);
+  evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.AFTER_SORT, this, headerCell);
   this.dispatchEvent(evt);
 };
 pear.ui.Grid.prototype.handleHeaderCellOptionClick_ = function(ge) {
   ge.stopPropagation();
-  var evt = new goog.events.Event(pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK, this);
+  var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK, this, ge.target);
   this.dispatchEvent(evt);
 };
 pear.ui.Grid.prototype.handlePageChange_ = function(ge) {
@@ -14576,4 +14638,9 @@ pear.ui.Grid.GridDataCellEvent = function(type, target, cell) {
   this.cell = cell;
 };
 goog.inherits(pear.ui.Grid.GridDataCellEvent, goog.events.Event);
+pear.ui.Grid.GridHeaderCellEvent = function(type, target, cell) {
+  goog.events.Event.call(this, type, target);
+  this.cell = cell;
+};
+goog.inherits(pear.ui.Grid.GridHeaderCellEvent, goog.events.Event);
 

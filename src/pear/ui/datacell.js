@@ -22,6 +22,7 @@ pear.ui.DataCell = function(opt_domHelper, opt_renderer) {
 goog.inherits(pear.ui.DataCell, pear.ui.Cell);
 
 
+
 /**
  * Returns the text caption or DOM structure displayed in the component.
  * @return {goog.ui.ControlContent} Text caption or DOM structure
@@ -29,4 +30,9 @@ goog.inherits(pear.ui.DataCell, pear.ui.Cell);
  */
 pear.ui.DataCell.prototype.getContent = function() {
   return String(this.getModel());
+};
+
+
+pear.ui.DataCell.prototype.disposeInternal = function() {
+  pear.ui.DataCell.superClass_.disposeInternal.call(this);
 };

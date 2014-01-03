@@ -39,6 +39,12 @@ pear.ui.HeaderRow.prototype.addCell = function(cell, opt_render) {
   pear.ui.HeaderRow.superClass_.addCell.call(this, cell, true);
 };
 
+
+pear.ui.HeaderRow.prototype.disposeInternal = function() {
+  pear.ui.HeaderRow.superClass_.disposeInternal.call(this);
+};
+
+
 /**
  * Configures the component after its DOM has been rendered, and sets up event
  * handling.  Overrides {@link goog.ui.Component#enterDocument}.

@@ -48,3 +48,9 @@ pear.data.DataModel.prototype.getRows = function() {
   return this.rows_;
 };
 
+pear.data.DataModel.prototype.disposeInternal = function() {
+  this.columns_ = null;
+  this.rows_ = null; 
+
+  pear.data.DataModel.superClass_.disposeInternal.call(this);
+};

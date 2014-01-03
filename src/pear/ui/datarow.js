@@ -51,6 +51,11 @@ pear.ui.DataRow.prototype.setLocationTop = function(top) {
   this.top_ = top;
 };
 
+
+pear.ui.DataRow.prototype.disposeInternal = function() {
+  pear.ui.DataRow.superClass_.disposeInternal.call(this);
+};
+
 /**
   @override
 */

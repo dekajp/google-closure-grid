@@ -40,6 +40,15 @@ pear.ui.HeaderCell.prototype.headerMenu_ = null;
 pear.ui.HeaderCell.prototype.contentCell_ = null;
 
 
+pear.ui.HeaderCell.prototype.disposeInternal = function() {
+  if (this.resizable_){
+    this.resizable_.dispose();
+    this.resizable_= null;
+  }
+  this.sortDirection_ = null;
+  pear.ui.HeaderCell.superClass_.disposeInternal.call(this);
+};
+
 /**
  * @private
  * @type {enum}

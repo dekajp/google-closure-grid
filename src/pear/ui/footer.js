@@ -40,6 +40,15 @@ pear.ui.FooterRow.prototype.getPager = function(){
   return this.pager_;
 };
 
+
+pear.ui.FooterRow.prototype.disposeInternal = function() {
+  if (this.pager_){
+    this.pager_.dispose();
+    this.pager_=null;
+  }
+  pear.ui.FooterRow.superClass_.disposeInternal.call(this);
+};
+
 /**
  * @override
  *

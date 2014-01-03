@@ -53,6 +53,16 @@ pear.data.DataView.prototype.viewrange_ = {
   end : 0
 };
 
+pear.data.DataView.prototype.disposeInternal = function() {
+  this.rowidx_ = null;
+  this.rowViews_ = null; 
+  this.grid_ = null;
+  this.datamodel_.dispose();
+  this.datamodel_=null;
+
+  pear.data.DataView.superClass_.disposeInternal.call(this);
+};
+
 /**
  * @return {Array}
  */
@@ -100,6 +110,7 @@ pear.data.DataView.prototype.getPageSize = function() {
 
 pear.data.DataView.prototype.init_ = function() {
   this.rowViews_ = [];
+  this.rowidx_=[];
   this.transformToRowViews_(this.datamodel_.getRows());
 
   goog.array.forEach(this.rowViews_ , function (value,index){

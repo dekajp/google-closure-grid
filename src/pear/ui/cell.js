@@ -65,6 +65,14 @@ goog.ui.Component.prototype.row_ = null;
  */
 goog.ui.Component.prototype.grid_ = null;
 
+
+pear.ui.Cell.prototype.disposeInternal = function() {
+  this.grid_ = null;
+  this.row_= null;
+
+  pear.ui.Cell.superClass_.disposeInternal.call(this);
+};
+
 /**
  * Configures the component after its DOM has been rendered, and sets up event
  * handling.  Overrides {@link goog.ui.Component#enterDocument}.

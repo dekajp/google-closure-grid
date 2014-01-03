@@ -53,6 +53,12 @@ pear.ui.Pager.prototype.createDom = function() {
   this.element_ = goog.dom.createDom('div', 'pear-grid-pager');
 };
 
+pear.ui.Pager.prototype.disposeInternal = function() {
+  this.pagerComboBox_.dispose();
+  this.pagerComboBox_=null;
+  pear.ui.Pager.superClass_.disposeInternal.call(this);
+};
+
 
 /**
  * @override

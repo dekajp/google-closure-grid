@@ -59,6 +59,12 @@ pear.ui.Row.prototype.height_ = 25;
 pear.ui.Row.prototype.rowPosition_ = -1;
 
 
+pear.ui.Row.prototype.disposeInternal = function() {
+  this.grid_=null;
+  pear.ui.Row.superClass_.disposeInternal.call(this);
+};
+
+
 /**
   @override
 */
