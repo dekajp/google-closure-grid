@@ -286,7 +286,7 @@ pear.ui.Grid.prototype.getDataView = function() {
  * @return {number} 
  */
 pear.ui.Grid.prototype.getRowCount = function() {
-  return 50000;
+  return this.getModel().getRowCount();;
 };
 
 /**
@@ -404,7 +404,7 @@ pear.ui.Grid.prototype.disposeInternal = function() {
 
   dv = this.getModel();
   dv.dispose();
-  
+
   this.width_ = null;
   this.height_ = null;
   this.sortColumnIndex_ = null;
@@ -490,9 +490,6 @@ pear.ui.Grid.prototype.renderfooterRow_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.renderBody_ = function() {
-  var dv = this.getDataView();
-  var rows = dv.getRowViews();
-
   this.body_ = new pear.ui.Body();
   this.addChild(this.body_, true);
   goog.style.setHeight(this.body_.getElement(), this.height_ - 2 * this.headerRow_.getHeight());
@@ -501,16 +498,21 @@ pear.ui.Grid.prototype.renderBody_ = function() {
   this.bodyCanvas_ = new pear.ui.BodyCanvas();
   this.body_.addChild(this.bodyCanvas_, true);
 
-  if (this.Configuration_.AllowPaging){
-    goog.style.setHeight(this.bodyCanvas_.getElement(),  this.Configuration_.PageSize * this.Configuration_.RowHeight);
-  }else{
-    goog.style.setHeight(this.bodyCanvas_.getElement(),  rows.length * this.Configuration_.RowHeight);
-  }
+  this.setCanvasHeight_();
   
   this.registerEventsOnBody_();
 };
 
-
+pear.ui.Grid.prototype.setCanvasHeight_ = function(){
+  var height = 0;
+  if (this.Configuration_.AllowPaging){
+    height =  this.Configuration_.PageSize * this.Configuration_.RowHeight;
+  }else{
+    height =  this.getRowCount() * this.Configuration_.RowHeight;
+  }
+  
+  goog.style.setHeight(this.bodyCanvas_.getElement(),height);
+}
 
 
 /**
@@ -575,6 +577,7 @@ pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
  * @private
  */
 pear.ui.Grid.prototype.refreshRenderRows_ = function() {
+  var rowCount = this.getRowCount();
   var canvasVisibleBeginPx = (this.body_.getElement().scrollTop > (this.Configuration_.RowHeight * 10))
                               ? (this.body_.getElement().scrollTop - (this.Configuration_.RowHeight * 10))
                               : 0;
@@ -592,10 +595,10 @@ pear.ui.Grid.prototype.refreshRenderRows_ = function() {
   startIndex = (startIndex < 0) ? 0 : startIndex;
 
   endIndex = parseInt(canvasVisibleEndPx / this.Configuration_.RowHeight, 10);
-  
+  endIndex = ( endIndex > rowCount )? rowCount : endIndex;
 
   var i = 0;
-  for (i = startIndex; i <= endIndex; i++) {
+  for (i = startIndex; i < endIndex; i++) {
     if (!this.renderedDataRowsCache_[i]) {
       this.renderedDataRows_[i] = this.dataRows_[i];
     }
@@ -778,10 +781,11 @@ pear.ui.Grid.prototype.handleDataCellClick_ = function(be) {
 
 pear.ui.Grid.prototype.updateFooterMsg = function (){;
   var startIndex = 1;
+  var rowCount = this.getRowCount();
   var endIndex = this.getDataView().getRowViews().length;
   if (this.Configuration_.AllowPaging){
     startIndex = (this.currentPageIndex_ -1 )* this.Configuration_.PageSize;
-    endIndex = this.currentPageIndex_ * this.Configuration_.PageSize ;
+    endIndex = (this.currentPageIndex_ * this.Configuration_.PageSize ) > rowCount  ? rowCount : (this.currentPageIndex_ * this.Configuration_.PageSize );
   }
   startIndex = startIndex ? startIndex : 1;
   this.footerRow_.setFooterMsg("Showing ["+startIndex+" - "+endIndex+"]");

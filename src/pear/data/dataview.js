@@ -183,6 +183,10 @@ pear.data.DataView.prototype.getRowViews = function() {
   return rows;
 };
 
+pear.data.DataView.prototype.getRowCount = function() {
+  return this.rowViews_.length;
+};
+
 pear.data.DataView.prototype.updateRowsIdx = function() {
   this.rowidx_=[];
   goog.array.forEach(this.rowViews_ , function (value,index){

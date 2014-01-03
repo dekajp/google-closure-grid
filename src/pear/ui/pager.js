@@ -142,13 +142,17 @@ pear.ui.Pager.prototype.handleAction_ = function (ge){
   if (ge.target === this.navControl_[0]){
     // Prev
     pageIndex--;
-    this.pagerComboBox_.setValue(pageIndex);
+    this.changePageIndex_(pageIndex);
   }else if (ge.target === this.navControl_[1]){
     // Next
     pageIndex++;
-    this.pagerComboBox_.setValue(pageIndex);
+    this.changePageIndex_(pageIndex);
   }
   ge.stopPropagation();
+};
+
+pear.ui.Pager.prototype.changePageIndex_ = function (index){
+  this.pagerComboBox_.setValue(index);
 };
 
 

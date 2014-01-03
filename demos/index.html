@@ -45,6 +45,7 @@ See the COPYING file for details.
     goog.require('goog.ui.Container');
     goog.require('goog.array');
     goog.require('goog.object');
+    goog.require('goog.dom.forms');
     goog.require('pear.ui.Grid');
   </script>
 
@@ -55,11 +56,11 @@ See the COPYING file for details.
     }
     .config-item{
       display: inline-block;
-      padding:2px 8px 2px 8px;
+      padding:2px 3px 2px 8px;
       border-color: gray;
       border-width: 1px 1px 1px 1px;
       border-style: solid;
-      margin:0px 5px 0px 5px;
+      margin:0px 2px 0px 2px;
       border-radius:3px;
     }
   </style>
@@ -76,15 +77,28 @@ See the COPYING file for details.
 
     </div>
   </fieldset>
-  <br>
-     <fieldset class="goog-debug-panel">
-    <legend>Action</legend>
+ 
+    <fieldset class="goog-debug-panel">
+    <legend>Data / Debug</legend>
     <div id="">
-      <input class="config-item" type="button" id="id_reload" value="Reload"  />
       <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  checked="true" /> </div>
+      <div class="config-item"> Nos Of Rows : 
+          <select id ="id_rows">
+             <option value="10">10</option>
+             <option value="1000">1000</option>
+             <option value="50000">50,000</option>
+             <option selected value="100000">100,000</option>
+             <option value="500000">500,000</option>
+           </select> 
+        </div>
     </div>
   </fieldset>
  
+    <fieldset class="goog-debug-panel">
+    <legend>Action</legend>
+    <div id="">
+    <input class="config-item" type="button" id="id_reload" value="Reload"  />
+  </fieldset>
   <br>
   <!-- This div will have a Sample Component added to its contents. -->
   <div id="target1" style="width:600px;height:500px">
@@ -140,7 +154,8 @@ See the COPYING file for details.
       grid.dispose();
     }
     var data = [];
-    for (var i = 0; i < 50000; i++) {
+    var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
+    for (var i = 0; i < parseInt(limit,10); i++) {
       data[i] = {
         title: "Task " + i,
         duration: "5 days",
