@@ -1,11 +1,5 @@
 <!DOCTYPE html>
 <html>
-<!--
-Copyright 2010 The Closure Library Authors. All Rights Reserved.
-
-Use of this source code is governed by the Apache License, Version 2.0.
-See the COPYING file for details.
--->
 <head>
   <title>Google Closure Grid - pear.ui.Grid</title>
   <meta charset="utf-8">
@@ -19,6 +13,8 @@ See the COPYING file for details.
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menubutton.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css" />
   <link rel="stylesheet" href="../src/css/grid.css" />
+  <link rel="stylesheet" href="../src/css/plugin/pagerplugin.css" />
+  <link rel="stylesheet" href="../src/css/plugin/footerstatusplugin.css" />
  
  <style>
   body {
@@ -47,6 +43,8 @@ See the COPYING file for details.
     goog.require('goog.object');
     goog.require('goog.dom.forms');
     goog.require('pear.ui.Grid');
+    goog.require('pear.plugin.Pager');
+    goog.require('pear.plugin.FooterStatus')
   </script>
 
   <!--<link rel="stylesheet" href="css/demo.css">-->
@@ -181,6 +179,11 @@ See the COPYING file for details.
     grid.setHeight(400);
     dataModel = new pear.data.DataModel (columns,data);
     grid.setDataView(new pear.data.DataView(dataModel));
+
+    // Plugins
+    grid.addPlugin( new pear.plugin.Pager());
+    grid.addPlugin( new pear.plugin.FooterStatus());
+
 
     grid.render(goog.dom.getElement('target1'));
 

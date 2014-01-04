@@ -33,44 +33,6 @@
   outline: none;
 }
 
-
-.pear-grid-footer-status{
-  display: inline-block;
-  padding:2px 8px 2px 8px;
-  border-color: gray;
-  border-width: 1px 1px 1px 1px;
-  border-style: solid;
-  margin:0px 5px 0px 5px;
-  border-radius:3px;
-}
-
-.pear-grid-pager{
-  display: inline-block;
- /* padding:2px 8px 2px 8px;
-  margin:0px 5px 0px 5px;*/
-  outline: none;
-}
-
-.pear-grid-pager div{
-  display: inline-block;
-  padding:0px 5px 0px 5px;
-}
-
-.pear-grid-pager-cell{
-  display: inline-block;
-  padding: 2px 8px 2px 8px;
-  border-color: gray;
-  border-width: 1px 1px 1px 1px;
-  border-style: solid;
-  margin: 0px 5px 0px 5px;
-  border-radius: 3px;
-  outline: none;
-}
-
-.pear-grid-pager-cell-hover{
-  border-color: black;
-}
-
 .pear-grid-row-data{
   position: relative;
   outline:none;

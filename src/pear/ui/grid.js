@@ -1,30 +1,30 @@
 /**
- *  @license
- *  Distributed under - The MIT License (MIT).
+ * @license
+ * Distributed under - The MIT License (MIT).
  *
- *  Copyright (c) 2014  Jyoti Deka
- *  dekajp{at}gmail{dot}com
- *  http://github.com/dekajp/google-closure-grid
- *  
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is
- *  furnished to do so, subject to the following conditions:
- *  
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *  
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- *  THE SOFTWARE.
+ * Copyright (c) 2014  Jyoti Deka
+ * dekajp{at}gmail{dot}com
+ * http://github.com/dekajp/google-closure-grid
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  *
- *  version 0.1
+ * version 0.1
  *
  */
 
@@ -42,6 +42,11 @@ goog.require('pear.ui.FooterRow');
 goog.require('pear.ui.HeaderCell');
 goog.require('pear.ui.HeaderRow');
 goog.require('pear.data.DataView');
+goog.require('pear.ui.Plugable');
+
+
+goog.require('pear.plugin.Pager');
+goog.require('pear.plugin.FooterStatus');
 
 
 
@@ -56,12 +61,9 @@ pear.ui.Grid = function(opt_domHelper) {
   goog.ui.Component.call(this);
   this.dom_ = opt_domHelper || goog.dom.getDomHelper();
 
-
   this.previousScrollTop_ = 0;
-  this.dataRows_ = [];
   this.renderedDataRows_ = [];
   this.renderedDataRowsCache_ = [];
-
 };
 goog.inherits(pear.ui.Grid, goog.ui.Component);
 
@@ -128,34 +130,40 @@ pear.ui.Grid.prototype.body_ = null;
  * @private 
  * @type {Array}
  */
-pear.ui.Grid.prototype.dataRows_ = [];
+pear.ui.Grid.prototype.dataRows_ = null;
+
+/**
+ * @private 
+ * @type {Array}
+ */
+pear.ui.Grid.prototype.plugins_ = null;
+
+/**
+ * @private 
+ * @type {number}
+ */
+pear.ui.Grid.prototype.width_ = null;
+
+/**
+ * @private 
+ * @type {number}
+ */
+pear.ui.Grid.prototype.height_ = null;
 
 
 /**
  * @private 
  * @type {number}
  */
-pear.ui.Grid.prototype.width_ = 0;
-
-/**
- * @private 
- * @type {number}
- */
-pear.ui.Grid.prototype.height_ = 0;
+pear.ui.Grid.prototype.sortColumnIndex_ = null ;
 
 
 /**
  * @private 
  * @type {number}
  */
-pear.ui.Grid.prototype.sortColumnIndex_ = -1 ;
+pear.ui.Grid.prototype.currentPageIndex_ = null ;
 
-
-/**
- * @private 
- * @type {number}
- */
-pear.ui.Grid.prototype.currentPageIndex_ = 0 ;
 
 /**
  * @return {*}
@@ -207,12 +215,20 @@ pear.ui.Grid.prototype.getBody = function() {
 
 
 /**
- * @return {Object}
+ * @return {Array.<Object>}
  */
 pear.ui.Grid.prototype.getDataRows = function() {
+  this.dataRows_ = this.dataRows_ || [];
   return this.dataRows_;
 };
 
+/**
+ * @return {Array.<Object>}
+ */
+pear.ui.Grid.prototype.getPlugins = function() {
+  this.plugins_ = this.plugins_ || [];
+  return this.plugins_;
+};
 
 /**
  * @return {number}
@@ -298,12 +314,27 @@ pear.ui.Grid.prototype.getHeaderRow = function() {
 };
 
 /**
+ * Header Row
+ * @return {pear.ui.HeaderRow?} 
+ */
+pear.ui.Grid.prototype.getFooterRow = function() {
+  return this.footerRow_;
+};
+
+/**
  * Sorted Column Index
  * @return {number} 
  */
 pear.ui.Grid.prototype.getSortColumnIndex = function() {
+  this.sortColumnIndex_ = this.sortColumnIndex_ || -1;
   return this.sortColumnIndex_;
 };
+
+pear.ui.Grid.prototype.getCurrentPageIndex = function() {
+  this.currentPageIndex_ = this.currentPageIndex_ || 0;
+  return this.currentPageIndex_;
+};
+
 
 /**
  * Sorted Column Index
@@ -314,11 +345,21 @@ pear.ui.Grid.prototype.setSortColumnIndex = function(n) {
 };
 
 pear.ui.Grid.prototype.setPageIndex = function (index){
+   var evt = new goog.events.Event(pear.ui.Grid.EventType.BEFORE_PAGING,
+      this);
+  this.dispatchEvent(evt);
+
   this.currentPageIndex_ = index;
   this.getDataView().setPageIndex(index);
+
+  var evt = new goog.events.Event(pear.ui.Grid.EventType.AFTER_PAGING,
+      this);
+  this.dispatchEvent(evt);
+  this.refresh();
 }
 
 pear.ui.Grid.prototype.getPageIndex = function (){
+
   return this.currentPageIndex_ ;
 }
 
@@ -338,6 +379,17 @@ pear.ui.Grid.prototype.setDataView = function(dv) {
   this.setModel(dv);
   dv.setGrid(this);
   this.prepareControlHierarchy_();
+};
+
+pear.ui.Grid.prototype.addPlugin = function(plugin) {
+  var plugins = this.getPlugins();
+  plugins.push(plugin);
+};
+
+pear.ui.Grid.prototype.pluginShow_ = function() {
+  goog.array.forEach(this.getPlugins(),function(plugin){
+    plugin.show(this);
+  },this);
 };
 
 
@@ -377,18 +429,31 @@ pear.ui.Grid.prototype.enterDocument = function() {
   pear.ui.Grid.superClass_.enterDocument.call(this);
 
   this.renderGrid_();
+  this.pluginShow_();
 };
 
 /**
  * @override
  */
 pear.ui.Grid.prototype.disposeInternal = function() {
-   // TODO : better dispose needs to be done
+
+   // Instance 
+  this.previousScrollTop_ = null;
+  this.renderedDataRows_ = null;
+  this.renderedDataRowsCache_ = null;
+
+  // TODO : better dispose needs to be done
   // call dispose on each child
+
+  goog.array.forEach(this.getPlugins() ,function(value){
+    value.dispose();
+  })
+  this.plugins_ = null;
+
   this.headerRow_.dispose();
   this.headerRow_ = null;
   
-  goog.array.forEach(this.dataRows_ ,function(value){
+  goog.array.forEach(this.getDataRows() ,function(value){
     value.dispose();
   })
   this.dataRows_ = null;
@@ -409,11 +474,8 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   this.height_ = null;
   this.sortColumnIndex_ = null;
   this.currentPageIndex_  = null;
-  this.renderedDataRowsCache_= null;
-  this.renderedDataRows_= null;
 
   pear.ui.Grid.superClass_.disposeInternal.call(this);
- 
 };
 
 
@@ -600,7 +662,7 @@ pear.ui.Grid.prototype.refreshRenderRows_ = function() {
   var i = 0;
   for (i = startIndex; i < endIndex; i++) {
     if (!this.renderedDataRowsCache_[i]) {
-      this.renderedDataRows_[i] = this.dataRows_[i];
+      this.renderedDataRows_[i] = this.getDataRows()[i];
     }
   }
 
@@ -631,8 +693,8 @@ pear.ui.Grid.prototype.draw_ = function (){
   this.updateFooterMsg();
 };
 
-pear.ui.Grid.prototype.redraw = function (){
-  this.renderedDataRowsCache_=[];
+pear.ui.Grid.prototype.refresh = function (){
+  this.renderedDataRowsCache_= [];
   this.renderedDataRows_ = [];
   this.prepareDataRows_();
   this.refreshRenderRows_();
@@ -735,7 +797,7 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
 
   var dv = this.getDataView();
   dv.sort(headerCell.getModel());
-  this.redraw();
+  this.refresh();
 
   evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.AFTER_SORT,
       this,headerCell);
@@ -749,21 +811,6 @@ pear.ui.Grid.prototype.handleHeaderCellOptionClick_ = function(ge) {
   this.dispatchEvent(evt);
 };
 
-pear.ui.Grid.prototype.handlePageChange_ = function (ge){
-  ge.preventDefault();
-  ge.stopPropagation();
-  var evt = new goog.events.Event(pear.ui.Grid.EventType.BEFORE_PAGING,
-      this);
-  this.dispatchEvent(evt);
-
-  this.setPageIndex(ge.pageIndex);
-  this.redraw();
-  this.updateFooterMsg();
-
-  evt = new goog.events.Event(pear.ui.Grid.EventType.AFTER_PAGING,
-      this);
-  this.dispatchEvent(evt);
-};
 
 pear.ui.Grid.prototype.handleDataCellClick_ = function(be) {
   be.stopPropagation();
@@ -780,6 +827,7 @@ pear.ui.Grid.prototype.handleDataCellClick_ = function(be) {
 };
 
 pear.ui.Grid.prototype.updateFooterMsg = function (){;
+ /* 
   var startIndex = 1;
   var rowCount = this.getRowCount();
   var endIndex = this.getDataView().getRowViews().length;
@@ -789,6 +837,7 @@ pear.ui.Grid.prototype.updateFooterMsg = function (){;
   }
   startIndex = startIndex ? startIndex : 1;
   this.footerRow_.setFooterMsg("Showing ["+startIndex+" - "+endIndex+"]");
+  */
 };
 
 

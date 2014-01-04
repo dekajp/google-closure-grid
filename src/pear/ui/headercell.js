@@ -239,7 +239,7 @@ pear.ui.HeaderCell.prototype.handleResize_ = function(be){
 pear.ui.HeaderCell.prototype.handleResizeEnd_ = function(be){
   be.stopPropagation();
   var grid = this.getGrid();
-  grid.redraw();
+  grid.refresh();
 };
 
 /**

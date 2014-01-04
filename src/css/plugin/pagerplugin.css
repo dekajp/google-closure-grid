@@ -1,0 +1,26 @@
+.pear-grid-pager{
+  display: inline-block;
+ /* padding:2px 8px 2px 8px;*/
+  margin:3px 2px 3px 2px;
+  outline: none;
+}
+
+.pear-grid-pager > div , .pear-grid-pager > span{
+  display: inline-block;
+  padding:0px 5px 0px 5px;
+}
+
+.pear-grid-pager-cell{
+  display: inline-block;
+  padding: 2px 8px 2px 8px;
+  border-color: gray;
+  border-width: 1px 1px 1px 1px;
+  border-style: solid;
+  margin: 0px 5px 0px 5px;
+  border-radius: 3px;
+  outline: none;
+}
+
+.pear-grid-pager-cell-hover{
+  border-color: black;
+}
