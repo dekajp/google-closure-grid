@@ -483,8 +483,7 @@ pear.ui.Grid.prototype.disposeInternal = function() {
  * @private
  */
 pear.ui.Grid.prototype.renderGrid_ = function() {
-
-  goog.style.setSize(this.getElement(), this.width_, this.height_);
+  goog.style.setHeight(this.getElement(),this.height_);
 
   this.renderHeader_();
   this.renderBody_();
@@ -494,6 +493,7 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
   }
   this.prepareDataRows_();
   this.renderfooterRow_();
+  this.syncWidth_();
   this.draw_();
 };
 
@@ -505,12 +505,14 @@ pear.ui.Grid.prototype.renderHeader_ = function() {
         new pear.ui.HeaderRow(this,
                           this.Configuration_.RowHeaderHeight);
   this.addChild(this.headerRow_, true);
-  goog.style.setSize(this.headerRow_.getElement(),
-                     this.width_,
+  goog.style.setHeight(this.headerRow_.getElement(),
                      this.Configuration_.RowHeaderHeight);
 
   this.createHeader_();
   this.registerEventsOnHeaderRow_();
+
+  goog.style.setWidth(this.headerRow_.getElement(),
+                     this.headerRow_.getWidth());
 };
 
 
@@ -556,10 +558,9 @@ pear.ui.Grid.prototype.renderBody_ = function() {
   this.addChild(this.body_, true);
   goog.style.setHeight(this.body_.getElement(), this.height_ - 2 * this.headerRow_.getHeight());
   
-
   this.bodyCanvas_ = new pear.ui.BodyCanvas();
   this.body_.addChild(this.bodyCanvas_, true);
-
+  
   this.setCanvasHeight_();
   
   this.registerEventsOnBody_();
@@ -576,6 +577,17 @@ pear.ui.Grid.prototype.setCanvasHeight_ = function(){
   goog.style.setHeight(this.bodyCanvas_.getElement(),height);
 }
 
+
+pear.ui.Grid.prototype.syncWidth_ = function(){
+  var width = this.headerRow_.getWidth();
+  width = width + 50;
+  var bounds = goog.style.getBounds(this.getElement());
+  width = ( width > bounds.width )?width :bounds.width;
+  goog.style.setWidth(this.headerRow_.getElement(),width);
+  goog.style.setWidth(this.body_.getElement(), width);
+  goog.style.setWidth(this.bodyCanvas_.getElement(), width);
+  goog.style.setWidth(this.footerRow_.getElement(), width);
+}
 
 /**
  * @private
@@ -713,6 +725,8 @@ pear.ui.Grid.prototype.setColumnResize = function (index,width){
       c.draw();
     }
   },this);
+
+  this.syncWidth_();
 };
 
 

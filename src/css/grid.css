@@ -6,15 +6,17 @@
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
-  position: absolute;
+  position: relative;
   overflow:hidden;
+  overflow-x:scroll;
 }
 
 .pear-grid-body{
-  overflow:scroll;
-  border-color: gray;
-  border-width: 1px 1px 1px 0px;
-  border-style: solid;
+  overflow-y:scroll;
+}
+
+.pear-grid-body-canvas{
+  position: relative;
 }
 
 .pear-grid-row-header, .pear-grid-row-footer,

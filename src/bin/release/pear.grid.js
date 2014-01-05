@@ -12843,6 +12843,13 @@ pear.ui.Row.prototype.getGrid = function() {
 pear.ui.Row.prototype.setHeight = function(height) {
   this.height_ = height;
 };
+pear.ui.Row.prototype.getWidth = function() {
+  var width = 0;
+  this.forEachChild(function(child) {
+    width = width + child.getCellWidth();
+  });
+  return width;
+};
 pear.ui.Row.prototype.getHeight = function() {
   return this.height_;
 };
@@ -14144,7 +14151,7 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   pear.ui.Grid.superClass_.disposeInternal.call(this);
 };
 pear.ui.Grid.prototype.renderGrid_ = function() {
-  goog.style.setSize(this.getElement(), this.width_, this.height_);
+  goog.style.setHeight(this.getElement(), this.height_);
   this.renderHeader_();
   this.renderBody_();
   if (this.Configuration_.AllowPaging) {
@@ -14153,14 +14160,16 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
   }
   this.prepareDataRows_();
   this.renderfooterRow_();
+  this.syncWidth_();
   this.draw_();
 };
 pear.ui.Grid.prototype.renderHeader_ = function() {
   this.headerRow_ = this.headerRow_ || new pear.ui.HeaderRow(this, this.Configuration_.RowHeaderHeight);
   this.addChild(this.headerRow_, true);
-  goog.style.setSize(this.headerRow_.getElement(), this.width_, this.Configuration_.RowHeaderHeight);
+  goog.style.setHeight(this.headerRow_.getElement(), this.Configuration_.RowHeaderHeight);
   this.createHeader_();
   this.registerEventsOnHeaderRow_();
+  goog.style.setWidth(this.headerRow_.getElement(), this.headerRow_.getWidth());
 };
 pear.ui.Grid.prototype.createHeader_ = function() {
   this.createHeaderCells_();
@@ -14195,6 +14204,16 @@ pear.ui.Grid.prototype.setCanvasHeight_ = function() {
     height = this.getRowCount() * this.Configuration_.RowHeight;
   }
   goog.style.setHeight(this.bodyCanvas_.getElement(), height);
+};
+pear.ui.Grid.prototype.syncWidth_ = function() {
+  var width = this.headerRow_.getWidth();
+  width = width + 50;
+  var bounds = goog.style.getBounds(this.getElement());
+  width = width > bounds.width ? width : bounds.width;
+  goog.style.setWidth(this.headerRow_.getElement(), width);
+  goog.style.setWidth(this.body_.getElement(), width);
+  goog.style.setWidth(this.bodyCanvas_.getElement(), width);
+  goog.style.setWidth(this.footerRow_.getElement(), width);
 };
 pear.ui.Grid.prototype.prepareDataRows_ = function() {
   var dv = this.getDataView();
@@ -14290,6 +14309,7 @@ pear.ui.Grid.prototype.setColumnResize = function(index, width) {
       c.draw();
     }
   }, this);
+  this.syncWidth_();
 };
 pear.ui.Grid.prototype.registerEventsOnHeaderRow_ = function() {
   this.forEachChild(function(cell) {

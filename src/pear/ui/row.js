@@ -148,6 +148,19 @@ pear.ui.Row.prototype.setHeight = function(height) {
 
 /**
   @public
+  @param {number} height
+*/
+pear.ui.Row.prototype.getWidth = function() {
+  var width = 0;
+  this.forEachChild(function(child){
+    width = width + child.getCellWidth();
+  })
+
+  return width;
+};
+
+/**
+  @public
   @return  {number}
 */
 pear.ui.Row.prototype.getHeight = function() {
