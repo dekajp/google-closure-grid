@@ -582,7 +582,7 @@ pear.ui.Grid.prototype.setCanvasHeight_ = function(){
 
 pear.ui.Grid.prototype.syncWidth_ = function(){
   var width = this.headerRow_.getWidth();
-  width = width + 50;
+  width = width + 10;
   var bounds = goog.style.getBounds(this.getElement());
   width = ( width > bounds.width )?width :bounds.width;
   goog.style.setWidth(this.headerRow_.getElement(),width);
