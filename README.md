@@ -5,7 +5,7 @@ version 0.1 (unstable)
 Demo : http://dekajp.github.io/demos/index.html
 
 
-`Complete Features`
+##Complete Features
 
 * Data Virtualization ~ 100,000 Rows
 * Alternate Row Highlight
@@ -17,7 +17,7 @@ Demo : http://dekajp.github.io/demos/index.html
 
 
 
-`Todo - Features`
+##Todo - Features
 
 * Show/Hide Columns
 * Columns Move
@@ -29,3 +29,6 @@ Demo : http://dekajp.github.io/demos/index.html
 * -
 * -
 * -
+
+##Credits 
+pear.ui.Grid borrows concepts and inspiration from [Slickgrid](https://github.com/mleibman/SlickGrid)
