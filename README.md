@@ -1,4 +1,4 @@
-google-closure-grid (pear.ui.Grid)
+#google-closure-grid (pear.ui.Grid)
 
 version 0.1 (unstable)
 
