@@ -29,6 +29,10 @@ goog.inherits(pear.ui.DataCell, pear.ui.Cell);
  *     comprising the component's contents.
  */
 pear.ui.DataCell.prototype.getContent = function() {
+  var columnObject = this.getColumnObject();
+  if (columnObject.formatter){
+    return String(columnObject.formatter(this.getModel()));
+  }
   return String(this.getModel());
 };
 

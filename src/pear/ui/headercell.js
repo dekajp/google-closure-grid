@@ -229,7 +229,7 @@ pear.ui.HeaderCell.prototype.handleOptionClick_ = function(be){
 pear.ui.HeaderCell.prototype.handleResize_ = function(be){
   be.stopPropagation();
   
-  var pos = this.getCellPosition();
+  var pos = this.getCellIndex();
   grid.setColumnResize(pos,be.size.width);
 };
 

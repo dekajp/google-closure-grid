@@ -532,10 +532,11 @@ pear.ui.Grid.prototype.createHeader_ = function() {
  */
 pear.ui.Grid.prototype.createHeaderCells_ = function() {
   var coldata = this.getColumnsDataModel();
-  goog.array.forEach(coldata, function(cell) {
+  goog.array.forEach(coldata, function(cell,index) {
     // create header cells here
     var headerCell = new pear.ui.HeaderCell();
     headerCell.setModel(cell);
+    headerCell.setCellIndex(index);
     this.headerRow_.addCell(headerCell, true);
   }, this);
 };
@@ -620,15 +621,18 @@ pear.ui.Grid.prototype.prepareDataRows_ = function() {
  */
 pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
   var model = row.getRowView().getRowData();
+  var dv = this.getDataView();
+  var columns = dv.getColumns();
   if (row.getChildCount() >0 ){
     row.removeChildren(true);
   }
-  goog.object.forEach(model, function(cell) {
+  
+  goog.array.forEach(columns,function (value,index){
     var c = new pear.ui.DataCell();
-    c.setModel(cell);
+    c.setModel(model[value.id]);
+    c.setCellIndex(index);
     row.addCell(c, true);
-  }, this);
-
+  },this);
   this.registerEventsOnDataRow_(row);
 };
 

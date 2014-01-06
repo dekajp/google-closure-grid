@@ -123,7 +123,6 @@ pear.ui.Row.prototype.getRowView = function(){
       immediately after being added (defaults to false).
 */
 pear.ui.Row.prototype.addCell = function(cell, opt_render) {
-  cell.setCellPosition(this.getChildCount());
   this.addChild(cell, opt_render);
 };
 

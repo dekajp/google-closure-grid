@@ -8182,7 +8182,7 @@ pear.ui.Cell = function(opt_renderer, opt_domHelper) {
 };
 goog.inherits(pear.ui.Cell, goog.ui.Control);
 pear.ui.Cell.EventType = {CLICK:"evt-pear-grid-cell-click", OPTION_CLICK:"evt-pear-grid-cell-options-click"};
-goog.ui.Component.prototype.columnPosition_ = -1;
+goog.ui.Component.prototype.columnIndex_ = -1;
 goog.ui.Component.prototype.columnWidth_ = 0;
 goog.ui.Component.prototype.row_ = null;
 goog.ui.Component.prototype.grid_ = null;
@@ -8204,11 +8204,17 @@ pear.ui.Cell.prototype.getGrid = function() {
   this.grid_ = this.grid_ || this.getRow().getGrid();
   return this.grid_;
 };
-pear.ui.Cell.prototype.setCellPosition = function(pos) {
-  this.columnPosition_ = pos;
+pear.ui.Cell.prototype.setCellIndex = function(index) {
+  this.columnIndex_ = index;
 };
-pear.ui.Cell.prototype.getCellPosition = function() {
-  return this.columnPosition_;
+pear.ui.Cell.prototype.getCellIndex = function() {
+  return this.columnIndex_;
+};
+pear.ui.Cell.prototype.getColumnObject = function() {
+  var grid = this.getGrid();
+  var dv = grid.getDataView();
+  var columns = dv.getColumns();
+  return columns[this.getCellIndex()];
 };
 pear.ui.Cell.prototype.getRowPosition = function() {
   return this.getRow().getRowPosition();
@@ -8220,7 +8226,7 @@ pear.ui.Cell.prototype.setCellWidth = function(width, opt_render) {
   }
 };
 pear.ui.Cell.prototype.getCellWidth = function() {
-  this.columnWidth_ = this.columnWidth_ || (this.getGrid().getColumnWidth(this.getCellPosition()) || this.getGrid().getConfiguration().ColumnWidth);
+  this.columnWidth_ = this.columnWidth_ || (this.getGrid().getColumnWidth(this.getCellIndex()) || this.getGrid().getConfiguration().ColumnWidth);
   return this.columnWidth_;
 };
 pear.ui.Cell.prototype.getCellHeight_ = function() {
@@ -8245,7 +8251,7 @@ pear.ui.Cell.prototype.setPosition_ = function() {
   left = 0;
   top = 0;
   var i = 0;
-  for (;i < this.getCellPosition();i++) {
+  for (;i < this.getCellIndex();i++) {
     left = left + this.getRow().getCellWidth(i);
   }
   goog.style.setPosition(this.getElement(), left, top);
@@ -8362,7 +8368,7 @@ pear.ui.HeaderCell.prototype.handleOptionClick_ = function(be) {
 };
 pear.ui.HeaderCell.prototype.handleResize_ = function(be) {
   be.stopPropagation();
-  var pos = this.getCellPosition();
+  var pos = this.getCellIndex();
   grid.setColumnResize(pos, be.size.width);
 };
 pear.ui.HeaderCell.prototype.handleResizeEnd_ = function(be) {
@@ -12848,7 +12854,6 @@ pear.ui.Row.prototype.getRowView = function() {
   return this.getModel();
 };
 pear.ui.Row.prototype.addCell = function(cell, opt_render) {
-  cell.setCellPosition(this.getChildCount());
   this.addChild(cell, opt_render);
 };
 pear.ui.Row.prototype.getGrid = function() {
@@ -12950,6 +12955,10 @@ pear.ui.DataCell = function(opt_domHelper, opt_renderer) {
 };
 goog.inherits(pear.ui.DataCell, pear.ui.Cell);
 pear.ui.DataCell.prototype.getContent = function() {
+  var columnObject = this.getColumnObject();
+  if (columnObject.formatter) {
+    return String(columnObject.formatter(this.getModel()));
+  }
   return String(this.getModel());
 };
 pear.ui.DataCell.prototype.disposeInternal = function() {
@@ -14192,9 +14201,10 @@ pear.ui.Grid.prototype.createHeader_ = function() {
 };
 pear.ui.Grid.prototype.createHeaderCells_ = function() {
   var coldata = this.getColumnsDataModel();
-  goog.array.forEach(coldata, function(cell) {
+  goog.array.forEach(coldata, function(cell, index) {
     var headerCell = new pear.ui.HeaderCell;
     headerCell.setModel(cell);
+    headerCell.setCellIndex(index);
     this.headerRow_.addCell(headerCell, true);
   }, this);
 };
@@ -14248,12 +14258,15 @@ pear.ui.Grid.prototype.prepareDataRows_ = function() {
 };
 pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
   var model = row.getRowView().getRowData();
+  var dv = this.getDataView();
+  var columns = dv.getColumns();
   if (row.getChildCount() > 0) {
     row.removeChildren(true);
   }
-  goog.object.forEach(model, function(cell) {
+  goog.array.forEach(columns, function(value, index) {
     var c = new pear.ui.DataCell;
-    c.setModel(cell);
+    c.setModel(model[value.id]);
+    c.setCellIndex(index);
     row.addCell(c, true);
   }, this);
   this.registerEventsOnDataRow_(row);

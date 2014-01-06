@@ -45,6 +45,8 @@
     goog.require('pear.ui.Grid');
     goog.require('pear.plugin.Pager');
     goog.require('pear.plugin.FooterStatus')
+    goog.require('goog.i18n.NumberFormat')
+    goog.require('goog.i18n.DateTimeFormat')
   </script>
 
   <!--<link rel="stylesheet" href="css/demo.css">-->
@@ -131,23 +133,74 @@
       }
     }
 
-    function isChecked(id,name){
-      var elem = goog.dom.getElement(id);
-      return  elem.checked;
-    }
+  function isChecked(id,name){
+    var elem = goog.dom.getElement(id);
+    return  elem.checked;
+  };
+
+  function currencyFormatter(val){
+    var fmt = new goog.i18n.NumberFormat (goog.i18n.NumberFormat.Format.CURRENCY);
+    return fmt.format(val);
+  };
+
+  function NumberFormatter(val){
+    var fmt = new goog.i18n.NumberFormat (goog.i18n.NumberFormat.Format.DECIMAL);
+    return fmt.format(val);
+  };
+
+  function DateFormatter(val){
+    var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
+    return fmt.format(val);
+  };
+
 
   var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
   var unitprice = [1,2,3,4,5,6,7,8,9,10];
 
   var grid;
   var columns = [
-    {id: "orderno", headerText: "Order No",width:50,datatype:pear.data.DataModel.DataType.NUMBER},
-    {id: "item", headerText: "Item",width:150,datatype:pear.data.DataModel.DataType.TEXT},
-    {id: "unitprice", headerText: "Unit Price",width:150,datatype:pear.data.DataModel.DataType.NUMBER},
-    {id: "quantity", headerText: "Quantity",datatype:pear.data.DataModel.DataType.NUMBER},
-    {id: "total", headerText: "Total",datatype:pear.data.DataModel.DataType.NUMBER},
-    {id: "created", headerText: "Created On",datatype:pear.data.DataModel.DataType.DATETIME},
-    {id: "processed", headerText: "Processed",datatype:pear.data.DataModel.DataType.BOOLEAN}
+    { 
+      id: "orderno",
+      headerText: "Order No",
+      width:50,
+      datatype:pear.data.DataModel.DataType.NUMBER
+    },
+    {
+      id: "item",
+      headerText: "Item",
+      width:150,
+      datatype:pear.data.DataModel.DataType.TEXT
+    },
+    {
+      id: "unitprice",
+      headerText: "Unit Price",
+      width:150,
+      datatype:pear.data.DataModel.DataType.NUMBER,
+      formatter:currencyFormatter
+    },
+    {
+      id: "quantity", 
+      headerText: "Quantity",
+      datatype:pear.data.DataModel.DataType.NUMBER,
+      formatter:NumberFormatter
+    },
+    {
+      id: "total",
+      headerText: "Total",
+      datatype:pear.data.DataModel.DataType.NUMBER,
+      formatter:currencyFormatter
+    },
+    {
+      id: "created",
+      headerText: "Created On",
+      datatype:pear.data.DataModel.DataType.DATETIME,
+      formatter:DateFormatter
+     },
+    {
+      id: "processed",
+      headerText: "Processed",
+      datatype:pear.data.DataModel.DataType.BOOLEAN
+    }
   ];
 
   var load = function () {
@@ -160,13 +213,13 @@
     var start = new Date(2013,12,31);
     for (var i = 0; i < parseInt(limit,10); i++) {
       data[i] = {
-        rowid:  i 
+        orderno:  i 
       };
       temp = Math.round(Math.random() * 9);
      
       data[i].item = item[temp];
       data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 100);
+      data[i].quantity = Math.round(Math.random() * 10000);
       data[i].total = data[i].unitprice * data[i].quantity;
       data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
       data[i].processed= (i % 5 === 0);
