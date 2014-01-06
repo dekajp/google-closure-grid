@@ -23,7 +23,7 @@ Demo : http://dekajp.github.io/demos/index.html
 * Columns Move
 * Keyboard Navigation - Cell Level and Grid Level
 * Column Filterns
-* -
+* Column Formatters
 * -
 * -
 * -
