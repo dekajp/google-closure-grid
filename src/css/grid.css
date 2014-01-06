@@ -19,6 +19,9 @@
   position: relative;
 }
 
+.pear-grid-row-header{
+  padding:0px 2px 0px 2px;
+}
 .pear-grid-row-header, .pear-grid-row-footer,
 .pear-grid-body{
   position: relative;

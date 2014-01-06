@@ -21,6 +21,12 @@ pear.data.DataModel = function(columns, rows) {
 goog.inherits(pear.data.DataModel, goog.Disposable);
 
 
+pear.data.DataModel.DataType ={
+  NUMBER : 'number',
+  TEXT: 'text',
+  BOOLEAN: 'boolean',
+  DATETIME: 'datetime'
+};
 /**
  * @private
  * @type {Array}

@@ -50,10 +50,11 @@ pear.ui.FooterRow.prototype.disposeInternal = function() {
 pear.ui.FooterRow.prototype.enterDocument = function() {
   pear.ui.FooterRow.superClass_.enterDocument.call(this);
   var config = this.getGrid().getConfiguration();
+  this.setHeight(5);
   var elem = this.getElement();
   this.setPosition_();
   goog.style.setSize(elem, this.getGrid().getWidth(),
-      config.RowHeight);
+      this.getHeight());
   
 };
 

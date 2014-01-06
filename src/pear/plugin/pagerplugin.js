@@ -41,8 +41,16 @@ pear.plugin.Pager.prototype.getGrid = function() {
 
 pear.plugin.Pager.prototype.show = function(grid){
   this.grid_ = grid;
+  var parentElem = grid.getElement();
   if (this.grid_.getConfiguration().AllowPaging){
-    this.render(grid.getFooterRow().getElement());
+    var footer = goog.dom.getNextElementSibling(grid.getElement());
+    if ( footer && goog.dom.classes.has(footer, 'pear-grid-footer')){
+
+    }else{
+      footer = goog.dom.createDom('div', 'pear-grid-footer');
+      goog.dom.insertSiblingAfter(footer,parentElem);
+    }
+    this.render(footer);
   }
 }
 

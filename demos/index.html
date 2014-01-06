@@ -69,7 +69,7 @@
    <fieldset class="goog-debug-panel">
     <legend>Grid Configuration - Reload Grid Each Time</legend>
     <div id="">
-      <div class="config-item"> AllowPaging <input type="checkbox" id="id_AllowPaging"  checked="true" /> </div>
+      <div class="config-item"> AllowPaging <input type="checkbox" id="id_AllowPaging"   /> </div>
       <div class="config-item"> AllowSorting <input type="checkbox" id="id_AllowSorting"  checked="true" /> </div>
       <div class="config-item"> AllowColumnResize <input type="checkbox" id="id_AllowColumnResize" checked="true" /> </div>
 
@@ -136,15 +136,18 @@
       return  elem.checked;
     }
 
+  var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
+  var unitprice = [1,2,3,4,5,6,7,8,9,10];
 
   var grid;
   var columns = [
-    {id: "title", headerText: "Title",width:50,datatype:"text"},
-    {id: "duration", headerText: "Duration",width:150,datatype:"text"},
-    {id: "percentcomplete", headerText: "% Complete",width:200,datatype:"number"},
-    {id: "start", headerText: "Start",datatype:"datetime"},
-    {id: "finish", headerText: "Finish",datatype:"datetime"},
-    {id: "effortDriven", headerText: "Effort Driven",datatype:"boolean"}
+    {id: "orderno", headerText: "Order No",width:50,datatype:pear.data.DataModel.DataType.NUMBER},
+    {id: "item", headerText: "Item",width:150,datatype:pear.data.DataModel.DataType.TEXT},
+    {id: "unitprice", headerText: "Unit Price",width:150,datatype:pear.data.DataModel.DataType.NUMBER},
+    {id: "quantity", headerText: "Quantity",datatype:pear.data.DataModel.DataType.NUMBER},
+    {id: "total", headerText: "Total",datatype:pear.data.DataModel.DataType.NUMBER},
+    {id: "created", headerText: "Created On",datatype:pear.data.DataModel.DataType.DATETIME},
+    {id: "processed", headerText: "Processed",datatype:pear.data.DataModel.DataType.BOOLEAN}
   ];
 
   var load = function () {
@@ -153,15 +156,20 @@
     }
     var data = [];
     var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
+    var temp;
+    var start = new Date(2013,12,31);
     for (var i = 0; i < parseInt(limit,10); i++) {
       data[i] = {
-        title: "Task " + i,
-        duration: "5 days",
-        percentcomplete: Math.round(Math.random() * 100),
-        start: "01/01/2009",
-        finish: "01/05/2009",
-        effortDriven: (i % 5 == 0)
+        rowid:  i 
       };
+      temp = Math.round(Math.random() * 9);
+     
+      data[i].item = item[temp];
+      data[i].unitprice = unitprice[temp];
+      data[i].quantity = Math.round(Math.random() * 100);
+      data[i].total = data[i].unitprice * data[i].quantity;
+      data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
+      data[i].processed= (i % 5 === 0);
     }
 
     var start = +new Date();  // log start timestamp

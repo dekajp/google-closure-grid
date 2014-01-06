@@ -464,7 +464,9 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   this.bodyCanvas_.dispose();
   this.bodyCanvas_ = null;
 
-  this.footerRow_.dispose();
+  if (this.footerRow_){
+    this.footerRow_.dispose();
+  }
   this.footerRow_ = null;
 
   dv = this.getModel();
@@ -492,7 +494,7 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
     this.getDataView().setPageSize(this.Configuration_.PageSize);
   }
   this.prepareDataRows_();
-  this.renderfooterRow_();
+  //this.renderfooterRow_();
   this.syncWidth_();
   this.draw_();
 };
@@ -556,7 +558,7 @@ pear.ui.Grid.prototype.renderfooterRow_ = function() {
 pear.ui.Grid.prototype.renderBody_ = function() {
   this.body_ = new pear.ui.Body();
   this.addChild(this.body_, true);
-  goog.style.setHeight(this.body_.getElement(), this.height_ - 2 * this.headerRow_.getHeight());
+  goog.style.setHeight(this.body_.getElement(), this.height_ -  this.headerRow_.getHeight());
   
   this.bodyCanvas_ = new pear.ui.BodyCanvas();
   this.body_.addChild(this.bodyCanvas_, true);
@@ -586,7 +588,7 @@ pear.ui.Grid.prototype.syncWidth_ = function(){
   goog.style.setWidth(this.headerRow_.getElement(),width);
   goog.style.setWidth(this.body_.getElement(), width);
   goog.style.setWidth(this.bodyCanvas_.getElement(), width);
-  goog.style.setWidth(this.footerRow_.getElement(), width);
+  //goog.style.setWidth(this.footerRow_.getElement(), width);
 }
 
 /**

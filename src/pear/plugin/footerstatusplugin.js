@@ -37,8 +37,15 @@ pear.plugin.FooterStatus.prototype.getGrid = function() {
 
 pear.plugin.FooterStatus.prototype.show = function(grid){
   this.grid_ = grid;
-  var parentElem = grid.getFooterRow().getElement();
-  this.render(parentElem);
+  var parentElem = grid.getElement();
+  var footer = goog.dom.getNextElementSibling(grid.getElement());
+  if ( footer && goog.dom.classes.has(footer, 'pear-grid-footer')){
+
+  }else{
+    footer = goog.dom.createDom('div', 'pear-grid-footer');
+    goog.dom.insertSiblingAfter(footer,parentElem);
+  }
+  this.render(footer);
 }
 
 /**

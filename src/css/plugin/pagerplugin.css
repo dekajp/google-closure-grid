@@ -1,3 +1,17 @@
+.pear-grid-footer{
+  background: rgb(230, 230, 230);
+  border-width: 0px 1px 1px 1px;
+  border-style: solid;
+  border-color:gray;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  position: relative;
+  overflow:hidden;
+  overflow-x:scroll;
+ 
+}
+
 .pear-grid-pager{
   display: inline-block;
  /* padding:2px 8px 2px 8px;*/

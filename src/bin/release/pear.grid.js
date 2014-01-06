@@ -619,6 +619,7 @@ pear.data.DataModel = function(columns, rows) {
   this.rows_ = rows || [];
 };
 goog.inherits(pear.data.DataModel, goog.Disposable);
+pear.data.DataModel.DataType = {NUMBER:"number", TEXT:"text", BOOLEAN:"boolean", DATETIME:"datetime"};
 pear.data.DataModel.prototype.columns_ = [];
 pear.data.DataModel.prototype.rows_ = [];
 pear.data.DataModel.prototype.getColumns = function() {
@@ -12588,8 +12589,14 @@ pear.plugin.FooterStatus.prototype.getGrid = function() {
 };
 pear.plugin.FooterStatus.prototype.show = function(grid) {
   this.grid_ = grid;
-  var parentElem = grid.getFooterRow().getElement();
-  this.render(parentElem);
+  var parentElem = grid.getElement();
+  var footer = goog.dom.getNextElementSibling(grid.getElement());
+  if (footer && goog.dom.classes.has(footer, "pear-grid-footer")) {
+  } else {
+    footer = goog.dom.createDom("div", "pear-grid-footer");
+    goog.dom.insertSiblingAfter(footer, parentElem);
+  }
+  this.render(footer);
 };
 pear.plugin.FooterStatus.prototype.createDom = function() {
   this.element_ = goog.dom.createDom("div", "pear-grid-footer-status");
@@ -12654,8 +12661,15 @@ pear.plugin.Pager.prototype.getGrid = function() {
 };
 pear.plugin.Pager.prototype.show = function(grid) {
   this.grid_ = grid;
+  var parentElem = grid.getElement();
   if (this.grid_.getConfiguration().AllowPaging) {
-    this.render(grid.getFooterRow().getElement());
+    var footer = goog.dom.getNextElementSibling(grid.getElement());
+    if (footer && goog.dom.classes.has(footer, "pear-grid-footer")) {
+    } else {
+      footer = goog.dom.createDom("div", "pear-grid-footer");
+      goog.dom.insertSiblingAfter(footer, parentElem);
+    }
+    this.render(footer);
   }
 };
 pear.plugin.Pager.prototype.createDom = function() {
@@ -12899,9 +12913,10 @@ pear.ui.FooterRow.prototype.disposeInternal = function() {
 pear.ui.FooterRow.prototype.enterDocument = function() {
   pear.ui.FooterRow.superClass_.enterDocument.call(this);
   var config = this.getGrid().getConfiguration();
+  this.setHeight(5);
   var elem = this.getElement();
   this.setPosition_();
-  goog.style.setSize(elem, this.getGrid().getWidth(), config.RowHeight);
+  goog.style.setSize(elem, this.getGrid().getWidth(), this.getHeight());
 };
 goog.provide("pear.ui.BodyCanvas");
 goog.require("goog.ui.Component");
@@ -14140,7 +14155,9 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   this.body_ = null;
   this.bodyCanvas_.dispose();
   this.bodyCanvas_ = null;
-  this.footerRow_.dispose();
+  if (this.footerRow_) {
+    this.footerRow_.dispose();
+  }
   this.footerRow_ = null;
   dv = this.getModel();
   dv.dispose();
@@ -14159,7 +14176,6 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
     this.getDataView().setPageSize(this.Configuration_.PageSize);
   }
   this.prepareDataRows_();
-  this.renderfooterRow_();
   this.syncWidth_();
   this.draw_();
 };
@@ -14190,7 +14206,7 @@ pear.ui.Grid.prototype.renderfooterRow_ = function() {
 pear.ui.Grid.prototype.renderBody_ = function() {
   this.body_ = new pear.ui.Body;
   this.addChild(this.body_, true);
-  goog.style.setHeight(this.body_.getElement(), this.height_ - 2 * this.headerRow_.getHeight());
+  goog.style.setHeight(this.body_.getElement(), this.height_ - this.headerRow_.getHeight());
   this.bodyCanvas_ = new pear.ui.BodyCanvas;
   this.body_.addChild(this.bodyCanvas_, true);
   this.setCanvasHeight_();
@@ -14213,7 +14229,6 @@ pear.ui.Grid.prototype.syncWidth_ = function() {
   goog.style.setWidth(this.headerRow_.getElement(), width);
   goog.style.setWidth(this.body_.getElement(), width);
   goog.style.setWidth(this.bodyCanvas_.getElement(), width);
-  goog.style.setWidth(this.footerRow_.getElement(), width);
 };
 pear.ui.Grid.prototype.prepareDataRows_ = function() {
   var dv = this.getDataView();
