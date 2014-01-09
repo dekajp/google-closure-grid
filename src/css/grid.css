@@ -122,7 +122,9 @@
   padding-right:2px;
 }
 .pear-grid-cell-header-slidemenu {
-  float: right;
+  display: -moz-inline-box;
+  display: inline-block;
+  float: left;
   outline:none;
   padding-left:2px;
   padding-right:2px;

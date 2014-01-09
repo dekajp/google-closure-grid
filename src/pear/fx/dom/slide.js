@@ -28,7 +28,7 @@ pear.fx.dom.Slide.prototype.updateStyle = function() {
   
   var marginX = (this.isRightPositioningForRtlEnabled() &&
       this.isRightToLeft()) ? 'marginRight' : 'marginLeft';
-  
   var y = this.coords[0];
   this.element.style[marginX] = y + 'px';
+ 
 };

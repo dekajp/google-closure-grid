@@ -121,6 +121,7 @@ pear.ui.HeaderCell.prototype.splitHeaderCell_ = function(){
                                         'pear-grid-cell-header-indicators'
                                         );
   goog.dom.appendChild(this.getElement(),this.contentIndicator_);
+  goog.style.setWidth(this.contentIndicator_,32);
 
   this.sortIndicator_ = goog.dom.createDom('div',
                                             'pear-grid-cell-header-sort'
@@ -155,12 +156,24 @@ pear.ui.HeaderCell.prototype.syncContentCellOnResize_ = function(){
 
 pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
   var marginleft = 0;
-  if (this.getsortDirection()){
+  var left = 0;
+  goog.dom.removeNode(this.headerMenu_);
+  goog.dom.removeNode(this.sortIndicator_);
+
+  if (this.getsortDirection() && goog.style.isElementShown(this.headerMenu_)){
+    goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
+    marginleft = marginleft + 16;
+    goog.dom.appendChild(this.contentIndicator_,this.headerMenu_);
+    marginleft = marginleft + 16;
+  }else if (this.getsortDirection()){
+    goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
+    marginleft = marginleft + 16;
+   
+  }else if (goog.style.isElementShown(this.headerMenu_)){
+    goog.dom.appendChild(this.contentIndicator_,this.headerMenu_);
     marginleft = marginleft + 16;
   }
-  if (goog.style.isElementShown(this.headerMenu_)){
-    marginleft = marginleft + 16;
-  }
+  
   marginleft = marginleft * -1;
   this.handleMenuSlide_(this.contentIndicator_,[marginleft]);
   //goog.style.setStyle(this.contentIndicator_, 'margin-left', marginleft+'px');
