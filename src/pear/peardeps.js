@@ -15,7 +15,8 @@ goog.addDependency('../../../../src/pear/ui/datarow.js', ['pear.ui.DataRow'], ['
 goog.addDependency('../../../../src/pear/ui/datarowrenderer.js', ['pear.ui.DataRowRenderer'], ['pear.ui.RowRenderer']);
 goog.addDependency('../../../../src/pear/ui/footer.js', ['pear.ui.FooterRow'], ['pear.ui.FooterRowRenderer', 'pear.ui.Row']);
 goog.addDependency('../../../../src/pear/ui/footerrowrenderer.js', ['pear.ui.FooterRowRenderer'], ['pear.ui.RowRenderer']);
-goog.addDependency('../../../../src/pear/ui/grid.js', ['pear.ui.Grid', 'pear.ui.Grid.GridDataCellEvent', 'pear.ui.Grid.GridHeaderCellEvent'], ['goog.Timer', 'pear.data.DataModel', 'pear.data.DataView', 'pear.plugin.FooterStatus', 'pear.plugin.Pager', 'pear.ui.Body', 'pear.ui.BodyCanvas', 'pear.ui.DataCell', 'pear.ui.DataRow', 'pear.ui.FooterRow', 'pear.ui.HeaderCell', 'pear.ui.HeaderRow', 'pear.ui.Plugable']);
+goog.addDependency('../../../../src/pear/ui/grid.js', ['pear.ui.Grid', 'pear.ui.Grid.GridDataCellEvent', 'pear.ui.Grid.GridHeaderCellEvent'], ['goog.Timer', 'pear.data.DataModel', 'pear.data.DataView', 'pear.plugin.FooterStatus', 'pear.plugin.Pager', 'pear.ui.Body', 'pear.ui.BodyCanvas', 'pear.ui.DataCell', 'pear.ui.DataRow', 'pear.ui.FooterRow', 'pear.ui.Header', 'pear.ui.HeaderCell', 'pear.ui.HeaderRow', 'pear.ui.Plugable']);
+goog.addDependency('../../../../src/pear/ui/header.js', ['pear.ui.Header'], ['goog.ui.Component']);
 goog.addDependency('../../../../src/pear/ui/headercell.js', ['pear.ui.HeaderCell'], ['pear.ui.Cell', 'pear.ui.HeaderCellContentRenderer', 'pear.ui.HeaderCellMenuRenderer', 'pear.ui.HeaderCellRenderer', 'pear.ui.Resizable']);
 goog.addDependency('../../../../src/pear/ui/headercellcontentrenderer.js', ['pear.ui.HeaderCellContentRenderer'], ['pear.ui.CellRenderer']);
 goog.addDependency('../../../../src/pear/ui/headercellmenurenderer.js', ['pear.ui.HeaderCellMenuRenderer'], ['pear.ui.CellRenderer']);

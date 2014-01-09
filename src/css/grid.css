@@ -8,13 +8,15 @@
   box-sizing: border-box;
   position: relative;
   overflow:hidden;
-  overflow-x:scroll;
 }
 
 .pear-grid-body{
   overflow-y:scroll;
 }
 
+.pear-grid-header{
+  overflow:hidden;
+};
 .pear-grid-body-canvas{
   position: relative;
 }

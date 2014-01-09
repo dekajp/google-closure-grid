@@ -13022,6 +13022,18 @@ pear.ui.DataRow.prototype.handleMouseOut_ = function(be) {
     goog.dom.classes.add(elem, "pear-grid-row-data-odd");
   }
 };
+goog.provide("pear.ui.Header");
+goog.require("goog.ui.Component");
+pear.ui.Header = function(opt_domHelper, opt_renderer) {
+  goog.ui.Component.call(this, opt_domHelper);
+  this.renderer_ = opt_renderer || goog.ui.ContainerRenderer.getInstance();
+};
+goog.inherits(pear.ui.Header, goog.ui.Component);
+pear.ui.Header.prototype.createDom = function() {
+  pear.ui.Grid.superClass_.createDom.call(this);
+  var elem = this.getElement();
+  goog.dom.classes.set(elem, "pear-grid-header");
+};
 goog.provide("goog.userAgent.product");
 goog.require("goog.userAgent");
 goog.define("goog.userAgent.product.ASSUME_FIREFOX", false);
@@ -13996,6 +14008,7 @@ goog.provide("pear.ui.Grid.GridDataCellEvent");
 goog.provide("pear.ui.Grid.GridHeaderCellEvent");
 goog.require("goog.Timer");
 goog.require("pear.data.DataModel");
+goog.require("pear.ui.Header");
 goog.require("pear.ui.Body");
 goog.require("pear.ui.BodyCanvas");
 goog.require("pear.ui.DataCell");
@@ -14015,7 +14028,7 @@ pear.ui.Grid = function(opt_domHelper) {
   this.renderedDataRowsCache_ = [];
 };
 goog.inherits(pear.ui.Grid, goog.ui.Component);
-pear.ui.Grid.ScrollDirection = {UP:1, DOWN:2, NONE:0};
+pear.ui.Grid.ScrollDirection = {UP:1, DOWN:2, LEFT:3, RIGHT:4, NONE:0};
 pear.ui.Grid.SortDirection = {NONE:0, ASC:1, DESC:2};
 pear.ui.Grid.prototype.Configuration_ = {Width:500, Height:600, RowHeight:25, RowHeaderHeight:30, RowFooterHeight:20, ColumnWidth:125, PageSize:50, AllowSorting:true, AllowPaging:true, AllowColumnResize:true, AllowColumnHeaderMenu:true};
 pear.ui.Grid.EventType = {BEFORE_SORT:"before-sort", AFTER_SORT:"after-sort", BEFORE_PAGING:"before-paging", AFTER_PAGING:"after-paging", HEADER_CELL_MENU_CLICK:"headercell-menu-click", DATACELL_BEFORE_CLICK:"datacell-before-click", DATACELL_AFTER_CLICK:"datacell-after-click"};
@@ -14178,6 +14191,7 @@ pear.ui.Grid.prototype.disposeInternal = function() {
 };
 pear.ui.Grid.prototype.renderGrid_ = function() {
   goog.style.setHeight(this.getElement(), this.height_);
+  goog.style.setWidth(this.getElement(), this.width_);
   this.renderHeader_();
   this.renderBody_();
   if (this.Configuration_.AllowPaging) {
@@ -14189,14 +14203,17 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
   this.draw_();
 };
 pear.ui.Grid.prototype.renderHeader_ = function() {
-  this.headerRow_ = this.headerRow_ || new pear.ui.HeaderRow(this, this.Configuration_.RowHeaderHeight);
-  this.addChild(this.headerRow_, true);
-  goog.style.setHeight(this.headerRow_.getElement(), this.Configuration_.RowHeaderHeight);
+  this.header_ = new pear.ui.Header;
+  this.addChild(this.header_, true);
+  goog.style.setWidth(this.header_.getElement(), this.width_);
   this.createHeader_();
   this.registerEventsOnHeaderRow_();
   goog.style.setWidth(this.headerRow_.getElement(), this.headerRow_.getWidth());
 };
 pear.ui.Grid.prototype.createHeader_ = function() {
+  this.headerRow_ = this.headerRow_ || new pear.ui.HeaderRow(this, this.Configuration_.RowHeaderHeight);
+  this.header_.addChild(this.headerRow_, true);
+  goog.style.setHeight(this.headerRow_.getElement(), this.Configuration_.RowHeaderHeight);
   this.createHeaderCells_();
 };
 pear.ui.Grid.prototype.createHeaderCells_ = function() {
@@ -14217,6 +14234,7 @@ pear.ui.Grid.prototype.renderBody_ = function() {
   this.body_ = new pear.ui.Body;
   this.addChild(this.body_, true);
   goog.style.setHeight(this.body_.getElement(), this.height_ - this.headerRow_.getHeight());
+  goog.style.setWidth(this.body_.getElement(), this.width_);
   this.bodyCanvas_ = new pear.ui.BodyCanvas;
   this.body_.addChild(this.bodyCanvas_, true);
   this.setCanvasHeight_();
@@ -14237,8 +14255,10 @@ pear.ui.Grid.prototype.syncWidth_ = function() {
   var bounds = goog.style.getBounds(this.getElement());
   width = width > bounds.width ? width : bounds.width;
   goog.style.setWidth(this.headerRow_.getElement(), width);
-  goog.style.setWidth(this.body_.getElement(), width);
   goog.style.setWidth(this.bodyCanvas_.getElement(), width);
+};
+pear.ui.Grid.prototype.syncHeaderRow_ = function() {
+  this.header_.getElement().scrollLeft = this.body_.getElement().scrollLeft;
 };
 pear.ui.Grid.prototype.prepareDataRows_ = function() {
   var dv = this.getDataView();
@@ -14365,7 +14385,17 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll_ = function(e) {
   } else {
     this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.UP;
   }
-  this.draw_();
+  if (this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.DOWN || this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.UP) {
+    this.draw_();
+  }
+  if (this.previousScrollLeft_ <= this.body_.getElement().scrollLeft) {
+    this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.RIGHT;
+  } else {
+    this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.LEFT;
+  }
+  if (this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.LEFT || this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.RIGHT) {
+    this.syncHeaderRow_();
+  }
   this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.NONE;
   this.previousScrollTop_ = this.body_.getElement().scrollTop;
   if (e) {

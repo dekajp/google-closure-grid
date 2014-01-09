@@ -34,6 +34,7 @@ goog.provide('pear.ui.Grid.GridHeaderCellEvent');
 
 goog.require('goog.Timer');
 goog.require('pear.data.DataModel');
+goog.require('pear.ui.Header');
 goog.require('pear.ui.Body');
 goog.require('pear.ui.BodyCanvas');
 goog.require('pear.ui.DataCell');
@@ -74,6 +75,8 @@ goog.inherits(pear.ui.Grid, goog.ui.Component);
 pear.ui.Grid.ScrollDirection = {
   UP: 1,
   DOWN: 2,
+  LEFT: 3,
+  RIGHT: 4,
   NONE: 0
 };
 
@@ -486,6 +489,7 @@ pear.ui.Grid.prototype.disposeInternal = function() {
  */
 pear.ui.Grid.prototype.renderGrid_ = function() {
   goog.style.setHeight(this.getElement(),this.height_);
+  goog.style.setWidth(this.getElement(),this.width_);
 
   this.renderHeader_();
   this.renderBody_();
@@ -503,13 +507,11 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.renderHeader_ = function() {
-  this.headerRow_ = this.headerRow_ || 
-        new pear.ui.HeaderRow(this,
-                          this.Configuration_.RowHeaderHeight);
-  this.addChild(this.headerRow_, true);
-  goog.style.setHeight(this.headerRow_.getElement(),
-                     this.Configuration_.RowHeaderHeight);
-
+  this.header_ = new pear.ui.Header();
+  this.addChild(this.header_, true);
+  goog.style.setWidth(this.header_.getElement(), this.width_);
+  
+  
   this.createHeader_();
   this.registerEventsOnHeaderRow_();
 
@@ -522,6 +524,13 @@ pear.ui.Grid.prototype.renderHeader_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.createHeader_ = function() {
+  this.headerRow_ = this.headerRow_ || 
+        new pear.ui.HeaderRow(this,
+                          this.Configuration_.RowHeaderHeight);
+  this.header_.addChild(this.headerRow_, true);
+  goog.style.setHeight(this.headerRow_.getElement(),
+                     this.Configuration_.RowHeaderHeight);
+
   // render header
   this.createHeaderCells_();
 };
@@ -560,7 +569,8 @@ pear.ui.Grid.prototype.renderBody_ = function() {
   this.body_ = new pear.ui.Body();
   this.addChild(this.body_, true);
   goog.style.setHeight(this.body_.getElement(), this.height_ -  this.headerRow_.getHeight());
-  
+  goog.style.setWidth(this.body_.getElement(), this.width_);
+
   this.bodyCanvas_ = new pear.ui.BodyCanvas();
   this.body_.addChild(this.bodyCanvas_, true);
   
@@ -587,11 +597,15 @@ pear.ui.Grid.prototype.syncWidth_ = function(){
   var bounds = goog.style.getBounds(this.getElement());
   width = ( width > bounds.width )?width :bounds.width;
   goog.style.setWidth(this.headerRow_.getElement(),width);
-  goog.style.setWidth(this.body_.getElement(), width);
+  //goog.style.setWidth(this.body_.getElement(), width);
   goog.style.setWidth(this.bodyCanvas_.getElement(), width);
   //goog.style.setWidth(this.footerRow_.getElement(), width);
 }
 
+
+pear.ui.Grid.prototype.syncHeaderRow_ = function(){
+  this.header_.getElement().scrollLeft = this.body_.getElement().scrollLeft;
+}
 /**
  * @private
  */
@@ -787,10 +801,28 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll_ = function(e) {
     this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.UP;
   }
   
-  this.draw_();
+  if (this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.DOWN || 
+      this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.UP
+    ){
+    this.draw_();
+  }
+
+  if (this.previousScrollLeft_ <= this.body_.getElement().scrollLeft) {
+    this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.RIGHT;
+  }else {
+    this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.LEFT;
+  }
+
+  if ( this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.LEFT || 
+      this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.RIGHT
+  ){
+    this.syncHeaderRow_();
+  }
 
   this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.NONE;
   this.previousScrollTop_ = this.body_.getElement().scrollTop;
+
+
 
   if (e) {
     e.stopPropagation();
