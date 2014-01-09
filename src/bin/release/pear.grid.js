@@ -9471,7 +9471,7 @@ pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function() {
   this.handleMenuSlide_(this.contentIndicator_, [marginleft]);
 };
 pear.ui.HeaderCell.prototype.handleMenuSlide_ = function(el, value) {
-  var anim = new pear.fx.dom.Slide(el, [0], value, 100);
+  var anim = new pear.fx.dom.Slide(el, [0], value, 300);
   anim.play();
 };
 pear.ui.HeaderCell.prototype.createResizeHandle_ = function() {

@@ -168,7 +168,7 @@ pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
 
 pear.ui.HeaderCell.prototype.handleMenuSlide_ = function(el,value) {
   
-  var anim = new pear.fx.dom.Slide (el, [0], value, 100);
+  var anim = new pear.fx.dom.Slide (el, [0], value, 300);
   //goog.events.listen(anim, goog.fx.Transition.EventType.BEGIN,disableButtons);
   //goog.events.listen(anim, goog.fx.Transition.EventType.END, enableButtons);
   anim.play();
