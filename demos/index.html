@@ -221,8 +221,8 @@
       data[i].unitprice = unitprice[temp];
       data[i].quantity = Math.round(Math.random() * 10000);
       data[i].total = data[i].unitprice * data[i].quantity;
-      data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
       data[i].processed= (i % 5 === 0);
+      data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
     }
 
     var start = +new Date();  // log start timestamp
