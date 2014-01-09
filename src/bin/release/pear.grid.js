@@ -14187,6 +14187,9 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   this.height_ = null;
   this.sortColumnIndex_ = null;
   this.currentPageIndex_ = null;
+  this.previousScrollTop_ = null;
+  this.bodyScrollTriggerDirection_ = null;
+  this.previousScrollLeft_ = null;
   pear.ui.Grid.superClass_.disposeInternal.call(this);
 };
 pear.ui.Grid.prototype.renderGrid_ = function() {
@@ -14251,7 +14254,6 @@ pear.ui.Grid.prototype.setCanvasHeight_ = function() {
 };
 pear.ui.Grid.prototype.syncWidth_ = function() {
   var width = this.headerRow_.getWidth();
-  width = width + 10;
   var bounds = goog.style.getBounds(this.getElement());
   width = width > bounds.width ? width : bounds.width;
   goog.style.setWidth(this.headerRow_.getElement(), width);
