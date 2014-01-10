@@ -48,6 +48,8 @@ goog.require('pear.ui.Plugable');
 
 goog.require('pear.plugin.Pager');
 goog.require('pear.plugin.FooterStatus');
+goog.require('pear.plugin.HeaderMenu');
+
 
 
 

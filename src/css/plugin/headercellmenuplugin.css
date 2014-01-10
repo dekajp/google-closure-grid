@@ -1,0 +1,13 @@
+.pear-grid-header-cell-menu{
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: rgb(230, 230, 230);
+  z-index: 2000;
+  border-radius: 2px;
+  border: 1px solid gray;
+}
+
+.pear-grid-header-cell-menu > div{
+  float:right;
+}

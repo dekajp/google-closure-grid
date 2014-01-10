@@ -66,6 +66,12 @@ pear.ui.HeaderCell.prototype.setsortDirection = function(value) {
   this.sortDirection_ = value || pear.ui.Grid.SortDirection.NONE;
 }
 
+
+pear.ui.HeaderCell.prototype.getMenuElement = function() {
+  return this.headerMenu_;
+};
+
+
 /**
  * Returns the text caption or DOM structure displayed in the component.
  * @return {goog.ui.ControlContent} Text caption or DOM structure
@@ -157,8 +163,8 @@ pear.ui.HeaderCell.prototype.syncContentCellOnResize_ = function(){
 pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
   var marginleft = 0;
   var left = 0;
-  goog.dom.removeNode(this.headerMenu_);
-  goog.dom.removeNode(this.sortIndicator_);
+  
+  
 
   if (this.getsortDirection() && goog.style.isElementShown(this.headerMenu_)){
     goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
@@ -168,10 +174,14 @@ pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
   }else if (this.getsortDirection()){
     goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
     marginleft = marginleft + 16;
-   
+    goog.dom.removeNode(this.headerMenu_);
   }else if (goog.style.isElementShown(this.headerMenu_)){
     goog.dom.appendChild(this.contentIndicator_,this.headerMenu_);
     marginleft = marginleft + 16;
+    goog.dom.removeNode(this.sortIndicator_);
+  }else{
+    goog.dom.removeNode(this.sortIndicator_);
+    goog.dom.removeNode(this.headerMenu_);
   }
   
   marginleft = marginleft * -1;

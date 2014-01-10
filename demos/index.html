@@ -12,9 +12,12 @@
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuseparator.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menubutton.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css" />
+  
   <link rel="stylesheet" href="../src/css/grid.css" />
+  
   <link rel="stylesheet" href="../src/css/plugin/pagerplugin.css" />
   <link rel="stylesheet" href="../src/css/plugin/footerstatusplugin.css" />
+  <link rel="stylesheet" href="../src/css/plugin/headercellmenuplugin.css" />
  
  <style>
   body {
@@ -44,7 +47,8 @@
     goog.require('goog.dom.forms');
     goog.require('pear.ui.Grid');
     goog.require('pear.plugin.Pager');
-    goog.require('pear.plugin.FooterStatus')
+    goog.require('pear.plugin.FooterStatus');
+    goog.require('pear.plugin.HeaderMenu');
     goog.require('goog.i18n.NumberFormat')
     goog.require('goog.i18n.DateTimeFormat')
   </script>
@@ -244,7 +248,7 @@
     // Plugins
     grid.addPlugin( new pear.plugin.Pager());
     grid.addPlugin( new pear.plugin.FooterStatus());
-
+    grid.addPlugin( new pear.plugin.HeaderMenu());
 
     grid.render(goog.dom.getElement('target1'));
 
