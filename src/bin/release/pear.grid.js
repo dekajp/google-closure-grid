@@ -15158,6 +15158,7 @@ pear.ui.Grid = function(opt_domHelper) {
   this.previousScrollTop_ = 0;
   this.renderedDataRows_ = [];
   this.renderedDataRowsCache_ = [];
+  this.scrollbarWidth_ = goog.style.getScrollbarWidth();
 };
 goog.inherits(pear.ui.Grid, goog.ui.Component);
 pear.ui.Grid.ScrollDirection = {UP:1, DOWN:2, LEFT:3, RIGHT:4, NONE:0};
@@ -15219,6 +15220,9 @@ pear.ui.Grid.prototype.setColumnWidth = function(index, width, opt_render) {
     headerCell.setCellWidth(width);
     headerCell.draw();
   }
+};
+pear.ui.Grid.prototype.getScrollbarWidth = function() {
+  return this.scrollbarWidth_;
 };
 pear.ui.Grid.prototype.getDataView = function() {
   return this.getModel();
@@ -15359,6 +15363,10 @@ pear.ui.Grid.prototype.createHeaderCells_ = function() {
     headerCell.setCellIndex(index);
     this.headerRow_.addCell(headerCell, true);
   }, this);
+  var model = {id:"__scroll__", headerText:"", width:this.getScrollbarWidth(), datatype:pear.data.DataModel.DataType.NUMBER};
+  var filler = goog.dom.createDom("div", "pear-grid-cell-header pear-grid-cell");
+  goog.style.setWidth(filler, model.width);
+  goog.dom.appendChild(this.headerRow_.getElement(), filler);
 };
 pear.ui.Grid.prototype.renderfooterRow_ = function() {
   this.footerRow_ = this.footerRow_ || new pear.ui.FooterRow(this, this.Configuration_.RowFooterHeight);
@@ -15388,7 +15396,7 @@ pear.ui.Grid.prototype.syncWidth_ = function() {
   var width = this.headerRow_.getWidth();
   var bounds = goog.style.getBounds(this.getElement());
   width = width > bounds.width ? width : bounds.width;
-  goog.style.setWidth(this.headerRow_.getElement(), width);
+  goog.style.setWidth(this.headerRow_.getElement(), width + this.getScrollbarWidth());
   goog.style.setWidth(this.bodyCanvas_.getElement(), width);
 };
 pear.ui.Grid.prototype.syncHeaderRow_ = function() {
