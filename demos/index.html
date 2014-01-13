@@ -12,6 +12,9 @@
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuseparator.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menubutton.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css" />
+
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/button.css">
+
   
   <link rel="stylesheet" href="../src/css/grid.css" />
   
@@ -62,7 +65,7 @@
       display: inline-block;
       padding:2px 3px 2px 8px;
       border-color: gray;
-      border-width: 1px 1px 1px 1px;
+      border-width: 0px 0px 0px 0px;
       border-style: solid;
       margin:0px 2px 0px 2px;
       border-radius:3px;
@@ -71,7 +74,7 @@
 </head>
 <body>
   <h1>pear.ui.Grid</h1>
-
+  <h4>Source :  <a href="https://github.com/dekajp/google-closure-grid" >https://github.com/dekajp/google-closure-grid</a></h4>
    <fieldset class="goog-debug-panel">
     <legend>Grid Configuration - Reload Grid Each Time</legend>
     <div id="">
@@ -81,7 +84,15 @@
 
     </div>
   </fieldset>
- 
+ <fieldset class="goog-debug-panel">
+    <legend>Plugins - Just for Demo - Styles and UI </legend>
+    <div id="">
+      <div class="config-item"> Footer Status <input type="checkbox" id="pl_Footer" checked="true"  /> </div>
+      <div class="config-item"> Pager  <input type="checkbox" id="pl_Pager"   checked="true"/> </div>
+      <div class="config-item"> Filter <input type="checkbox" id="pl_Filter" checked="true" /> </div>
+
+    </div>
+  </fieldset>
     <fieldset class="goog-debug-panel">
     <legend>Data / Debug</legend>
     <div id="">
@@ -246,9 +257,15 @@
     grid.setDataView(new pear.data.DataView(dataModel));
 
     // Plugins
-    grid.addPlugin( new pear.plugin.Pager());
-    grid.addPlugin( new pear.plugin.FooterStatus());
-    grid.addPlugin( new pear.plugin.HeaderMenu());
+    if (isChecked('pl_Pager')){
+      grid.addPlugin( new pear.plugin.Pager());
+    }
+    if (isChecked('pl_Footer')){
+      grid.addPlugin( new pear.plugin.FooterStatus());
+    }
+    if (isChecked('pl_Filter')){
+      grid.addPlugin( new pear.plugin.HeaderMenu());
+    }
 
     grid.render(goog.dom.getElement('target1'));
 

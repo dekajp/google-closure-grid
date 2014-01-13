@@ -7109,16 +7109,9 @@ pear.ui.Resizable.prototype.handleDrag_ = function(e) {
   if (position & 194) {
     size.width = this.elementSize_.width + dragger.deltaX - this.handlerOffsetCoord_.x;
   }
-  if (position & 388) {
-    size.height = this.elementSize_.height + dragger.deltaY - this.handlerOffsetCoord_.y;
-  }
   if (position & 296) {
     size.width = this.elementSize_.width - dragger.deltaX + this.handlerOffsetCoord_.x;
     coord.x = this.elementCoord_.x + dragger.deltaX - this.handlerOffsetCoord_.x;
-  }
-  if (position & 112) {
-    size.height = this.elementSize_.height - dragger.deltaY + this.handlerOffsetCoord_.y;
-    coord.y = this.elementCoord_.y + dragger.deltaY - this.handlerOffsetCoord_.y;
   }
   this.resize_(el, size, coord, position);
   if (goog.isFunction(el.resize)) {
@@ -9433,6 +9426,12 @@ pear.ui.HeaderCell.prototype.getMenuElement = function() {
 pear.ui.HeaderCell.prototype.getContent = function() {
   return "";
 };
+pear.ui.HeaderCell.prototype.getContentText = function() {
+  return this.getModel()["headerText"];
+};
+pear.ui.HeaderCell.prototype.getDataViewColumn = function() {
+  return this.getModel();
+};
 pear.ui.HeaderCell.prototype.enterDocument = function() {
   pear.ui.HeaderCell.superClass_.enterDocument.call(this);
   this.splitHeaderCell_();
@@ -9443,7 +9442,7 @@ pear.ui.HeaderCell.prototype.registerEvent_ = function() {
 };
 pear.ui.HeaderCell.prototype.splitHeaderCell_ = function() {
   var grid = this.getGrid();
-  this.contentCell_ = goog.dom.createDom("div", "pear-grid-cell-header-content", this.getModel()["headerText"]);
+  this.contentCell_ = goog.dom.createDom("div", "pear-grid-cell-header-content", this.getContentText());
   goog.dom.appendChild(this.getElement(), this.contentCell_);
   this.syncContentCellOnResize_();
   this.contentIndicator_ = goog.dom.createDom("div", "pear-grid-cell-header-indicators");
@@ -9593,23 +9592,48 @@ pear.data.DataView = function(datamodel) {
   this.init_();
 };
 goog.inherits(pear.data.DataView, goog.Disposable);
+pear.data.DataView.FilterType = {LIKE:1, EQUAL:2, GREATER_THAN:3, LESS_THAN:4, BETWEEN:5};
 pear.data.DataView.prototype.datamodel_ = null;
 pear.data.DataView.prototype.grid_ = null;
 pear.data.DataView.prototype.rowViews_ = [];
 pear.data.DataView.prototype.sortField_ = null;
 pear.data.DataView.prototype.sortDirection_ = null;
+pear.data.DataView.prototype.pageIndex_ = null;
+pear.data.DataView.prototype.pageSize_ = null;
 pear.data.DataView.prototype.rowidx_ = [];
-pear.data.DataView.prototype.viewrange_ = {start:0, end:0};
 pear.data.DataView.prototype.disposeInternal = function() {
   this.rowidx_ = null;
+  this.originalRowViews_ = null;
   this.rowViews_ = null;
   this.grid_ = null;
+  this.pageIndex_ = null;
+  this.pageSize_ = null;
+  this.sortFieldId_ = null;
+  this.sortDirection_ = null;
   this.datamodel_.dispose();
   this.datamodel_ = null;
   pear.data.DataView.superClass_.disposeInternal.call(this);
 };
+pear.data.DataView.prototype.init_ = function() {
+  this.initLocalCacheRowViews_();
+};
+pear.data.DataView.prototype.initLocalCacheRowViews_ = function() {
+  this.rowViews_ = [];
+  this.rowidx_ = [];
+  this.transformToRowViews_(this.datamodel_.getRows());
+  this.updateRowsIdx();
+};
+pear.data.DataView.prototype.transformToRowViews_ = function(rows) {
+  goog.array.forEach(rows, function(value) {
+    this.addRowView_(value);
+  }, this);
+};
+pear.data.DataView.prototype.addRowView_ = function(row) {
+  var rv = new pear.data.RowView(row, this);
+  this.rowViews_.push(rv);
+};
 pear.data.DataView.prototype.getSortField = function() {
-  return this.sortField_;
+  return this.sortFieldId_;
 };
 pear.data.DataView.prototype.getSortDirection = function() {
   return this.sortDirection_;
@@ -9622,53 +9646,81 @@ pear.data.DataView.prototype.setGrid = function(grid) {
 };
 pear.data.DataView.prototype.setPageIndex = function(pageIndex) {
   this.pageIndex_ = pageIndex;
-  this.refresh_();
 };
 pear.data.DataView.prototype.getPageIndex = function() {
-  var index = this.pageSize_ && this.pageSize_ > 0 ? this.pageIndex_ ? this.pageIndex_ : 1 : 0;
+  var index = this.pageSize_ && this.pageSize_ > 0 ? this.pageIndex_ ? this.pageIndex_ : 0 : 0;
   return index;
 };
 pear.data.DataView.prototype.setPageSize = function(pageSize) {
   this.pageSize_ = pageSize;
-  this.refresh_();
 };
 pear.data.DataView.prototype.getPageSize = function() {
-  var pageSize = this.pageSize_ || 0;
+  this.pageSize_ = this.pageSize_ || this.getRowCount();
   return this.pageSize_;
 };
-pear.data.DataView.prototype.init_ = function() {
-  this.rowViews_ = [];
-  this.rowidx_ = [];
-  this.transformToRowViews_(this.datamodel_.getRows());
-  goog.array.forEach(this.rowViews_, function(value, index) {
-    this.rowidx_.push(index);
+pear.data.DataView.prototype.addColumnFilter = function(columnId, filter) {
+  var columns = this.getColumns();
+  goog.array.forEach(columns, function(column, index) {
+    if (column.id === columnId) {
+      column.filter = column.filter || [];
+      column.filter = [];
+      column.filter.push(filter);
+    }
   }, this);
-  this.refresh_();
+};
+pear.data.DataView.prototype.clearColumnFilter = function(columnMapId) {
+  var columns = this.getColumns();
+  goog.array.forEach(columns, function(column, index) {
+    if (column.id === columnMapId) {
+      column.filter = null;
+    }
+  }, this);
+};
+pear.data.DataView.prototype.applyFilter = function() {
+  var columns = this.getColumns();
+  this.rowViews_ = [];
+  this.transformToRowViews_(this.datamodel_.getRows());
+  this.updateRowsIdx();
+  this.rowViews_ = this.rowViews_.filter(this.filter_, this);
+};
+pear.data.DataView.prototype.filter_ = function(row) {
+  var columns = this.getColumns();
+  var rowdata = row.getRowData();
+  var ret = false;
+  goog.array.forEach(columns, function(column) {
+    if (column.filter && column.filter.length > 0) {
+      goog.array.forEach(column.filter, function(filter) {
+        if (rowdata[column.id] == filter.expression) {
+          ret = true;
+          return ret;
+        }
+      }, this);
+    }
+  }, this);
+  return ret;
 };
 pear.data.DataView.prototype.getRowViewByRowId = function(rowId) {
   var rv = null;
   rv = this.rowViews_[rowId] || [];
   return rv;
 };
-pear.data.DataView.prototype.transformToRowViews_ = function(rows) {
-  goog.array.forEach(rows, function(value) {
-    this.addRowView_(value);
-  }, this);
-};
-pear.data.DataView.prototype.addRowView_ = function(row) {
-  var rv = new pear.data.RowView(row, this);
-  this.rowViews_.push(rv);
-};
 pear.data.DataView.prototype.getRowViews = function() {
-  var rows = [];
-  var i;
-  for (i = this.viewrange_.start - 1;i < this.viewrange_.end;i++) {
-    rows.push(this.rowViews_[this.rowidx_[i]]);
-  }
+  return this.getPagedRowsViews_();
+};
+pear.data.DataView.prototype.getPagedRowsViews_ = function() {
+  var pgIdx = this.getPageIndex();
+  var pgSize = this.getPageSize();
+  var start = pgIdx * pgSize > this.rowViews_.length ? this.rowViews_.length : pgIdx * pgSize;
+  var end = start + pgSize > this.rowViews_.length ? this.rowViews_.length : start + pgSize;
+  var rows = this.rowViews_.slice(start, end);
   return rows;
 };
+pear.data.DataView.prototype.setRowViews = function(rowviews) {
+  this.rowViews_ = rowviews;
+  this.updateRowsIdx();
+};
 pear.data.DataView.prototype.getRowCount = function() {
-  return this.rowViews_.length;
+  return this.datamodel_.getRows().length;
 };
 pear.data.DataView.prototype.updateRowsIdx = function() {
   this.rowidx_ = [];
@@ -9676,26 +9728,29 @@ pear.data.DataView.prototype.updateRowsIdx = function() {
     this.rowidx_.push(index);
   }, this);
 };
-pear.data.DataView.prototype.sort = function(model) {
-  if (this.sortField_ === model.id) {
+pear.data.DataView.prototype.sort = function(col) {
+  if (this.sortFieldId_ === col.id) {
     this.sortDirection_ = !this.sortDirection_;
   }
-  this.sortField_ = model.id;
-  if (model.type === "number") {
-    this.rowViews_.sort(this.numberCompare);
-  } else {
-    if (model.type === "datetime") {
-      this.rowViews_.sort(this.dateCompare);
+  this.sortFieldId_ = col.id;
+  var sortFn = function(column) {
+    var rv = this.rowViews_;
+    if (column.datatype === "number") {
+      rv.sort(this.numberCompare);
     } else {
-      if (model.type === "booleam") {
-        this.rowViews_.sort(this.defaultCompare);
+      if (column.datatype === "datetime") {
+        rv.sort(this.dateCompare);
       } else {
-        this.rowViews_.sort(this.defaultCompare);
+        if (column.datatype === "booleam") {
+          rv.sort(this.defaultCompare);
+        } else {
+          rv.sort(this.defaultCompare);
+        }
       }
     }
-  }
-  this.updateRowsIdx();
-  this.refresh_();
+    return rv;
+  };
+  this.setRowViews(sortFn.call(this, col));
 };
 pear.data.DataView.prototype.defaultCompare = function(value1, value2) {
   var dv = value1.getDataView();
@@ -9736,16 +9791,6 @@ pear.data.DataView.prototype.dateCompare = function(value1, value2) {
   }
   var dateA = new Date(value1.getRowData()[sortfield]), dateB = new Date(value2.getRowData()[sortfield]);
   return dateA - dateB;
-};
-pear.data.DataView.prototype.refresh_ = function() {
-  var pageSize = this.getPageSize();
-  var pageIndex = this.getPageIndex() - 1;
-  this.viewrange_.start = 1, this.viewrange_.end = this.rowidx_.length;
-  if (pageSize > 0 && pageIndex > 0) {
-    this.viewrange_.start = pageIndex * pageSize + 1;
-    this.viewrange_.start = this.viewrange_.start < 1 ? 1 : this.viewrange_.start;
-    this.viewrange_.end = this.viewrange_.start + pageSize;
-  }
 };
 goog.provide("pear.ui.Plugable");
 pear.ui.Plugable = function() {
@@ -13670,13 +13715,13 @@ pear.plugin.FooterStatus.prototype.getGrid = function() {
 pear.plugin.FooterStatus.prototype.show = function(grid) {
   this.grid_ = grid;
   var parentElem = grid.getElement();
-  var footer = goog.dom.getNextElementSibling(grid.getElement());
-  if (footer && goog.dom.classes.has(footer, "pear-grid-footer")) {
+  this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
+  if (this.footer_ && goog.dom.classes.has(this.footer_, "pear-grid-footer")) {
   } else {
-    footer = goog.dom.createDom("div", "pear-grid-footer");
-    goog.dom.insertSiblingAfter(footer, parentElem);
+    this.footer_ = goog.dom.createDom("div", "pear-grid-footer");
+    goog.dom.insertSiblingAfter(this.footer_, parentElem);
   }
-  this.render(footer);
+  this.render(this.footer_);
 };
 pear.plugin.FooterStatus.prototype.createDom = function() {
   this.element_ = goog.dom.createDom("div", "pear-grid-footer-status");
@@ -13684,6 +13729,10 @@ pear.plugin.FooterStatus.prototype.createDom = function() {
 pear.plugin.FooterStatus.prototype.disposeInternal = function() {
   this.grid_ = null;
   this.footerStatus_.dispose();
+  if (this.footer_) {
+    this.footer_.remove();
+    this.footer_ = null;
+  }
   pear.plugin.FooterStatus.superClass_.disposeInternal.call(this);
 };
 pear.plugin.FooterStatus.prototype.enterDocument = function() {
@@ -13701,8 +13750,8 @@ pear.plugin.FooterStatus.prototype.updateMsg_ = function() {
   var configuration = grid.getConfiguration();
   var currentPageIndex = grid.getCurrentPageIndex();
   if (configuration.AllowPaging) {
-    startIndex = (currentPageIndex - 1) * configuration.PageSize;
-    endIndex = currentPageIndex * configuration.PageSize > rowCount ? rowCount : currentPageIndex * configuration.PageSize;
+    startIndex = currentPageIndex * configuration.PageSize;
+    endIndex = startIndex + configuration.PageSize > rowCount ? rowCount : startIndex + configuration.PageSize;
   }
   startIndex = startIndex ? startIndex : 1;
   this.footerStatus_.setContent("[" + startIndex + " - " + endIndex + "]");
@@ -13743,13 +13792,13 @@ pear.plugin.Pager.prototype.show = function(grid) {
   this.grid_ = grid;
   var parentElem = grid.getElement();
   if (this.grid_.getConfiguration().AllowPaging) {
-    var footer = goog.dom.getNextElementSibling(grid.getElement());
-    if (footer && goog.dom.classes.has(footer, "pear-grid-footer")) {
+    this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
+    if (this.footer_ && goog.dom.classes.has(this.footer_, "pear-grid-footer")) {
     } else {
-      footer = goog.dom.createDom("div", "pear-grid-footer");
-      goog.dom.insertSiblingAfter(footer, parentElem);
+      this.footer_ = goog.dom.createDom("div", "pear-grid-footer");
+      goog.dom.insertSiblingAfter(this.footer_, parentElem);
     }
-    this.render(footer);
+    this.render(this.footer_);
   }
 };
 pear.plugin.Pager.prototype.createDom = function() {
@@ -13759,6 +13808,10 @@ pear.plugin.Pager.prototype.disposeInternal = function() {
   if (this.grid_.getConfiguration().AllowPaging) {
     this.pagerComboBox_.dispose();
     this.pagerComboBox_ = null;
+  }
+  if (this.footer_) {
+    this.footer_.remove();
+    this.footer_ = null;
   }
   this.grid_ = null;
   pear.plugin.Pager.superClass_.disposeInternal.call(this);
@@ -13771,6 +13824,7 @@ pear.plugin.Pager.prototype.enterDocument = function() {
 pear.plugin.Pager.prototype.createPager_ = function() {
   this.createPagerNavControls_();
   this.createPagerDropDown_();
+  this.changePageIndex_(this.getPageIndex());
 };
 pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
   var elem = this.getElement();
@@ -13779,11 +13833,6 @@ pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
   var totalRows = grid.getRowCount();
   this.pagerComboBox_ = new goog.ui.ComboBox;
   this.pagerComboBox_.setUseDropdownArrow(true);
-  this.pagerComboBox_.setDefaultText("Page");
-  var caption = new goog.ui.ComboBoxItem("Page");
-  caption.setSticky(true);
-  caption.setEnabled(false);
-  this.pagerComboBox_.addItem(caption);
   var i = 0;
   do {
     this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i + 1)));
@@ -13824,11 +13873,13 @@ pear.plugin.Pager.prototype.handleAction_ = function(ge) {
   ge.stopPropagation();
 };
 pear.plugin.Pager.prototype.changePageIndex_ = function(index) {
-  this.pagerComboBox_.setValue(index);
+  index = index < 0 ? 0 : index;
+  index = index <= this.pagerComboBox_.getItemCount() - 1 ? index : this.pagerComboBox_.getItemCount() - 1;
+  this.pagerComboBox_.setValue(index + 1);
 };
 pear.plugin.Pager.prototype.handleChange_ = function(ge) {
   var grid = this.getGrid();
-  grid.setPageIndex(parseInt(this.pagerComboBox_.getValue()));
+  grid.setPageIndex(parseInt(this.pagerComboBox_.getValue()) - 1);
 };
 goog.provide("pear.plugin.PagerCellRenderer");
 goog.require("goog.ui.Component");
@@ -14038,195 +14089,6 @@ pear.ui.DataCell.prototype.getContent = function() {
 pear.ui.DataCell.prototype.disposeInternal = function() {
   pear.ui.DataCell.superClass_.disposeInternal.call(this);
 };
-goog.provide("pear.plugin.HeaderMenu");
-goog.require("goog.ui.Component");
-goog.require("goog.events.Event");
-goog.require("pear.ui.Plugable");
-goog.require("goog.positioning.MenuAnchoredPosition");
-pear.plugin.HeaderMenu = function(grid, opt_renderer, opt_domHelper) {
-  goog.ui.Component.call(this, opt_renderer || pear.ui.RowRenderer.getInstance(), opt_domHelper);
-};
-goog.inherits(pear.plugin.HeaderMenu, goog.ui.Component);
-pear.ui.Plugable.addImplementation(pear.plugin.HeaderMenu);
-pear.plugin.HeaderMenu.prototype.getPageIndex = function() {
-  return this.getGrid().getPageIndex();
-};
-pear.plugin.HeaderMenu.prototype.getGrid = function() {
-  return this.grid_;
-};
-pear.plugin.HeaderMenu.prototype.show = function(grid) {
-  this.grid_ = grid;
-  var gridElem = this.grid_.getElement();
-  var parentElem = goog.dom.getAncestor(gridElem, function() {
-    return true;
-  });
-  this.render(parentElem);
-  goog.events.listen(this.grid_, pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK, this.handleGridHeaderMenuOptionClick_, false, this);
-  goog.style.showElement(this.getElement(), "");
-};
-pear.plugin.HeaderMenu.prototype.createDom = function() {
-  this.element_ = goog.dom.createDom("div", "pear-grid-header-cell-menu");
-};
-pear.plugin.HeaderMenu.prototype.disposeInternal = function() {
-  this.grid_ = null;
-  pear.plugin.HeaderMenu.superClass_.disposeInternal.call(this);
-};
-pear.plugin.HeaderMenu.prototype.enterDocument = function() {
-  pear.plugin.HeaderMenu.superClass_.enterDocument.call(this);
-  var elem = this.getElement();
-  this.createMenu_();
-};
-pear.plugin.HeaderMenu.prototype.createMenu_ = function() {
-  var closeElement = goog.dom.createDom("div", "fa fa-times");
-  goog.dom.appendChild(this.getElement(), closeElement);
-  var sampleElement = goog.dom.createDom("span");
-  goog.dom.setTextContent(sampleElement, "Header Cell Menu Plugin - placeholder for UI controls - Sorting , Filtering , Other menu options");
-  goog.dom.appendChild(this.getElement(), sampleElement);
-  goog.events.listen(closeElement, goog.events.EventType.CLICK, function() {
-    goog.style.showElement(this.getElement(), "");
-  }, false, this);
-};
-pear.plugin.HeaderMenu.prototype.handleGridHeaderMenuOptionClick_ = function(ge) {
-  console.dir(ge);
-  var headerCell = ge.cell;
-  var menuElement = headerCell.getMenuElement();
-  var menuPosition = goog.style.getPosition(menuElement);
-  var position = new goog.positioning.MenuAnchoredPosition(menuElement, goog.positioning.Corner.BOTTOM_START, true);
-  position.reposition(this.getElement(), goog.positioning.Corner.TOP_START);
-  goog.style.showElement(this.getElement(), "inline-block");
-};
-goog.provide("pear.ui.DataRowRenderer");
-goog.require("pear.ui.RowRenderer");
-pear.ui.DataRowRenderer = function() {
-  pear.ui.RowRenderer.call(this);
-};
-goog.inherits(pear.ui.DataRowRenderer, pear.ui.RowRenderer);
-goog.addSingletonGetter(pear.ui.DataRowRenderer);
-pear.ui.DataRowRenderer.CSS_CLASS = goog.getCssName("pear-grid-row-data");
-pear.ui.DataRowRenderer.prototype.getCssClass = function() {
-  return pear.ui.DataRowRenderer.CSS_CLASS;
-};
-pear.ui.DataRowRenderer.prototype.getClassNames = function(container) {
-  var baseClass = this.getCssClass();
-  var isHorizontal = container.getOrientation() == goog.ui.Container.Orientation.HORIZONTAL;
-  var even = container.getRowPosition() % 2 == 0;
-  var classNames = [baseClass, isHorizontal ? goog.getCssName(baseClass, "horizontal") : goog.getCssName(baseClass, "vertical"), even ? goog.getCssName(baseClass, "even") : goog.getCssName(baseClass, "odd")];
-  if (!container.isEnabled()) {
-    classNames.push(goog.getCssName(baseClass, "disabled"));
-  }
-  return classNames;
-};
-goog.provide("pear.ui.DataRow");
-goog.require("pear.ui.DataRowRenderer");
-goog.require("pear.ui.Row");
-pear.ui.DataRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
-  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL, pear.ui.DataRowRenderer.getInstance(), opt_domHelper);
-};
-goog.inherits(pear.ui.DataRow, pear.ui.Row);
-pear.ui.DataRow.prototype.top_ = 0;
-pear.ui.DataRow.prototype.getLocationTop = function() {
-  return this.top_;
-};
-pear.ui.DataRow.prototype.setLocationTop = function(top) {
-  this.top_ = top;
-};
-pear.ui.DataRow.prototype.disposeInternal = function() {
-  pear.ui.DataRow.superClass_.disposeInternal.call(this);
-};
-pear.ui.DataRow.prototype.enterDocument = function() {
-  pear.ui.Row.superClass_.enterDocument.call(this);
-  var elem = this.getElement();
-  this.setPosition_();
-  this.getHandler().listen(elem, goog.events.EventType.MOUSEOVER, this.handleMouseOver_, false, this).listen(elem, goog.events.EventType.MOUSEOUT, this.handleMouseOut_, false, this);
-};
-pear.ui.DataRow.prototype.handleMouseOver_ = function(be) {
-  var elem = this.getElement();
-  goog.dom.classes.add(elem, "pear-grid-row-over");
-  if (this.getRowPosition() % 2 > 0) {
-    goog.dom.classes.remove(elem, "pear-grid-row-data-odd");
-  }
-};
-pear.ui.DataRow.prototype.handleMouseOut_ = function(be) {
-  var elem = this.getElement();
-  goog.dom.classes.remove(elem, "pear-grid-row-over");
-  if (this.getRowPosition() % 2 > 0) {
-    goog.dom.classes.add(elem, "pear-grid-row-data-odd");
-  }
-};
-goog.provide("pear.ui.Header");
-goog.require("goog.ui.Component");
-pear.ui.Header = function(opt_domHelper, opt_renderer) {
-  goog.ui.Component.call(this, opt_domHelper);
-  this.renderer_ = opt_renderer || goog.ui.ContainerRenderer.getInstance();
-};
-goog.inherits(pear.ui.Header, goog.ui.Component);
-pear.ui.Header.prototype.createDom = function() {
-  pear.ui.Grid.superClass_.createDom.call(this);
-  var elem = this.getElement();
-  goog.dom.classes.set(elem, "pear-grid-header");
-};
-goog.provide("goog.userAgent.product");
-goog.require("goog.userAgent");
-goog.define("goog.userAgent.product.ASSUME_FIREFOX", false);
-goog.define("goog.userAgent.product.ASSUME_CAMINO", false);
-goog.define("goog.userAgent.product.ASSUME_IPHONE", false);
-goog.define("goog.userAgent.product.ASSUME_IPAD", false);
-goog.define("goog.userAgent.product.ASSUME_ANDROID", false);
-goog.define("goog.userAgent.product.ASSUME_CHROME", false);
-goog.define("goog.userAgent.product.ASSUME_SAFARI", false);
-goog.userAgent.product.PRODUCT_KNOWN_ = goog.userAgent.ASSUME_IE || (goog.userAgent.ASSUME_OPERA || (goog.userAgent.product.ASSUME_FIREFOX || (goog.userAgent.product.ASSUME_CAMINO || (goog.userAgent.product.ASSUME_IPHONE || (goog.userAgent.product.ASSUME_IPAD || (goog.userAgent.product.ASSUME_ANDROID || (goog.userAgent.product.ASSUME_CHROME || goog.userAgent.product.ASSUME_SAFARI)))))));
-goog.userAgent.product.init_ = function() {
-  goog.userAgent.product.detectedFirefox_ = false;
-  goog.userAgent.product.detectedCamino_ = false;
-  goog.userAgent.product.detectedIphone_ = false;
-  goog.userAgent.product.detectedIpad_ = false;
-  goog.userAgent.product.detectedAndroid_ = false;
-  goog.userAgent.product.detectedChrome_ = false;
-  goog.userAgent.product.detectedSafari_ = false;
-  var ua = goog.userAgent.getUserAgentString();
-  if (!ua) {
-    return;
-  }
-  if (ua.indexOf("Firefox") != -1) {
-    goog.userAgent.product.detectedFirefox_ = true;
-  } else {
-    if (ua.indexOf("Camino") != -1) {
-      goog.userAgent.product.detectedCamino_ = true;
-    } else {
-      if (ua.indexOf("iPhone") != -1 || ua.indexOf("iPod") != -1) {
-        goog.userAgent.product.detectedIphone_ = true;
-      } else {
-        if (ua.indexOf("iPad") != -1) {
-          goog.userAgent.product.detectedIpad_ = true;
-        } else {
-          if (ua.indexOf("Chrome") != -1) {
-            goog.userAgent.product.detectedChrome_ = true;
-          } else {
-            if (ua.indexOf("Android") != -1) {
-              goog.userAgent.product.detectedAndroid_ = true;
-            } else {
-              if (ua.indexOf("Safari") != -1) {
-                goog.userAgent.product.detectedSafari_ = true;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-};
-if (!goog.userAgent.product.PRODUCT_KNOWN_) {
-  goog.userAgent.product.init_();
-}
-goog.userAgent.product.OPERA = goog.userAgent.OPERA;
-goog.userAgent.product.IE = goog.userAgent.IE;
-goog.userAgent.product.FIREFOX = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_FIREFOX : goog.userAgent.product.detectedFirefox_;
-goog.userAgent.product.CAMINO = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_CAMINO : goog.userAgent.product.detectedCamino_;
-goog.userAgent.product.IPHONE = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_IPHONE : goog.userAgent.product.detectedIphone_;
-goog.userAgent.product.IPAD = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_IPAD : goog.userAgent.product.detectedIpad_;
-goog.userAgent.product.ANDROID = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_ANDROID : goog.userAgent.product.detectedAndroid_;
-goog.userAgent.product.CHROME = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_CHROME : goog.userAgent.product.detectedChrome_;
-goog.userAgent.product.SAFARI = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_SAFARI : goog.userAgent.product.detectedSafari_;
 goog.provide("goog.ui.ButtonSide");
 goog.ui.ButtonSide = {NONE:0, START:1, END:2, BOTH:3};
 goog.provide("goog.ui.ButtonRenderer");
@@ -14430,6 +14292,277 @@ goog.ui.registry.setDecoratorByClassName(goog.ui.ButtonRenderer.CSS_CLASS, funct
 });
 goog.provide("goog.ui.INLINE_BLOCK_CLASSNAME");
 goog.ui.INLINE_BLOCK_CLASSNAME = goog.getCssName("goog-inline-block");
+goog.provide("goog.ui.FlatButtonRenderer");
+goog.require("goog.a11y.aria.Role");
+goog.require("goog.dom.classlist");
+goog.require("goog.ui.Button");
+goog.require("goog.ui.ButtonRenderer");
+goog.require("goog.ui.INLINE_BLOCK_CLASSNAME");
+goog.require("goog.ui.registry");
+goog.ui.FlatButtonRenderer = function() {
+  goog.ui.ButtonRenderer.call(this);
+};
+goog.inherits(goog.ui.FlatButtonRenderer, goog.ui.ButtonRenderer);
+goog.addSingletonGetter(goog.ui.FlatButtonRenderer);
+goog.ui.FlatButtonRenderer.CSS_CLASS = goog.getCssName("goog-flat-button");
+goog.ui.FlatButtonRenderer.prototype.createDom = function(button) {
+  var classNames = this.getClassNames(button);
+  var attributes = {"class":goog.ui.INLINE_BLOCK_CLASSNAME + " " + classNames.join(" ")};
+  var element = button.getDomHelper().createDom("div", attributes, button.getContent());
+  this.setTooltip(element, button.getTooltip());
+  this.setAriaStates(button, element);
+  return element;
+};
+goog.ui.FlatButtonRenderer.prototype.getAriaRole = function() {
+  return goog.a11y.aria.Role.BUTTON;
+};
+goog.ui.FlatButtonRenderer.prototype.canDecorate = function(element) {
+  return element.tagName == "DIV";
+};
+goog.ui.FlatButtonRenderer.prototype.decorate = function(button, element) {
+  goog.dom.classlist.add(element, goog.ui.INLINE_BLOCK_CLASSNAME);
+  return goog.ui.FlatButtonRenderer.superClass_.decorate.call(this, button, element);
+};
+goog.ui.FlatButtonRenderer.prototype.getValue = function(element) {
+  return "";
+};
+goog.ui.FlatButtonRenderer.prototype.getCssClass = function() {
+  return goog.ui.FlatButtonRenderer.CSS_CLASS;
+};
+goog.ui.registry.setDecoratorByClassName(goog.ui.FlatButtonRenderer.CSS_CLASS, function() {
+  return new goog.ui.Button(null, goog.ui.FlatButtonRenderer.getInstance());
+});
+goog.provide("pear.plugin.HeaderMenu");
+goog.require("goog.ui.Component");
+goog.require("goog.events.Event");
+goog.require("pear.ui.Plugable");
+goog.require("goog.positioning.MenuAnchoredPosition");
+goog.require("goog.ui.FlatButtonRenderer");
+pear.plugin.HeaderMenu = function(grid, opt_renderer, opt_domHelper) {
+  goog.ui.Component.call(this, opt_renderer || pear.ui.RowRenderer.getInstance(), opt_domHelper);
+};
+goog.inherits(pear.plugin.HeaderMenu, goog.ui.Component);
+pear.ui.Plugable.addImplementation(pear.plugin.HeaderMenu);
+pear.plugin.HeaderMenu.prototype.getPageIndex = function() {
+  return this.getGrid().getPageIndex();
+};
+pear.plugin.HeaderMenu.prototype.getGrid = function() {
+  return this.grid_;
+};
+pear.plugin.HeaderMenu.prototype.show = function(grid) {
+  this.grid_ = grid;
+  var gridElem = this.grid_.getElement();
+  var parentElem = goog.dom.getAncestor(gridElem, function() {
+    return true;
+  });
+  this.render(parentElem);
+  goog.events.listen(this.grid_, pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK, this.handleGridHeaderMenuOptionClick_, false, this);
+  goog.style.showElement(this.getElement(), "");
+};
+pear.plugin.HeaderMenu.prototype.createDom = function() {
+  this.element_ = goog.dom.createDom("div", this.getCSSClassName());
+};
+pear.plugin.HeaderMenu.prototype.disposeInternal = function() {
+  this.grid_ = null;
+  this.headerCell_ = null;
+  this.titleContent_ = null;
+  this.filterInput_ = null;
+  pear.plugin.HeaderMenu.superClass_.disposeInternal.call(this);
+};
+pear.plugin.HeaderMenu.prototype.enterDocument = function() {
+  pear.plugin.HeaderMenu.superClass_.enterDocument.call(this);
+  var elem = this.getElement();
+  this.createHeaderMenuDom();
+};
+pear.plugin.HeaderMenu.prototype.createHeaderMenuDom = function() {
+  var titleBar = goog.dom.createDom("div", this.getCSSClassName() + "-title");
+  goog.dom.appendChild(this.getElement(), titleBar);
+  this.titleContent_ = goog.dom.createDom("div", this.getCSSClassName() + "-title-content");
+  goog.dom.appendChild(titleBar, this.titleContent_);
+  var closeElement = goog.dom.createDom("div", "pear-grid-header-cell-menu-title-close fa fa-times");
+  goog.dom.appendChild(titleBar, closeElement);
+  var breakElem = goog.dom.createDom("div", {style:"clear:both"});
+  goog.dom.appendChild(this.getElement(), breakElem);
+  this.createFilterMenu_();
+  goog.events.listen(closeElement, goog.events.EventType.CLICK, this.close_, false, this);
+};
+pear.plugin.HeaderMenu.prototype.close_ = function() {
+  goog.style.showElement(this.getElement(), "");
+};
+pear.plugin.HeaderMenu.prototype.createFilterMenu_ = function() {
+  var domEl = goog.dom.createDom("div", "pear-grid-header-cell-menu-title-filter");
+  goog.dom.appendChild(this.getElement(), domEl);
+  this.filterInput_ = new goog.ui.LabelInput("Filter Text");
+  this.filterInput_.render(domEl);
+  var fbApply = new goog.ui.Button("Apply", goog.ui.FlatButtonRenderer.getInstance());
+  fbApply.render(this.getElement());
+  fbApply.setTooltip("Apply Filter to DataView");
+  var fbClear = new goog.ui.Button("Clear", goog.ui.FlatButtonRenderer.getInstance());
+  fbClear.render(this.getElement());
+  fbClear.setTooltip("clear filter");
+  goog.events.listen(fbApply, goog.ui.Component.EventType.ACTION, this.handleApplyFilter_, false, this);
+  goog.events.listen(fbClear, goog.ui.Component.EventType.ACTION, this.handleCancelFilter_, false, this);
+};
+pear.plugin.HeaderMenu.prototype.handleApplyFilter_ = function(be) {
+  var dv = this.grid_.getDataView();
+  var column = this.headerCell_.getDataViewColumn();
+  dv.addColumnFilter(column.id, {type:pear.data.DataView.FilterType.EQUAL, expression:this.filterInput_.getValue()});
+  dv.applyFilter();
+  this.grid_.refresh();
+  this.close_();
+};
+pear.plugin.HeaderMenu.prototype.handleCancelFilter_ = function(be) {
+  var dv = this.grid_.getDataView();
+  var column = this.headerCell_.getDataViewColumn();
+  dv.clearColumnFilter(column.id);
+  this.grid_.refresh();
+  this.close_();
+};
+pear.plugin.HeaderMenu.prototype.handleGridHeaderMenuOptionClick_ = function(ge) {
+  console.dir(ge);
+  this.headerCell_ = ge.cell;
+  var menuElement = this.headerCell_.getMenuElement();
+  var menuPosition = goog.style.getPosition(menuElement);
+  var position = new goog.positioning.MenuAnchoredPosition(menuElement, goog.positioning.Corner.BOTTOM_START, true);
+  position.reposition(this.getElement(), goog.positioning.Corner.TOP_START);
+  goog.style.showElement(this.getElement(), "inline-block");
+  goog.dom.setTextContent(this.titleContent_, this.headerCell_.getContentText());
+};
+pear.plugin.HeaderMenu.prototype.getCSSClassName = function() {
+  return "pear-grid-header-cell-menu";
+};
+goog.provide("pear.ui.DataRowRenderer");
+goog.require("pear.ui.RowRenderer");
+pear.ui.DataRowRenderer = function() {
+  pear.ui.RowRenderer.call(this);
+};
+goog.inherits(pear.ui.DataRowRenderer, pear.ui.RowRenderer);
+goog.addSingletonGetter(pear.ui.DataRowRenderer);
+pear.ui.DataRowRenderer.CSS_CLASS = goog.getCssName("pear-grid-row-data");
+pear.ui.DataRowRenderer.prototype.getCssClass = function() {
+  return pear.ui.DataRowRenderer.CSS_CLASS;
+};
+pear.ui.DataRowRenderer.prototype.getClassNames = function(container) {
+  var baseClass = this.getCssClass();
+  var isHorizontal = container.getOrientation() == goog.ui.Container.Orientation.HORIZONTAL;
+  var even = container.getRowPosition() % 2 == 0;
+  var classNames = [baseClass, isHorizontal ? goog.getCssName(baseClass, "horizontal") : goog.getCssName(baseClass, "vertical"), even ? goog.getCssName(baseClass, "even") : goog.getCssName(baseClass, "odd")];
+  if (!container.isEnabled()) {
+    classNames.push(goog.getCssName(baseClass, "disabled"));
+  }
+  return classNames;
+};
+goog.provide("pear.ui.DataRow");
+goog.require("pear.ui.DataRowRenderer");
+goog.require("pear.ui.Row");
+pear.ui.DataRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
+  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL, pear.ui.DataRowRenderer.getInstance(), opt_domHelper);
+};
+goog.inherits(pear.ui.DataRow, pear.ui.Row);
+pear.ui.DataRow.prototype.top_ = 0;
+pear.ui.DataRow.prototype.getLocationTop = function() {
+  return this.top_;
+};
+pear.ui.DataRow.prototype.setLocationTop = function(top) {
+  this.top_ = top;
+};
+pear.ui.DataRow.prototype.disposeInternal = function() {
+  pear.ui.DataRow.superClass_.disposeInternal.call(this);
+};
+pear.ui.DataRow.prototype.enterDocument = function() {
+  pear.ui.Row.superClass_.enterDocument.call(this);
+  var elem = this.getElement();
+  this.setPosition_();
+  this.getHandler().listen(elem, goog.events.EventType.MOUSEOVER, this.handleMouseOver_, false, this).listen(elem, goog.events.EventType.MOUSEOUT, this.handleMouseOut_, false, this);
+};
+pear.ui.DataRow.prototype.handleMouseOver_ = function(be) {
+  var elem = this.getElement();
+  goog.dom.classes.add(elem, "pear-grid-row-over");
+  if (this.getRowPosition() % 2 > 0) {
+    goog.dom.classes.remove(elem, "pear-grid-row-data-odd");
+  }
+};
+pear.ui.DataRow.prototype.handleMouseOut_ = function(be) {
+  var elem = this.getElement();
+  goog.dom.classes.remove(elem, "pear-grid-row-over");
+  if (this.getRowPosition() % 2 > 0) {
+    goog.dom.classes.add(elem, "pear-grid-row-data-odd");
+  }
+};
+goog.provide("pear.ui.Header");
+goog.require("goog.ui.Component");
+pear.ui.Header = function(opt_domHelper, opt_renderer) {
+  goog.ui.Component.call(this, opt_domHelper);
+  this.renderer_ = opt_renderer || goog.ui.ContainerRenderer.getInstance();
+};
+goog.inherits(pear.ui.Header, goog.ui.Component);
+pear.ui.Header.prototype.createDom = function() {
+  pear.ui.Grid.superClass_.createDom.call(this);
+  var elem = this.getElement();
+  goog.dom.classes.set(elem, "pear-grid-header");
+};
+goog.provide("goog.userAgent.product");
+goog.require("goog.userAgent");
+goog.define("goog.userAgent.product.ASSUME_FIREFOX", false);
+goog.define("goog.userAgent.product.ASSUME_CAMINO", false);
+goog.define("goog.userAgent.product.ASSUME_IPHONE", false);
+goog.define("goog.userAgent.product.ASSUME_IPAD", false);
+goog.define("goog.userAgent.product.ASSUME_ANDROID", false);
+goog.define("goog.userAgent.product.ASSUME_CHROME", false);
+goog.define("goog.userAgent.product.ASSUME_SAFARI", false);
+goog.userAgent.product.PRODUCT_KNOWN_ = goog.userAgent.ASSUME_IE || (goog.userAgent.ASSUME_OPERA || (goog.userAgent.product.ASSUME_FIREFOX || (goog.userAgent.product.ASSUME_CAMINO || (goog.userAgent.product.ASSUME_IPHONE || (goog.userAgent.product.ASSUME_IPAD || (goog.userAgent.product.ASSUME_ANDROID || (goog.userAgent.product.ASSUME_CHROME || goog.userAgent.product.ASSUME_SAFARI)))))));
+goog.userAgent.product.init_ = function() {
+  goog.userAgent.product.detectedFirefox_ = false;
+  goog.userAgent.product.detectedCamino_ = false;
+  goog.userAgent.product.detectedIphone_ = false;
+  goog.userAgent.product.detectedIpad_ = false;
+  goog.userAgent.product.detectedAndroid_ = false;
+  goog.userAgent.product.detectedChrome_ = false;
+  goog.userAgent.product.detectedSafari_ = false;
+  var ua = goog.userAgent.getUserAgentString();
+  if (!ua) {
+    return;
+  }
+  if (ua.indexOf("Firefox") != -1) {
+    goog.userAgent.product.detectedFirefox_ = true;
+  } else {
+    if (ua.indexOf("Camino") != -1) {
+      goog.userAgent.product.detectedCamino_ = true;
+    } else {
+      if (ua.indexOf("iPhone") != -1 || ua.indexOf("iPod") != -1) {
+        goog.userAgent.product.detectedIphone_ = true;
+      } else {
+        if (ua.indexOf("iPad") != -1) {
+          goog.userAgent.product.detectedIpad_ = true;
+        } else {
+          if (ua.indexOf("Chrome") != -1) {
+            goog.userAgent.product.detectedChrome_ = true;
+          } else {
+            if (ua.indexOf("Android") != -1) {
+              goog.userAgent.product.detectedAndroid_ = true;
+            } else {
+              if (ua.indexOf("Safari") != -1) {
+                goog.userAgent.product.detectedSafari_ = true;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+if (!goog.userAgent.product.PRODUCT_KNOWN_) {
+  goog.userAgent.product.init_();
+}
+goog.userAgent.product.OPERA = goog.userAgent.OPERA;
+goog.userAgent.product.IE = goog.userAgent.IE;
+goog.userAgent.product.FIREFOX = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_FIREFOX : goog.userAgent.product.detectedFirefox_;
+goog.userAgent.product.CAMINO = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_CAMINO : goog.userAgent.product.detectedCamino_;
+goog.userAgent.product.IPHONE = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_IPHONE : goog.userAgent.product.detectedIphone_;
+goog.userAgent.product.IPAD = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_IPAD : goog.userAgent.product.detectedIpad_;
+goog.userAgent.product.ANDROID = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_ANDROID : goog.userAgent.product.detectedAndroid_;
+goog.userAgent.product.CHROME = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_CHROME : goog.userAgent.product.detectedChrome_;
+goog.userAgent.product.SAFARI = goog.userAgent.product.PRODUCT_KNOWN_ ? goog.userAgent.product.ASSUME_SAFARI : goog.userAgent.product.detectedSafari_;
 goog.provide("goog.ui.CustomButtonRenderer");
 goog.require("goog.a11y.aria.Role");
 goog.require("goog.dom.NodeType");
@@ -15334,7 +15467,7 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
   this.renderHeader_();
   this.renderBody_();
   if (this.Configuration_.AllowPaging) {
-    this.setPageIndex(1);
+    this.setPageIndex(0);
     this.getDataView().setPageSize(this.Configuration_.PageSize);
   }
   this.prepareDataRows_();
@@ -15356,17 +15489,13 @@ pear.ui.Grid.prototype.createHeader_ = function() {
   this.createHeaderCells_();
 };
 pear.ui.Grid.prototype.createHeaderCells_ = function() {
-  var coldata = this.getColumnsDataModel();
-  goog.array.forEach(coldata, function(cell, index) {
+  var columns = this.getColumnsDataModel();
+  goog.array.forEach(columns, function(column, index) {
     var headerCell = new pear.ui.HeaderCell;
-    headerCell.setModel(cell);
+    headerCell.setModel(column);
     headerCell.setCellIndex(index);
     this.headerRow_.addCell(headerCell, true);
   }, this);
-  var model = {id:"__scroll__", headerText:"", width:this.getScrollbarWidth(), datatype:pear.data.DataModel.DataType.NUMBER};
-  var filler = goog.dom.createDom("div", "pear-grid-cell-header pear-grid-cell");
-  goog.style.setWidth(filler, model.width);
-  goog.dom.appendChild(this.headerRow_.getElement(), filler);
 };
 pear.ui.Grid.prototype.renderfooterRow_ = function() {
   this.footerRow_ = this.footerRow_ || new pear.ui.FooterRow(this, this.Configuration_.RowFooterHeight);
@@ -15479,7 +15608,6 @@ pear.ui.Grid.prototype.bodyCanvasRender_ = function(opt_redraw) {
 pear.ui.Grid.prototype.draw_ = function() {
   this.refreshRenderRows_();
   this.bodyCanvasRender_();
-  this.updateFooterMsg();
 };
 pear.ui.Grid.prototype.refresh = function() {
   this.renderedDataRowsCache_ = [];
@@ -15575,8 +15703,6 @@ pear.ui.Grid.prototype.handleDataCellClick_ = function(be) {
   this.dispatchEvent(evt);
   evt = new pear.ui.Grid.GridDataCellEvent(pear.ui.Grid.EventType.DATACELL_AFTER_CLICK, this, control);
   this.dispatchEvent(evt);
-};
-pear.ui.Grid.prototype.updateFooterMsg = function() {
 };
 pear.ui.Grid.GridDataCellEvent = function(type, target, cell) {
   goog.events.Event.call(this, type, target);

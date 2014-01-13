@@ -1,13 +1,81 @@
 .pear-grid-header-cell-menu{
   position: absolute;
   width: 150px;
-  height: 150px;
-  background: rgb(230, 230, 230);
+  height: 100px;
+  background: rgb(255, 255, 255);
   z-index: 2000;
-  border-radius: 2px;
-  border: 1px solid gray;
+  border-radius: 5px;
+  border: 1px solid #1abc9c;
 }
 
-.pear-grid-header-cell-menu > div{
+.pear-grid-header-cell-menu-title{
+  background-color: #1abc9c;
+  padding:3px;
+}
+
+.pear-grid-header-cell-menu-title-content ,
+.pear-grid-header-cell-menu-title-close{
+  display: inline-block;
+  
+  color: #ffffff;
+}
+
+.pear-grid-header-cell-menu-title-close{
   float:right;
+}
+
+.pear-grid-header-cell-menu-title-filter{
+  padding-top:10px;
+}
+
+.goog-flat-button {
+  position: relative;
+  /*width: 20ex;*/
+  margin: 2px;
+  border: 1px solid #000;
+  padding: 2px 6px;
+  font: normal 13px "Trebuchet MS", Tahoma, Arial, sans-serif;
+  color: #fff;
+  background-color: #3079ed;;
+  cursor: pointer;
+  outline: none;
+}
+
+/* State: disabled. */
+.goog-flat-button-disabled {
+  border-color: #888;
+  color: #888;
+  background-color: #ccc;
+  cursor: default;
+}
+
+/* State: hover. */
+.goog-flat-button-hover {
+  border-color: #357ae8;
+  color: #fff;
+  background-color: #357ae8;
+}
+
+/* State: active, selected, checked. */
+.goog-flat-button-active,
+.goog-flat-button-selected,
+.goog-flat-button-checked {
+  border-color: #5b4169;
+  color: #5b4169;
+  background-color: #d1a8ea;
+}
+
+/* State: focused. */
+.goog-flat-button-focused {
+  border-color: #5b4169;
+}
+
+/* Pill (collapsed border) styles. */
+.goog-flat-button-collapse-right {
+  margin-right: 0;
+}
+
+.goog-flat-button-collapse-left {
+  margin-left: 0;
+  border-left: none;
 }

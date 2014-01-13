@@ -508,7 +508,7 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
   this.renderHeader_();
   this.renderBody_();
   if (this.Configuration_.AllowPaging){
-    this.setPageIndex(1);
+    this.setPageIndex(0);
     this.getDataView().setPageSize(this.Configuration_.PageSize);
   }
   this.prepareDataRows_();
@@ -554,26 +554,14 @@ pear.ui.Grid.prototype.createHeader_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.createHeaderCells_ = function() {
-  var coldata = this.getColumnsDataModel();
-  goog.array.forEach(coldata, function(cell,index) {
+  var columns = this.getColumnsDataModel();
+  goog.array.forEach(columns, function(column,index) {
     // create header cells here
     var headerCell = new pear.ui.HeaderCell();
-    headerCell.setModel(cell);
+    headerCell.setModel(column);
     headerCell.setCellIndex(index);
     this.headerRow_.addCell(headerCell, true);
   }, this);
-
-
-  // For Browsers which have scrollbar Width > 0
-  var model = { 
-    id: "__scroll__",
-    headerText: "",
-    width:this.getScrollbarWidth(),
-    datatype:pear.data.DataModel.DataType.NUMBER
-  };
-  var filler = goog.dom.createDom("div","pear-grid-cell-header pear-grid-cell");
-  goog.style.setWidth(filler,model.width);
-  goog.dom.appendChild(this.headerRow_.getElement(),filler);
 };
 
 /**
@@ -622,6 +610,7 @@ pear.ui.Grid.prototype.syncWidth_ = function(){
   //width = width + 10;
   var bounds = goog.style.getBounds(this.getElement());
   width = ( width > bounds.width )?width :bounds.width;
+  // Take care of scrollbar width
   goog.style.setWidth(this.headerRow_.getElement(),width+this.getScrollbarWidth());
   //goog.style.setWidth(this.body_.getElement(), width);
   goog.style.setWidth(this.bodyCanvas_.getElement(), width);
@@ -748,7 +737,6 @@ pear.ui.Grid.prototype.bodyCanvasRender_ = function(opt_redraw) {
 pear.ui.Grid.prototype.draw_ = function (){
   this.refreshRenderRows_();
   this.bodyCanvasRender_();
-  this.updateFooterMsg();
 };
 
 pear.ui.Grid.prototype.refresh = function (){
@@ -876,7 +864,6 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
   var dv = this.getDataView();
   dv.sort(headerCell.getModel());
   this.refresh();
-
   evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.AFTER_SORT,
       this,headerCell);
   this.dispatchEvent(evt);
@@ -902,20 +889,6 @@ pear.ui.Grid.prototype.handleDataCellClick_ = function(be) {
   evt = new pear.ui.Grid.GridDataCellEvent (pear.ui.Grid.EventType.DATACELL_AFTER_CLICK,
       this,control);
   this.dispatchEvent(evt);
-};
-
-pear.ui.Grid.prototype.updateFooterMsg = function (){;
- /* 
-  var startIndex = 1;
-  var rowCount = this.getRowCount();
-  var endIndex = this.getDataView().getRowViews().length;
-  if (this.Configuration_.AllowPaging){
-    startIndex = (this.currentPageIndex_ -1 )* this.Configuration_.PageSize;
-    endIndex = (this.currentPageIndex_ * this.Configuration_.PageSize ) > rowCount  ? rowCount : (this.currentPageIndex_ * this.Configuration_.PageSize );
-  }
-  startIndex = startIndex ? startIndex : 1;
-  this.footerRow_.setFooterMsg("Showing ["+startIndex+" - "+endIndex+"]");
-  */
 };
 
 

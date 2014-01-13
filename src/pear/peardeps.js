@@ -5,7 +5,7 @@ goog.addDependency('../../../../src/pear/data/dataview.js', ['pear.data.DataView
 goog.addDependency('../../../../src/pear/data/rowview.js', ['pear.data.RowView'], ['goog.Disposable', 'goog.ui.IdGenerator']);
 goog.addDependency('../../../../src/pear/fx/dom/slide.js', ['pear.fx.dom.Slide'], ['goog.fx.dom.PredefinedEffect']);
 goog.addDependency('../../../../src/pear/plugin/footerstatusplugin.js', ['pear.plugin.FooterStatus', 'pear.plugin.FooterStatusRenderer'], ['goog.events.Event', 'goog.ui.ComboBox', 'goog.ui.Component', 'goog.ui.ControlRenderer', 'pear.ui.Plugable']);
-goog.addDependency('../../../../src/pear/plugin/headermenu.js', ['pear.plugin.HeaderMenu'], ['goog.events.Event', 'goog.positioning.MenuAnchoredPosition', 'goog.ui.Component', 'pear.ui.Plugable']);
+goog.addDependency('../../../../src/pear/plugin/headermenu.js', ['pear.plugin.HeaderMenu'], ['goog.events.Event', 'goog.positioning.MenuAnchoredPosition', 'goog.ui.Component', 'goog.ui.FlatButtonRenderer', 'pear.ui.Plugable']);
 goog.addDependency('../../../../src/pear/plugin/pagerplugin.js', ['pear.plugin.Pager', 'pear.plugin.PagerCellRenderer'], ['goog.events.Event', 'goog.ui.ComboBox', 'goog.ui.Component', 'goog.ui.ControlRenderer', 'pear.ui.Plugable']);
 goog.addDependency('../../../../src/pear/ui/body.js', ['pear.ui.Body'], ['goog.ui.Component']);
 goog.addDependency('../../../../src/pear/ui/bodycanvas.js', ['pear.ui.BodyCanvas'], ['goog.ui.Component', 'goog.ui.ContainerRenderer']);

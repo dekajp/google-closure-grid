@@ -191,19 +191,19 @@ pear.ui.Resizable.prototype.handleDrag_ = function(e) {
     size.width = this.elementSize_.width + dragger.deltaX - this.handlerOffsetCoord_.x;  
   }
 
-  if (position & 388){ /* BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT */
-    size.height = this.elementSize_.height + dragger.deltaY - this.handlerOffsetCoord_.y;  
-  }
+ // if (position & 388){ /* BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT */
+ //   size.height = this.elementSize_.height + dragger.deltaY - this.handlerOffsetCoord_.y;  
+ // }
 
   if ( position & 296 ){/* LEFT, TOP_LEFT, BOTTOM_LEFT */
     size.width = this.elementSize_.width - dragger.deltaX + this.handlerOffsetCoord_.x;
     coord.x = this.elementCoord_.x + dragger.deltaX - this.handlerOffsetCoord_.x;
   }
  
-  if ( position & 112 ){/* TOP, TOP_LEFT, TOP_RIGHT */
-    size.height = this.elementSize_.height - dragger.deltaY + this.handlerOffsetCoord_.y;   
-    coord.y = this.elementCoord_.y + dragger.deltaY - this.handlerOffsetCoord_.y;    
-  }
+//  if ( position & 112 ){/* TOP, TOP_LEFT, TOP_RIGHT */
+//    size.height = this.elementSize_.height - dragger.deltaY + this.handlerOffsetCoord_.y;   
+//    coord.y = this.elementCoord_.y + dragger.deltaY - this.handlerOffsetCoord_.y;    
+//  }
  
   // Now size the containers.
   this.resize_(el, size, coord, position);

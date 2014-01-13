@@ -43,14 +43,14 @@ pear.plugin.Pager.prototype.show = function(grid){
   this.grid_ = grid;
   var parentElem = grid.getElement();
   if (this.grid_.getConfiguration().AllowPaging){
-    var footer = goog.dom.getNextElementSibling(grid.getElement());
-    if ( footer && goog.dom.classes.has(footer, 'pear-grid-footer')){
+    this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
+    if ( this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer')){
 
     }else{
-      footer = goog.dom.createDom('div', 'pear-grid-footer');
-      goog.dom.insertSiblingAfter(footer,parentElem);
+      this.footer_ = goog.dom.createDom('div', 'pear-grid-footer');
+      goog.dom.insertSiblingAfter(this.footer_,parentElem);
     }
-    this.render(footer);
+    this.render(this.footer_);
   }
 }
 
@@ -65,6 +65,10 @@ pear.plugin.Pager.prototype.disposeInternal = function() {
   if (this.grid_.getConfiguration().AllowPaging){
     this.pagerComboBox_.dispose();
     this.pagerComboBox_=null;
+  }
+  if (this.footer_){
+     this.footer_.remove();
+    this.footer_ = null;
   }
   this.grid_= null;
   pear.plugin.Pager.superClass_.disposeInternal.call(this);
@@ -92,6 +96,8 @@ pear.plugin.Pager.prototype.enterDocument = function() {
 pear.plugin.Pager.prototype.createPager_ = function() {
   this.createPagerNavControls_();
   this.createPagerDropDown_();
+
+  this.changePageIndex_(this.getPageIndex());
 };
 
 pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
@@ -102,12 +108,12 @@ pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
 
   this.pagerComboBox_ = new goog.ui.ComboBox();
   this.pagerComboBox_.setUseDropdownArrow(true);
-  this.pagerComboBox_.setDefaultText('Page');
+  //this.pagerComboBox_.setDefaultText('Page');
 
-  var caption = new goog.ui.ComboBoxItem('Page');
-  caption.setSticky(true);
-  caption.setEnabled(false);
-  this.pagerComboBox_.addItem(caption);
+  //var caption = new goog.ui.ComboBoxItem('Page');
+  //caption.setSticky(true);
+  //caption.setEnabled(false);
+  //this.pagerComboBox_.addItem(caption);
   var i=0;
   do {
     this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i+1)));
@@ -164,13 +170,15 @@ pear.plugin.Pager.prototype.handleAction_ = function (ge){
 
 pear.plugin.Pager.prototype.changePageIndex_ = function (index){
   // TODO : check for boundary 
-  this.pagerComboBox_.setValue(index);
+  index = ( index < 0 ) ? 0 : index;
+  index =  index <= this.pagerComboBox_.getItemCount()-1 ? index : (this.pagerComboBox_.getItemCount() - 1);
+  this.pagerComboBox_.setValue(index+1);
 };
 
 
 pear.plugin.Pager.prototype.handleChange_ = function (ge){
   var grid = this.getGrid();
-  grid.setPageIndex(parseInt(this.pagerComboBox_.getValue()));
+  grid.setPageIndex(parseInt(this.pagerComboBox_.getValue())-1);
 };
 
 

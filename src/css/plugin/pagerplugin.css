@@ -8,6 +8,7 @@
   box-sizing: border-box;
   position: relative;
  /* overflow:hidden; */
+ height: 25px;
 }
 
 .pear-grid-pager{

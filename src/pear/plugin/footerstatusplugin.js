@@ -38,14 +38,14 @@ pear.plugin.FooterStatus.prototype.getGrid = function() {
 pear.plugin.FooterStatus.prototype.show = function(grid){
   this.grid_ = grid;
   var parentElem = grid.getElement();
-  var footer = goog.dom.getNextElementSibling(grid.getElement());
-  if ( footer && goog.dom.classes.has(footer, 'pear-grid-footer')){
+  this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
+  if ( this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer')){
 
   }else{
-    footer = goog.dom.createDom('div', 'pear-grid-footer');
-    goog.dom.insertSiblingAfter(footer,parentElem);
+    this.footer_ = goog.dom.createDom('div', 'pear-grid-footer');
+    goog.dom.insertSiblingAfter(this.footer_,parentElem);
   }
-  this.render(footer);
+  this.render(this.footer_);
 }
 
 /**
@@ -58,6 +58,10 @@ pear.plugin.FooterStatus.prototype.createDom = function() {
 pear.plugin.FooterStatus.prototype.disposeInternal = function() {
   this.grid_ = null;
   this.footerStatus_.dispose();
+  if (this.footer_){
+    this.footer_.remove();
+    this.footer_ = null;
+  }
   pear.plugin.FooterStatus.superClass_.disposeInternal.call(this);
 };
 
@@ -88,8 +92,8 @@ pear.plugin.FooterStatus.prototype.updateMsg_ = function(){
   var currentPageIndex = grid.getCurrentPageIndex();
 
   if (configuration.AllowPaging){
-    startIndex = ( currentPageIndex - 1 )* configuration.PageSize;
-    endIndex = (currentPageIndex * configuration.PageSize ) > rowCount  ? rowCount : ( currentPageIndex * configuration.PageSize );
+    startIndex = ( currentPageIndex  )* configuration.PageSize;
+    endIndex = (startIndex + configuration.PageSize) > rowCount  ? rowCount : (startIndex + configuration.PageSize);
   }
   startIndex = startIndex ? startIndex : 1;
   this.footerStatus_.setContent("["+startIndex+" - "+endIndex+"]");

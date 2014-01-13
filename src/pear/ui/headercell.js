@@ -82,6 +82,14 @@ pear.ui.HeaderCell.prototype.getContent = function() {
   return '';
 };
 
+pear.ui.HeaderCell.prototype.getContentText = function() {
+  return this.getModel()['headerText']
+};
+
+pear.ui.HeaderCell.prototype.getDataViewColumn = function() {
+  return this.getModel();
+};
+
 
 /**
  * Configures the component after its DOM has been rendered, and sets up event
@@ -117,7 +125,7 @@ pear.ui.HeaderCell.prototype.splitHeaderCell_ = function(){
   // Header Cell Content
   this.contentCell_ = goog.dom.createDom('div',
                                         'pear-grid-cell-header-content',
-                                        this.getModel()['headerText']
+                                        this.getContentText()
                                         );
   goog.dom.appendChild(this.getElement(),this.contentCell_);
   
