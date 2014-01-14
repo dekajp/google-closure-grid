@@ -11,7 +11,7 @@ goog.require('goog.ui.IdGenerator');
  * @param {Array} rowdata
  * @extends {goog.Disposable}
  */
-pear.data.RowView = function(rowdata,dv) {
+/*pear.data.RowView = function(rowdata,dv) {
   goog.Disposable.call(this);
 
   // this.position_= position;
@@ -40,7 +40,7 @@ pear.data.RowView.prototype.getDataView = function() {
 pear.data.RowView.prototype.getRowId = function() {
   return this.rowId_;
 };
-
+*/
 
 //pear.data.RowView.prototype.getRowContainer = function() {
 //  return this.row_;

@@ -32,6 +32,12 @@ goog.provide('pear.ui.Grid');
 goog.provide('pear.ui.Grid.GridDataCellEvent');
 goog.provide('pear.ui.Grid.GridHeaderCellEvent');
 
+goog.require('goog.dom');
+goog.require('goog.events');
+goog.require('goog.events.EventType');
+goog.require('goog.array');
+goog.require('goog.object');
+
 goog.require('goog.Timer');
 goog.require('pear.data.DataModel');
 goog.require('pear.ui.Header');
@@ -104,10 +110,10 @@ pear.ui.Grid.prototype.Configuration_ = {
   RowFooterHeight: 20,
   ColumnWidth: 125,
   PageSize: 50,
-  AllowSorting: true,
-  AllowPaging: true,
-  AllowColumnResize: true,
-  AllowColumnHeaderMenu: true
+  AllowSorting: false,
+  AllowPaging: false,
+  AllowColumnResize: false,
+  AllowColumnHeaderMenu: false
 };
 
 pear.ui.Grid.EventType = {
@@ -181,10 +187,10 @@ pear.ui.Grid.prototype.getConfiguration = function() {
 /**
  * @return {*}
  */
-pear.ui.Grid.prototype.getColumnsDataModel = function() {
+pear.ui.Grid.prototype.getColumns = function() {
   var cols ;
   var dv = this.getDataView();
-  cols = dv.getColumns();
+  cols = dv.getDataColumns();
   return cols;
 };
 
@@ -274,7 +280,7 @@ pear.ui.Grid.prototype.setHeight = function(height) {
  * @return {number}
  */
 pear.ui.Grid.prototype.getColumnWidth = function(index) {
-  var coldata = this.getColumnsDataModel();
+  var coldata = this.getColumns();
   coldata[index]["width"] = coldata[index]["width"] || 
                             this.Configuration_.ColumnWidth;
   return coldata[index]["width"];
@@ -284,7 +290,7 @@ pear.ui.Grid.prototype.getColumnWidth = function(index) {
  * @return {number}
  */
 pear.ui.Grid.prototype.setColumnWidth = function(index,width,opt_render) {
-  var coldata = this.getColumnsDataModel();
+  var coldata = this.getColumns();
   coldata[index]["width"] = width || this.Configuration_.ColumnWidth;
   var headerCell = this.headerRow_.getChildAt(index);
   if (opt_render && headerCell){
@@ -307,7 +313,13 @@ pear.ui.Grid.prototype.getScrollbarWidth = function(){
  * @return {*} The model.
  */
 pear.ui.Grid.prototype.getDataView = function() {
-  return this.getModel();
+  this.dataview_ = this.dataview_ || new pear.data.DataView([],[]) ;
+  return  this.dataview_;
+};
+
+pear.ui.Grid.prototype.setDataView_ = function(dv) {
+  this.dataview_ = dv;
+  dv.setGrid(this);
 };
 
 
@@ -316,7 +328,7 @@ pear.ui.Grid.prototype.getDataView = function() {
  * @return {number} 
  */
 pear.ui.Grid.prototype.getRowCount = function() {
-  return this.getModel().getRowCount();;
+  return this.getDataView().getDataRowViewCount();
 };
 
 /**
@@ -373,7 +385,6 @@ pear.ui.Grid.prototype.setPageIndex = function (index){
 }
 
 pear.ui.Grid.prototype.getPageIndex = function (){
-
   return this.currentPageIndex_ ;
 }
 
@@ -385,14 +396,20 @@ pear.ui.Grid.prototype.getSortedHeaderCell = function() {
   return this.getHeaderRow().getChildAt(this.getSortColumnIndex());
 };
 
+pear.ui.Grid.prototype.setColumns = function(datacolumns) {
+  var dv = this.getDataView();
+  dv.setDataColumns(datacolumns);
+  dv.setGrid(this);
+};
+
 /**
  * Sets the model associated with the UI component.
  * @param {pear.data.DataView} dv DataView.
  */
-pear.ui.Grid.prototype.setDataView = function(dv) {
-  this.setModel(dv);
+pear.ui.Grid.prototype.setDataSource = function(data) {
+  var dv = this.getDataView();
+  dv.setDataRows(data);
   dv.setGrid(this);
-  this.prepareControlHierarchy_();
 };
 
 pear.ui.Grid.prototype.addPlugin = function(plugin) {
@@ -483,8 +500,9 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   }
   this.footerRow_ = null;
 
-  dv = this.getModel();
-  dv.dispose();
+  
+  this.dataview_.dispose();
+  this.dataview_=null;
 
   this.width_ = null;
   this.height_ = null;
@@ -554,7 +572,7 @@ pear.ui.Grid.prototype.createHeader_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.createHeaderCells_ = function() {
-  var columns = this.getColumnsDataModel();
+  var columns = this.getColumns();
   goog.array.forEach(columns, function(column,index) {
     // create header cells here
     var headerCell = new pear.ui.HeaderCell();
@@ -595,8 +613,9 @@ pear.ui.Grid.prototype.renderBody_ = function() {
 
 pear.ui.Grid.prototype.setCanvasHeight_ = function(){
   var height = 0;
+  var pagesize = this.getDataView().getPageSize();
   if (this.Configuration_.AllowPaging){
-    height =  this.Configuration_.PageSize * this.Configuration_.RowHeight;
+    height =  pagesize * this.Configuration_.RowHeight;
   }else{
     height =  this.getRowCount() * this.Configuration_.RowHeight;
   }
@@ -627,6 +646,7 @@ pear.ui.Grid.prototype.syncHeaderRow_ = function(){
 pear.ui.Grid.prototype.prepareDataRows_ = function() {
   var dv = this.getDataView();
   var rows = dv.getRowViews();
+  var pagesize = dv.getPageSize();
   this.dataRows_ = [];
 
   goog.array.forEach(rows, function(value, index) {
@@ -634,7 +654,7 @@ pear.ui.Grid.prototype.prepareDataRows_ = function() {
     row.setModel(value);
     row.setRowPosition(index);
     if (this.Configuration_.AllowPaging){
-      row.setLocationTop( (index % this.Configuration_.PageSize) * this.Configuration_.RowHeight);
+      row.setLocationTop( (index % pagesize) * this.Configuration_.RowHeight);
     }else{
       row.setLocationTop(index * this.Configuration_.RowHeight);
     }
@@ -649,9 +669,9 @@ pear.ui.Grid.prototype.prepareDataRows_ = function() {
  * @param {pear.ui.Row} row
  */
 pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
-  var model = row.getRowView().getRowData();
+  var model = row.getRowView();
   var dv = this.getDataView();
-  var columns = dv.getColumns();
+  var columns = this.getColumns()
   if (row.getChildCount() >0 ){
     row.removeChildren(true);
   }
@@ -742,6 +762,7 @@ pear.ui.Grid.prototype.draw_ = function (){
 pear.ui.Grid.prototype.refresh = function (){
   this.renderedDataRowsCache_= [];
   this.renderedDataRows_ = [];
+  this.setCanvasHeight_();
   this.prepareDataRows_();
   this.refreshRenderRows_();
   this.bodyCanvasRender_(true);
@@ -749,7 +770,7 @@ pear.ui.Grid.prototype.refresh = function (){
 
 pear.ui.Grid.prototype.setColumnResize = function (index,width){
   var cell = this.headerRow_.getChildAt(index);
-  var coldata = grid.getColumnsDataModel();
+  var coldata = grid.getColumns();
   var diff = width - coldata[index]["width"] ;
   this.setColumnWidth(index,coldata[index]["width"] + diff,true);
 

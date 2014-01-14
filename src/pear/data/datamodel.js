@@ -12,11 +12,11 @@ goog.require('goog.Disposable');
  * @param {number} height
  * @extends {goog.Disposable}
  */
-pear.data.DataModel = function(columns, rows) {
+pear.data.DataModel = function(datacolumns, datarows) {
   goog.Disposable.call(this);
 
-  this.columns_ = columns || [];
-  this.rows_ = rows || [];
+  this.dataColumns_ = datacolumns || [];
+  this.dataRows_ = datarows || [];
 };
 goog.inherits(pear.data.DataModel, goog.Disposable);
 
@@ -31,32 +31,41 @@ pear.data.DataModel.DataType ={
  * @private
  * @type {Array}
  */
-pear.data.DataModel.prototype.columns_ = [];
+pear.data.DataModel.prototype.dataColumns_ = [];
 
 
 /**
  * @private
  * @type {Array}
  */
-pear.data.DataModel.prototype.rows_ = [];
+pear.data.DataModel.prototype.dataRows_ = [];
+
+
 
 /**
  * @return {Array}
  */
-pear.data.DataModel.prototype.getColumns = function() {
-  return this.columns_;
+pear.data.DataModel.prototype.getDataColumns = function() {
+  return this.dataColumns_;
 };
 
+pear.data.DataModel.prototype.setDataColumns = function(dc) {
+  this.dataColumns_ = dc;
+};
 /**
  * @return {Array}
  */
-pear.data.DataModel.prototype.getRows = function() {
-  return this.rows_;
+pear.data.DataModel.prototype.getDataRows = function() {
+  return this.dataRows_;
+};
+
+pear.data.DataModel.prototype.setDataRows = function(dr) {
+  this.dataRows_ = dr;
 };
 
 pear.data.DataModel.prototype.disposeInternal = function() {
-  this.columns_ = null;
-  this.rows_ = null; 
+  this.dataColumns_ = null;
+  this.dataRows_ = null; 
 
   pear.data.DataModel.superClass_.disposeInternal.call(this);
 };

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>pear.ui.Grid - Built in Google Closure</title>
+
+  <script src="../lib/closure-library/closure/goog/base.js"></script>
+  <script src="../src/bin/release/pear.grid.js"></script>
+  <script>
+    goog.require('goog.ui.tree.TreeControl');
+    goog.require('goog.dom');
+  </script>
+  <script>
+    var treeData = [
+      {name: 'Simple Grid', url: 'simplegrid.html'},
+      {name: 'Sorting', childNodes: [
+        {name: 'Basic', url: 'sorting-basic.html'},
+        {name: 'Advanced', url: 'sorting-advanced.html'}
+      ]}
+    ];
+
+    function initTree() {
+      goog.ui.tree.TreeControl.defaultConfig.cleardotPath =
+          '../lib/closure-library/closure/goog/images/tree/cleardot.gif';
+      var tree = new goog.ui.tree.TreeControl('All Demos');
+      tree.setIsUserCollapsible(false);
+      buildNode(tree, treeData);
+      tree.render(goog.dom.getElement('demo-list'));
+    }
+
+    function buildNode(parent, nodeArray) {
+      for (var i = 0, node; node = nodeArray[i]; i++) {
+        if (node.name) {
+          var childNode = parent.getTree().createNode();
+          parent.add(childNode);
+          if (node.url) {
+            childNode.setHtml('<a href="' + node.url + '" title="' + node.name +
+                '" target="demo">' + node.name + '</a>');
+            // Need to prevent BaseNode.onClick_ from calling preventDefault.
+            childNode.onClick_ = goog.nullFunction;
+          } else if (node.childNodes) {
+            childNode.setHtml(node.name);
+            buildNode(childNode, node.childNodes);
+          }
+        }
+      }
+    }
+
+    //function showDemo(node) {
+    //  window.top.frames['demo'].location = node.getClientData();
+    //}
+  </script>
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/tree.css">
+  <style>
+    body {
+      font: normal 10pt Tahoma, Arial, sans-serif;
+      color: #333;
+      background-color: #eee;
+    }
+
+    h2 a {
+      font: bold 18pt Tahoma, Arial, sans-serif;
+      color: #333;
+      text-decoration: underline;
+    }
+
+    h2 a:hover {
+      color: #00f;
+      text-decoration: underline;
+    }
+
+    .goog-tree-children {
+      background-repeat: repeat-y;
+      background-image: url("../lib/closure-library/closure/goog/images/tree/I.png") !important;
+      background-position-y: 1px !important; /* IE only */
+      font: icon;
+    }
+
+    .goog-tree-icon {
+      background-image:url("../lib/closure-library/closure/goog/images/tree/tree.png");
+    }
+
+    .goog-tree-item-label {
+      font: bold 10pt Tahoma, Arial, sans-serif;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .goog-tree-item-label a {
+      font: normal 10pt Tahoma, Arial, sans-serif;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .goog-tree-item-label a:hover {
+      color: #00f;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h2><a href="index_splash.html" title="Home" target="demo">Index</a></h2>
+  <div id="demo-list"></div>
+  <script>initTree();</script>
+</body>
+</html>

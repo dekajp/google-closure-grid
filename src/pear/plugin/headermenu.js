@@ -148,6 +148,7 @@ pear.plugin.HeaderMenu.prototype.handleCancelFilter_ = function(be){
   var dv = this.grid_.getDataView();
   var column = this.headerCell_.getDataViewColumn();
   dv.clearColumnFilter(column.id );
+  dv.applyFilter();
   this.grid_.refresh();
   this.close_();
 };

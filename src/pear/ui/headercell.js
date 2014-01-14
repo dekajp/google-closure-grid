@@ -131,17 +131,36 @@ pear.ui.HeaderCell.prototype.splitHeaderCell_ = function(){
   
   this.syncContentCellOnResize_();
 
-  this.contentIndicator_ = goog.dom.createDom('div',
+  if (grid.getConfiguration().AllowSorting || 
+      grid.getConfiguration().AllowColumnHeaderMenu ){
+    this.contentIndicator_ = goog.dom.createDom('div',
                                         'pear-grid-cell-header-indicators'
                                         );
-  goog.dom.appendChild(this.getElement(),this.contentIndicator_);
-  goog.style.setWidth(this.contentIndicator_,32);
+    goog.dom.appendChild(this.getElement(),this.contentIndicator_);
+    goog.style.setWidth(this.contentIndicator_,32);
+  }
+  
+  if (grid.getConfiguration().AllowSorting){
+    this.createHeaderCellSortIndicator_();
+  }
+  if (grid.getConfiguration().AllowColumnHeaderMenu){
+    this.createHeaderCellMenu_();
+  }
+  if (grid.getConfiguration().AllowColumnResize){
+    this.createResizeHandle_();
+  }
+};
 
+pear.ui.HeaderCell.prototype.createHeaderCellSortIndicator_ = function(){
+  // Header Menu Control
   this.sortIndicator_ = goog.dom.createDom('div',
                                             'pear-grid-cell-header-sort'
                                           );
   goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
+  
+};
 
+pear.ui.HeaderCell.prototype.createHeaderCellMenu_ = function(){
   // Header Menu Control
   this.headerMenu_ = goog.dom.createDom('div',
                                         'pear-grid-cell-header-slidemenu',
@@ -154,14 +173,32 @@ pear.ui.HeaderCell.prototype.splitHeaderCell_ = function(){
   this.getHandler().
         listen(this.headerMenu_, goog.events.EventType.CLICK,
           this.handleOptionClick_,false,this);
-  this.registerEvents_()
 
-  
-  if (grid.getConfiguration().AllowColumnResize){
-    this.createResizeHandle_();
-  }
+  // Handle mouse events on behalf of controls in the container.
+  this.getHandler().
+      listen(this.headerMenu_, [
+        goog.events.EventType.MOUSEDOWN,
+        goog.events.EventType.MOUSEUP,
+        goog.events.EventType.MOUSEOVER,
+        goog.events.EventType.MOUSEOUT,
+        goog.events.EventType.CONTEXTMENU
+      ], this.handleChildMouseEvents_);
   
 };
+
+pear.ui.HeaderCell.prototype.createResizeHandle_ = function(){
+  var resizeData = {
+    handles: pear.ui.Resizable.Position.RIGHT
+  };
+  
+  this.resizable_ = new pear.ui.Resizable(this.getElement(),resizeData);
+  this.getHandler().
+        listen(this.resizable_, pear.ui.Resizable.EventType.RESIZE,
+          this.handleResize_,false,this).
+        listen(this.resizable_, pear.ui.Resizable.EventType.END_RESIZE,
+          this.handleResizeEnd_,false,this);
+};
+
 
 pear.ui.HeaderCell.prototype.syncContentCellOnResize_ = function(){
   var bound = goog.style.getContentBoxSize(this.getElement());
@@ -174,7 +211,9 @@ pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
   
   
 
-  if (this.getsortDirection() && goog.style.isElementShown(this.headerMenu_)){
+  if (this.getsortDirection() && 
+      this.headerMenu_ && 
+      goog.style.isElementShown(this.headerMenu_)){
     goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
     marginleft = marginleft + 16;
     goog.dom.appendChild(this.contentIndicator_,this.headerMenu_);
@@ -183,7 +222,7 @@ pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
     goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
     marginleft = marginleft + 16;
     goog.dom.removeNode(this.headerMenu_);
-  }else if (goog.style.isElementShown(this.headerMenu_)){
+  }else if (this.headerMenu_ && goog.style.isElementShown(this.headerMenu_)){
     goog.dom.appendChild(this.contentIndicator_,this.headerMenu_);
     marginleft = marginleft + 16;
     goog.dom.removeNode(this.sortIndicator_);
@@ -205,33 +244,9 @@ pear.ui.HeaderCell.prototype.handleMenuSlide_ = function(el,value) {
   anim.play();
 }
 
-pear.ui.HeaderCell.prototype.createResizeHandle_ = function(){
-  var resizeData = {
-    handles: pear.ui.Resizable.Position.RIGHT
-  };
-  
-  this.resizable_ = new pear.ui.Resizable(this.getElement(),resizeData);
-  this.getHandler().
-        listen(this.resizable_, pear.ui.Resizable.EventType.RESIZE,
-          this.handleResize_,false,this).
-        listen(this.resizable_, pear.ui.Resizable.EventType.END_RESIZE,
-          this.handleResizeEnd_,false,this);
-}
 
-/**
- * @private
- */
-pear.ui.HeaderCell.prototype.registerEvents_ = function(){
-  // Handle mouse events on behalf of controls in the container.
-  this.getHandler().
-      listen(this.headerMenu_, [
-        goog.events.EventType.MOUSEDOWN,
-        goog.events.EventType.MOUSEUP,
-        goog.events.EventType.MOUSEOVER,
-        goog.events.EventType.MOUSEOUT,
-        goog.events.EventType.CONTEXTMENU
-      ], this.handleChildMouseEvents_);
-};
+
+
 
 /**
  * @private
@@ -263,16 +278,24 @@ pear.ui.HeaderCell.prototype.handleActive_ = function(ge){
  * @private
  */
 pear.ui.HeaderCell.prototype.handleEnter_ = function(){
-  goog.style.setStyle(this.headerMenu_,"display","inline-block");
-  this.syncContentIndicatorLocation_();
+  if (this.getGrid().getConfiguration().AllowColumnHeaderMenu){
+    goog.style.setStyle(this.headerMenu_,"display","inline-block");
+  }
+  if (this.contentIndicator_){
+    this.syncContentIndicatorLocation_();
+  }
 };
 
 /**
  * @private
  */
 pear.ui.HeaderCell.prototype.handleLeave_ = function(){
-  goog.style.setStyle(this.headerMenu_,'display','none');
-  this.syncContentIndicatorLocation_();
+  if (this.getGrid().getConfiguration().AllowColumnHeaderMenu){
+    goog.style.setStyle(this.headerMenu_,'display','none');
+  }
+  if (this.contentIndicator_){
+    this.syncContentIndicatorLocation_();
+  }
 };
 
 /**

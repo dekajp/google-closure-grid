@@ -98,6 +98,7 @@ pear.plugin.Pager.prototype.createPager_ = function() {
   this.createPagerDropDown_();
 
   this.changePageIndex_(this.getPageIndex());
+  goog.events.listen(this.grid_.getDataView(),pear.data.DataView.EventType.ROWCOUNT_CHANGED,this.handleRowCountChange_,false,this);
 };
 
 pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
@@ -108,12 +109,6 @@ pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
 
   this.pagerComboBox_ = new goog.ui.ComboBox();
   this.pagerComboBox_.setUseDropdownArrow(true);
-  //this.pagerComboBox_.setDefaultText('Page');
-
-  //var caption = new goog.ui.ComboBoxItem('Page');
-  //caption.setSticky(true);
-  //caption.setEnabled(false);
-  //this.pagerComboBox_.addItem(caption);
   var i=0;
   do {
     this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i+1)));
@@ -182,6 +177,19 @@ pear.plugin.Pager.prototype.handleChange_ = function (ge){
 };
 
 
+pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge){
+  var elem = this.getElement();
+  var grid = this.getGrid();
+  var rowsPerPage = grid.getConfiguration().PageSize;
+  var totalRows = grid.getRowCount();
+
+  this.pagerComboBox_.removeAllItems() ;
+  var i=0;
+  do {
+    this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i+1)));
+    i++;
+  }while (i*rowsPerPage < totalRows)
+};
 
 goog.provide('pear.plugin.PagerCellRenderer');
 

@@ -80,7 +80,10 @@ pear.plugin.FooterStatus.prototype.enterDocument = function() {
   this.footerStatus_.render(this.getElement());
   this.updateMsg_();
   
-  goog.events.listen(this.grid_,pear.ui.Grid.EventType.AFTER_PAGING,this.updateMsg_,false,this);
+  //goog.events.listen(this.grid_,pear.ui.Grid.EventType.AFTER_PAGING,this.updateMsg_,false,this);
+  goog.events.listen(this.grid_.getDataView(),pear.data.DataView.EventType.PAGE_INDEX_CHANGED,this.updateMsg_,false,this);
+  goog.events.listen(this.grid_.getDataView(),pear.data.DataView.EventType.PAGE_SIZE_CHANGED,this.updateMsg_,false,this);
+  goog.events.listen(this.grid_.getDataView(),pear.data.DataView.EventType.ROWCOUNT_CHANGED,this.updateMsg_,false,this);
 };
 
 pear.plugin.FooterStatus.prototype.updateMsg_ = function(){

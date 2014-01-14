@@ -613,24 +613,30 @@ goog.disposeAll = function(var_args) {
 };
 goog.provide("pear.data.DataModel");
 goog.require("goog.Disposable");
-pear.data.DataModel = function(columns, rows) {
+pear.data.DataModel = function(datacolumns, datarows) {
   goog.Disposable.call(this);
-  this.columns_ = columns || [];
-  this.rows_ = rows || [];
+  this.dataColumns_ = datacolumns || [];
+  this.dataRows_ = datarows || [];
 };
 goog.inherits(pear.data.DataModel, goog.Disposable);
 pear.data.DataModel.DataType = {NUMBER:"number", TEXT:"text", BOOLEAN:"boolean", DATETIME:"datetime"};
-pear.data.DataModel.prototype.columns_ = [];
-pear.data.DataModel.prototype.rows_ = [];
-pear.data.DataModel.prototype.getColumns = function() {
-  return this.columns_;
+pear.data.DataModel.prototype.dataColumns_ = [];
+pear.data.DataModel.prototype.dataRows_ = [];
+pear.data.DataModel.prototype.getDataColumns = function() {
+  return this.dataColumns_;
 };
-pear.data.DataModel.prototype.getRows = function() {
-  return this.rows_;
+pear.data.DataModel.prototype.setDataColumns = function(dc) {
+  this.dataColumns_ = dc;
+};
+pear.data.DataModel.prototype.getDataRows = function() {
+  return this.dataRows_;
+};
+pear.data.DataModel.prototype.setDataRows = function(dr) {
+  this.dataRows_ = dr;
 };
 pear.data.DataModel.prototype.disposeInternal = function() {
-  this.columns_ = null;
-  this.rows_ = null;
+  this.dataColumns_ = null;
+  this.dataRows_ = null;
   pear.data.DataModel.superClass_.disposeInternal.call(this);
 };
 goog.provide("goog.dom.NodeType");
@@ -9325,7 +9331,7 @@ pear.ui.Cell.prototype.getCellIndex = function() {
 pear.ui.Cell.prototype.getColumnObject = function() {
   var grid = this.getGrid();
   var dv = grid.getDataView();
-  var columns = dv.getColumns();
+  var columns = dv.getDataColumns();
   return columns[this.getCellIndex()];
 };
 pear.ui.Cell.prototype.getRowPosition = function() {
@@ -9445,18 +9451,35 @@ pear.ui.HeaderCell.prototype.splitHeaderCell_ = function() {
   this.contentCell_ = goog.dom.createDom("div", "pear-grid-cell-header-content", this.getContentText());
   goog.dom.appendChild(this.getElement(), this.contentCell_);
   this.syncContentCellOnResize_();
-  this.contentIndicator_ = goog.dom.createDom("div", "pear-grid-cell-header-indicators");
-  goog.dom.appendChild(this.getElement(), this.contentIndicator_);
-  goog.style.setWidth(this.contentIndicator_, 32);
-  this.sortIndicator_ = goog.dom.createDom("div", "pear-grid-cell-header-sort");
-  goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
-  this.headerMenu_ = goog.dom.createDom("div", "pear-grid-cell-header-slidemenu", goog.dom.createDom("div", "fa fa-caret-square-o-down"));
-  goog.dom.appendChild(this.contentIndicator_, this.headerMenu_);
-  this.getHandler().listen(this.headerMenu_, goog.events.EventType.CLICK, this.handleOptionClick_, false, this);
-  this.registerEvents_();
+  if (grid.getConfiguration().AllowSorting || grid.getConfiguration().AllowColumnHeaderMenu) {
+    this.contentIndicator_ = goog.dom.createDom("div", "pear-grid-cell-header-indicators");
+    goog.dom.appendChild(this.getElement(), this.contentIndicator_);
+    goog.style.setWidth(this.contentIndicator_, 32);
+  }
+  if (grid.getConfiguration().AllowSorting) {
+    this.createHeaderCellSortIndicator_();
+  }
+  if (grid.getConfiguration().AllowColumnHeaderMenu) {
+    this.createHeaderCellMenu_();
+  }
   if (grid.getConfiguration().AllowColumnResize) {
     this.createResizeHandle_();
   }
+};
+pear.ui.HeaderCell.prototype.createHeaderCellSortIndicator_ = function() {
+  this.sortIndicator_ = goog.dom.createDom("div", "pear-grid-cell-header-sort");
+  goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
+};
+pear.ui.HeaderCell.prototype.createHeaderCellMenu_ = function() {
+  this.headerMenu_ = goog.dom.createDom("div", "pear-grid-cell-header-slidemenu", goog.dom.createDom("div", "fa fa-caret-square-o-down"));
+  goog.dom.appendChild(this.contentIndicator_, this.headerMenu_);
+  this.getHandler().listen(this.headerMenu_, goog.events.EventType.CLICK, this.handleOptionClick_, false, this);
+  this.getHandler().listen(this.headerMenu_, [goog.events.EventType.MOUSEDOWN, goog.events.EventType.MOUSEUP, goog.events.EventType.MOUSEOVER, goog.events.EventType.MOUSEOUT, goog.events.EventType.CONTEXTMENU], this.handleChildMouseEvents_);
+};
+pear.ui.HeaderCell.prototype.createResizeHandle_ = function() {
+  var resizeData = {handles:pear.ui.Resizable.Position.RIGHT};
+  this.resizable_ = new pear.ui.Resizable(this.getElement(), resizeData);
+  this.getHandler().listen(this.resizable_, pear.ui.Resizable.EventType.RESIZE, this.handleResize_, false, this).listen(this.resizable_, pear.ui.Resizable.EventType.END_RESIZE, this.handleResizeEnd_, false, this);
 };
 pear.ui.HeaderCell.prototype.syncContentCellOnResize_ = function() {
   var bound = goog.style.getContentBoxSize(this.getElement());
@@ -9465,7 +9488,7 @@ pear.ui.HeaderCell.prototype.syncContentCellOnResize_ = function() {
 pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function() {
   var marginleft = 0;
   var left = 0;
-  if (this.getsortDirection() && goog.style.isElementShown(this.headerMenu_)) {
+  if (this.getsortDirection() && (this.headerMenu_ && goog.style.isElementShown(this.headerMenu_))) {
     goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
     marginleft = marginleft + 16;
     goog.dom.appendChild(this.contentIndicator_, this.headerMenu_);
@@ -9476,7 +9499,7 @@ pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function() {
       marginleft = marginleft + 16;
       goog.dom.removeNode(this.headerMenu_);
     } else {
-      if (goog.style.isElementShown(this.headerMenu_)) {
+      if (this.headerMenu_ && goog.style.isElementShown(this.headerMenu_)) {
         goog.dom.appendChild(this.contentIndicator_, this.headerMenu_);
         marginleft = marginleft + 16;
         goog.dom.removeNode(this.sortIndicator_);
@@ -9493,14 +9516,6 @@ pear.ui.HeaderCell.prototype.handleMenuSlide_ = function(el, value) {
   var anim = new pear.fx.dom.Slide(el, [0], value, 300);
   anim.play();
 };
-pear.ui.HeaderCell.prototype.createResizeHandle_ = function() {
-  var resizeData = {handles:pear.ui.Resizable.Position.RIGHT};
-  this.resizable_ = new pear.ui.Resizable(this.getElement(), resizeData);
-  this.getHandler().listen(this.resizable_, pear.ui.Resizable.EventType.RESIZE, this.handleResize_, false, this).listen(this.resizable_, pear.ui.Resizable.EventType.END_RESIZE, this.handleResizeEnd_, false, this);
-};
-pear.ui.HeaderCell.prototype.registerEvents_ = function() {
-  this.getHandler().listen(this.headerMenu_, [goog.events.EventType.MOUSEDOWN, goog.events.EventType.MOUSEUP, goog.events.EventType.MOUSEOVER, goog.events.EventType.MOUSEOUT, goog.events.EventType.CONTEXTMENU], this.handleChildMouseEvents_);
-};
 pear.ui.HeaderCell.prototype.handleChildMouseEvents_ = function(ge) {
   ge.stopPropagation();
 };
@@ -9515,12 +9530,20 @@ pear.ui.HeaderCell.prototype.handleActive_ = function(ge) {
   }
 };
 pear.ui.HeaderCell.prototype.handleEnter_ = function() {
-  goog.style.setStyle(this.headerMenu_, "display", "inline-block");
-  this.syncContentIndicatorLocation_();
+  if (this.getGrid().getConfiguration().AllowColumnHeaderMenu) {
+    goog.style.setStyle(this.headerMenu_, "display", "inline-block");
+  }
+  if (this.contentIndicator_) {
+    this.syncContentIndicatorLocation_();
+  }
 };
 pear.ui.HeaderCell.prototype.handleLeave_ = function() {
-  goog.style.setStyle(this.headerMenu_, "display", "none");
-  this.syncContentIndicatorLocation_();
+  if (this.getGrid().getConfiguration().AllowColumnHeaderMenu) {
+    goog.style.setStyle(this.headerMenu_, "display", "none");
+  }
+  if (this.contentIndicator_) {
+    this.syncContentIndicatorLocation_();
+  }
 };
 pear.ui.HeaderCell.prototype.handleOptionClick_ = function(be) {
   be.stopPropagation();
@@ -9564,73 +9587,44 @@ pear.ui.HeaderCell.prototype.toggleSortDirection = function(be) {
 goog.provide("pear.data.RowView");
 goog.require("goog.Disposable");
 goog.require("goog.ui.IdGenerator");
-pear.data.RowView = function(rowdata, dv) {
-  goog.Disposable.call(this);
-  this.rowdata_ = rowdata;
-  this.dataview_ = dv;
-  this.rowId_ = this.idGenerator_.getNextUniqueId();
-};
-goog.inherits(pear.data.RowView, goog.Disposable);
-pear.data.RowView.prototype.idGenerator_ = goog.ui.IdGenerator.getInstance();
-pear.data.RowView.prototype.rowId_ = null;
-pear.data.RowView.prototype.getRowData = function() {
-  return this.rowdata_;
-};
-pear.data.RowView.prototype.getDataView = function() {
-  return this.dataview_;
-};
-pear.data.RowView.prototype.getRowId = function() {
-  return this.rowId_;
-};
 goog.provide("pear.data.DataView");
 goog.require("pear.data.DataModel");
 goog.require("pear.data.RowView");
-goog.require("goog.Disposable");
-pear.data.DataView = function(datamodel) {
-  goog.Disposable.call(this);
-  this.datamodel_ = datamodel;
-  this.init_();
+goog.require("goog.events.EventTarget");
+pear.data.DataView = function(datacolumns, datarows) {
+  pear.data.DataModel.call(this, datacolumns, datarows);
 };
-goog.inherits(pear.data.DataView, goog.Disposable);
+goog.inherits(pear.data.DataView, pear.data.DataModel);
 pear.data.DataView.FilterType = {LIKE:1, EQUAL:2, GREATER_THAN:3, LESS_THAN:4, BETWEEN:5};
-pear.data.DataView.prototype.datamodel_ = null;
+pear.data.DataView.EventType = {ROWCOUNT_CHANGED:"rowcount-changed", PAGE_INDEX_CHANGED:"page-index-changed", PAGE_SIZE_CHANGED:"page-size-changed"};
 pear.data.DataView.prototype.grid_ = null;
-pear.data.DataView.prototype.rowViews_ = [];
+pear.data.DataView.prototype.dataRowidx_ = [];
+pear.data.DataView.prototype.dataRowViews_ = [];
 pear.data.DataView.prototype.sortField_ = null;
 pear.data.DataView.prototype.sortDirection_ = null;
 pear.data.DataView.prototype.pageIndex_ = null;
 pear.data.DataView.prototype.pageSize_ = null;
-pear.data.DataView.prototype.rowidx_ = [];
 pear.data.DataView.prototype.disposeInternal = function() {
-  this.rowidx_ = null;
-  this.originalRowViews_ = null;
-  this.rowViews_ = null;
+  this.dataRowidx_ = null;
+  this.originaldataRowViews_ = null;
+  this.dataRowViews_ = null;
   this.grid_ = null;
   this.pageIndex_ = null;
   this.pageSize_ = null;
   this.sortFieldId_ = null;
   this.sortDirection_ = null;
-  this.datamodel_.dispose();
-  this.datamodel_ = null;
   pear.data.DataView.superClass_.disposeInternal.call(this);
 };
+pear.data.DataView.prototype.setDataRows = function(dr) {
+  pear.data.DataView.superClass_.setDataRows.call(this, dr);
+  this.init_();
+};
 pear.data.DataView.prototype.init_ = function() {
-  this.initLocalCacheRowViews_();
+  this.initLocalCachedataRowViews_();
 };
-pear.data.DataView.prototype.initLocalCacheRowViews_ = function() {
-  this.rowViews_ = [];
-  this.rowidx_ = [];
-  this.transformToRowViews_(this.datamodel_.getRows());
+pear.data.DataView.prototype.initLocalCachedataRowViews_ = function() {
+  this.dataRowViews_ = this.getDataRows().slice(0);
   this.updateRowsIdx();
-};
-pear.data.DataView.prototype.transformToRowViews_ = function(rows) {
-  goog.array.forEach(rows, function(value) {
-    this.addRowView_(value);
-  }, this);
-};
-pear.data.DataView.prototype.addRowView_ = function(row) {
-  var rv = new pear.data.RowView(row, this);
-  this.rowViews_.push(rv);
 };
 pear.data.DataView.prototype.getSortField = function() {
   return this.sortFieldId_;
@@ -9638,24 +9632,30 @@ pear.data.DataView.prototype.getSortField = function() {
 pear.data.DataView.prototype.getSortDirection = function() {
   return this.sortDirection_;
 };
-pear.data.DataView.prototype.getColumns = function() {
-  return this.datamodel_.getColumns();
-};
 pear.data.DataView.prototype.setGrid = function(grid) {
   this.grid_ = grid;
 };
 pear.data.DataView.prototype.setPageIndex = function(pageIndex) {
   this.pageIndex_ = pageIndex;
+  var evt = new pear.data.DataViewEvent(pear.data.DataView.EventType.PAGE_INDEX_CHANGED, this);
+  this.dispatchEvent(evt);
 };
 pear.data.DataView.prototype.getPageIndex = function() {
   var index = this.pageSize_ && this.pageSize_ > 0 ? this.pageIndex_ ? this.pageIndex_ : 0 : 0;
+  var rowcount = this.getDataRowViewCount();
+  var pagesize = this.getPageSize();
+  index = index * pagesize < rowcount ? index : 0;
   return index;
 };
 pear.data.DataView.prototype.setPageSize = function(pageSize) {
   this.pageSize_ = pageSize;
+  var evt = new pear.data.DataViewEvent(pear.data.DataView.EventType.PAGE_SIZE_CHANGED, this);
+  this.dispatchEvent(evt);
 };
 pear.data.DataView.prototype.getPageSize = function() {
-  this.pageSize_ = this.pageSize_ || this.getRowCount();
+  var rowcount = this.getDataRowViewCount();
+  this.pageSize_ = this.pageSize_ || rowcount;
+  this.pageSize_ = this.pageSize_ > rowcount ? rowcount : this.pageSize_;
   return this.pageSize_;
 };
 pear.data.DataView.prototype.addColumnFilter = function(columnId, filter) {
@@ -9675,57 +9675,64 @@ pear.data.DataView.prototype.clearColumnFilter = function(columnMapId) {
       column.filter = null;
     }
   }, this);
+  this.initLocalCachedataRowViews_();
 };
 pear.data.DataView.prototype.applyFilter = function() {
-  var columns = this.getColumns();
-  this.rowViews_ = [];
-  this.transformToRowViews_(this.datamodel_.getRows());
-  this.updateRowsIdx();
-  this.rowViews_ = this.rowViews_.filter(this.filter_, this);
+  var filteredRows = this.dataRowViews_.filter(this.filterFn_, this);
+  console.dir(filteredRows);
+  this.setRowViews(filteredRows);
 };
-pear.data.DataView.prototype.filter_ = function(row) {
+pear.data.DataView.prototype.filterFn_ = function(row) {
   var columns = this.getColumns();
   var rowdata = row.getRowData();
-  var ret = false;
+  var ret = true;
   goog.array.forEach(columns, function(column) {
     if (column.filter && column.filter.length > 0) {
       goog.array.forEach(column.filter, function(filter) {
         if (rowdata[column.id] == filter.expression) {
-          ret = true;
-          return ret;
+          ret = ret && true;
+        } else {
+          ret = ret && false;
         }
       }, this);
+    } else {
     }
   }, this);
   return ret;
 };
 pear.data.DataView.prototype.getRowViewByRowId = function(rowId) {
   var rv = null;
-  rv = this.rowViews_[rowId] || [];
+  rv = this.dataRowViews_[rowId] || [];
   return rv;
 };
 pear.data.DataView.prototype.getRowViews = function() {
-  return this.getPagedRowsViews_();
+  var rows = this.grid_.Configuration_.AllowPaging ? this.getPagedRowsViews_() : this.dataRowViews_;
+  return rows;
 };
 pear.data.DataView.prototype.getPagedRowsViews_ = function() {
   var pgIdx = this.getPageIndex();
   var pgSize = this.getPageSize();
-  var start = pgIdx * pgSize > this.rowViews_.length ? this.rowViews_.length : pgIdx * pgSize;
-  var end = start + pgSize > this.rowViews_.length ? this.rowViews_.length : start + pgSize;
-  var rows = this.rowViews_.slice(start, end);
+  var start = pgIdx * pgSize > this.dataRowViews_.length ? this.dataRowViews_.length : pgIdx * pgSize;
+  var end = start + pgSize > this.dataRowViews_.length ? this.dataRowViews_.length : start + pgSize;
+  var rows = this.dataRowViews_.slice(start, end);
   return rows;
 };
 pear.data.DataView.prototype.setRowViews = function(rowviews) {
-  this.rowViews_ = rowviews;
+  this.dataRowViews_ = rowviews;
   this.updateRowsIdx();
+  var evt = new pear.data.DataViewEvent(pear.data.DataView.EventType.ROWCOUNT_CHANGED, this);
+  this.dispatchEvent(evt);
 };
 pear.data.DataView.prototype.getRowCount = function() {
-  return this.datamodel_.getRows().length;
+  return this.getDataRows().length;
+};
+pear.data.DataView.prototype.getDataRowViewCount = function() {
+  return this.dataRowViews_.length;
 };
 pear.data.DataView.prototype.updateRowsIdx = function() {
-  this.rowidx_ = [];
-  goog.array.forEach(this.rowViews_, function(value, index) {
-    this.rowidx_.push(index);
+  this.dataRowidx_ = [];
+  goog.array.forEach(this.dataRowViews_, function(value, index) {
+    this.dataRowidx_.push(index);
   }, this);
 };
 pear.data.DataView.prototype.sort = function(col) {
@@ -9734,7 +9741,7 @@ pear.data.DataView.prototype.sort = function(col) {
   }
   this.sortFieldId_ = col.id;
   var sortFn = function(column) {
-    var rv = this.rowViews_;
+    var rv = this.dataRowViews_;
     if (column.datatype === "number") {
       rv.sort(this.numberCompare);
     } else {
@@ -9792,6 +9799,10 @@ pear.data.DataView.prototype.dateCompare = function(value1, value2) {
   var dateA = new Date(value1.getRowData()[sortfield]), dateB = new Date(value2.getRowData()[sortfield]);
   return dateA - dateB;
 };
+pear.data.DataViewEvent = function(type, target) {
+  goog.events.Event.call(this, type, target);
+};
+goog.inherits(pear.data.DataViewEvent, goog.events.Event);
 goog.provide("pear.ui.Plugable");
 pear.ui.Plugable = function() {
 };
@@ -9807,6 +9818,793 @@ pear.ui.Plugable.isImplementedBy = function(obj) {
   }
 };
 pear.ui.Plugable.prototype.show;
+goog.provide("goog.ui.ContainerRenderer");
+goog.require("goog.a11y.aria");
+goog.require("goog.array");
+goog.require("goog.asserts");
+goog.require("goog.dom.NodeType");
+goog.require("goog.dom.classlist");
+goog.require("goog.string");
+goog.require("goog.style");
+goog.require("goog.ui.registry");
+goog.require("goog.userAgent");
+goog.ui.ContainerRenderer = function() {
+};
+goog.addSingletonGetter(goog.ui.ContainerRenderer);
+goog.ui.ContainerRenderer.getCustomRenderer = function(ctor, cssClassName) {
+  var renderer = new ctor;
+  renderer.getCssClass = function() {
+    return cssClassName;
+  };
+  return renderer;
+};
+goog.ui.ContainerRenderer.CSS_CLASS = goog.getCssName("goog-container");
+goog.ui.ContainerRenderer.prototype.getAriaRole = function() {
+  return undefined;
+};
+goog.ui.ContainerRenderer.prototype.enableTabIndex = function(element, enable) {
+  if (element) {
+    element.tabIndex = enable ? 0 : -1;
+  }
+};
+goog.ui.ContainerRenderer.prototype.createDom = function(container) {
+  return container.getDomHelper().createDom("div", this.getClassNames(container).join(" "));
+};
+goog.ui.ContainerRenderer.prototype.getContentElement = function(element) {
+  return element;
+};
+goog.ui.ContainerRenderer.prototype.canDecorate = function(element) {
+  return element.tagName == "DIV";
+};
+goog.ui.ContainerRenderer.prototype.decorate = function(container, element) {
+  if (element.id) {
+    container.setId(element.id);
+  }
+  var baseClass = this.getCssClass();
+  var hasBaseClass = false;
+  var classNames = goog.dom.classlist.get(element);
+  if (classNames) {
+    goog.array.forEach(classNames, function(className) {
+      if (className == baseClass) {
+        hasBaseClass = true;
+      } else {
+        if (className) {
+          this.setStateFromClassName(container, className, baseClass);
+        }
+      }
+    }, this);
+  }
+  if (!hasBaseClass) {
+    goog.dom.classlist.add(element, baseClass);
+  }
+  this.decorateChildren(container, this.getContentElement(element));
+  return element;
+};
+goog.ui.ContainerRenderer.prototype.setStateFromClassName = function(container, className, baseClass) {
+  if (className == goog.getCssName(baseClass, "disabled")) {
+    container.setEnabled(false);
+  } else {
+    if (className == goog.getCssName(baseClass, "horizontal")) {
+      container.setOrientation(goog.ui.Container.Orientation.HORIZONTAL);
+    } else {
+      if (className == goog.getCssName(baseClass, "vertical")) {
+        container.setOrientation(goog.ui.Container.Orientation.VERTICAL);
+      }
+    }
+  }
+};
+goog.ui.ContainerRenderer.prototype.decorateChildren = function(container, element, opt_firstChild) {
+  if (element) {
+    var node = opt_firstChild || element.firstChild, next;
+    while (node && node.parentNode == element) {
+      next = node.nextSibling;
+      if (node.nodeType == goog.dom.NodeType.ELEMENT) {
+        var child = this.getDecoratorForChild((node));
+        if (child) {
+          child.setElementInternal((node));
+          if (!container.isEnabled()) {
+            child.setEnabled(false);
+          }
+          container.addChild(child);
+          child.decorate((node));
+        }
+      } else {
+        if (!node.nodeValue || goog.string.trim(node.nodeValue) == "") {
+          element.removeChild(node);
+        }
+      }
+      node = next;
+    }
+  }
+};
+goog.ui.ContainerRenderer.prototype.getDecoratorForChild = function(element) {
+  return(goog.ui.registry.getDecorator(element));
+};
+goog.ui.ContainerRenderer.prototype.initializeDom = function(container) {
+  var elem = container.getElement();
+  goog.asserts.assert(elem, "The container DOM element cannot be null.");
+  goog.style.setUnselectable(elem, true, goog.userAgent.GECKO);
+  if (goog.userAgent.IE) {
+    elem.hideFocus = true;
+  }
+  var ariaRole = this.getAriaRole();
+  if (ariaRole) {
+    goog.a11y.aria.setRole(elem, ariaRole);
+  }
+};
+goog.ui.ContainerRenderer.prototype.getKeyEventTarget = function(container) {
+  return container.getElement();
+};
+goog.ui.ContainerRenderer.prototype.getCssClass = function() {
+  return goog.ui.ContainerRenderer.CSS_CLASS;
+};
+goog.ui.ContainerRenderer.prototype.getClassNames = function(container) {
+  var baseClass = this.getCssClass();
+  var isHorizontal = container.getOrientation() == goog.ui.Container.Orientation.HORIZONTAL;
+  var classNames = [baseClass, isHorizontal ? goog.getCssName(baseClass, "horizontal") : goog.getCssName(baseClass, "vertical")];
+  if (!container.isEnabled()) {
+    classNames.push(goog.getCssName(baseClass, "disabled"));
+  }
+  return classNames;
+};
+goog.ui.ContainerRenderer.prototype.getDefaultOrientation = function() {
+  return goog.ui.Container.Orientation.VERTICAL;
+};
+goog.provide("pear.ui.RowRenderer");
+goog.require("goog.ui.ContainerRenderer");
+pear.ui.RowRenderer = function() {
+  goog.ui.ContainerRenderer.call(this);
+};
+goog.inherits(pear.ui.RowRenderer, goog.ui.ContainerRenderer);
+goog.addSingletonGetter(pear.ui.RowRenderer);
+pear.ui.RowRenderer.CSS_CLASS = goog.getCssName("pear-grid-row");
+pear.ui.RowRenderer.prototype.getCssClass = function() {
+  return pear.ui.RowRenderer.CSS_CLASS;
+};
+pear.ui.RowRenderer.prototype.getDefaultOrientation = function() {
+  return goog.ui.Container.Orientation.HORIZONTAL;
+};
+goog.provide("pear.ui.FooterRowRenderer");
+goog.require("pear.ui.RowRenderer");
+pear.ui.FooterRowRenderer = function() {
+  pear.ui.RowRenderer.call(this);
+};
+goog.inherits(pear.ui.FooterRowRenderer, pear.ui.RowRenderer);
+goog.addSingletonGetter(pear.ui.FooterRowRenderer);
+pear.ui.FooterRowRenderer.CSS_CLASS = goog.getCssName("pear-grid-row-footer");
+pear.ui.FooterRowRenderer.prototype.getCssClass = function() {
+  return pear.ui.FooterRowRenderer.CSS_CLASS;
+};
+goog.provide("goog.ui.Container");
+goog.provide("goog.ui.Container.EventType");
+goog.provide("goog.ui.Container.Orientation");
+goog.require("goog.a11y.aria");
+goog.require("goog.a11y.aria.State");
+goog.require("goog.asserts");
+goog.require("goog.dom");
+goog.require("goog.events.EventType");
+goog.require("goog.events.KeyCodes");
+goog.require("goog.events.KeyHandler");
+goog.require("goog.object");
+goog.require("goog.style");
+goog.require("goog.ui.Component");
+goog.require("goog.ui.ContainerRenderer");
+goog.require("goog.ui.Control");
+goog.ui.Container = function(opt_orientation, opt_renderer, opt_domHelper) {
+  goog.ui.Component.call(this, opt_domHelper);
+  this.renderer_ = opt_renderer || goog.ui.ContainerRenderer.getInstance();
+  this.orientation_ = opt_orientation || this.renderer_.getDefaultOrientation();
+};
+goog.inherits(goog.ui.Container, goog.ui.Component);
+goog.ui.Container.EventType = {AFTER_SHOW:"aftershow", AFTER_HIDE:"afterhide"};
+goog.ui.Container.Orientation = {HORIZONTAL:"horizontal", VERTICAL:"vertical"};
+goog.ui.Container.prototype.keyEventTarget_ = null;
+goog.ui.Container.prototype.keyHandler_ = null;
+goog.ui.Container.prototype.renderer_ = null;
+goog.ui.Container.prototype.orientation_ = null;
+goog.ui.Container.prototype.visible_ = true;
+goog.ui.Container.prototype.enabled_ = true;
+goog.ui.Container.prototype.focusable_ = true;
+goog.ui.Container.prototype.highlightedIndex_ = -1;
+goog.ui.Container.prototype.openItem_ = null;
+goog.ui.Container.prototype.mouseButtonPressed_ = false;
+goog.ui.Container.prototype.allowFocusableChildren_ = false;
+goog.ui.Container.prototype.openFollowsHighlight_ = true;
+goog.ui.Container.prototype.childElementIdMap_ = null;
+goog.ui.Container.prototype.getKeyEventTarget = function() {
+  return this.keyEventTarget_ || this.renderer_.getKeyEventTarget(this);
+};
+goog.ui.Container.prototype.setKeyEventTarget = function(element) {
+  if (this.focusable_) {
+    var oldTarget = this.getKeyEventTarget();
+    var inDocument = this.isInDocument();
+    this.keyEventTarget_ = element;
+    var newTarget = this.getKeyEventTarget();
+    if (inDocument) {
+      this.keyEventTarget_ = oldTarget;
+      this.enableFocusHandling_(false);
+      this.keyEventTarget_ = element;
+      this.getKeyHandler().attach(newTarget);
+      this.enableFocusHandling_(true);
+    }
+  } else {
+    throw Error("Can't set key event target for container " + "that doesn't support keyboard focus!");
+  }
+};
+goog.ui.Container.prototype.getKeyHandler = function() {
+  return this.keyHandler_ || (this.keyHandler_ = new goog.events.KeyHandler(this.getKeyEventTarget()));
+};
+goog.ui.Container.prototype.getRenderer = function() {
+  return this.renderer_;
+};
+goog.ui.Container.prototype.setRenderer = function(renderer) {
+  if (this.getElement()) {
+    throw Error(goog.ui.Component.Error.ALREADY_RENDERED);
+  }
+  this.renderer_ = renderer;
+};
+goog.ui.Container.prototype.createDom = function() {
+  this.setElementInternal(this.renderer_.createDom(this));
+};
+goog.ui.Container.prototype.getContentElement = function() {
+  return this.renderer_.getContentElement(this.getElement());
+};
+goog.ui.Container.prototype.canDecorate = function(element) {
+  return this.renderer_.canDecorate(element);
+};
+goog.ui.Container.prototype.decorateInternal = function(element) {
+  this.setElementInternal(this.renderer_.decorate(this, element));
+  if (element.style.display == "none") {
+    this.visible_ = false;
+  }
+};
+goog.ui.Container.prototype.enterDocument = function() {
+  goog.ui.Container.superClass_.enterDocument.call(this);
+  this.forEachChild(function(child) {
+    if (child.isInDocument()) {
+      this.registerChildId_(child);
+    }
+  }, this);
+  var elem = this.getElement();
+  this.renderer_.initializeDom(this);
+  this.setVisible(this.visible_, true);
+  this.getHandler().listen(this, goog.ui.Component.EventType.ENTER, this.handleEnterItem).listen(this, goog.ui.Component.EventType.HIGHLIGHT, this.handleHighlightItem).listen(this, goog.ui.Component.EventType.UNHIGHLIGHT, this.handleUnHighlightItem).listen(this, goog.ui.Component.EventType.OPEN, this.handleOpenItem).listen(this, goog.ui.Component.EventType.CLOSE, this.handleCloseItem).listen(elem, goog.events.EventType.MOUSEDOWN, this.handleMouseDown).listen(goog.dom.getOwnerDocument(elem), goog.events.EventType.MOUSEUP, 
+  this.handleDocumentMouseUp).listen(elem, [goog.events.EventType.MOUSEDOWN, goog.events.EventType.MOUSEUP, goog.events.EventType.MOUSEOVER, goog.events.EventType.MOUSEOUT, goog.events.EventType.CONTEXTMENU], this.handleChildMouseEvents);
+  if (this.isFocusable()) {
+    this.enableFocusHandling_(true);
+  }
+};
+goog.ui.Container.prototype.enableFocusHandling_ = function(enable) {
+  var handler = this.getHandler();
+  var keyTarget = this.getKeyEventTarget();
+  if (enable) {
+    handler.listen(keyTarget, goog.events.EventType.FOCUS, this.handleFocus).listen(keyTarget, goog.events.EventType.BLUR, this.handleBlur).listen(this.getKeyHandler(), goog.events.KeyHandler.EventType.KEY, this.handleKeyEvent);
+  } else {
+    handler.unlisten(keyTarget, goog.events.EventType.FOCUS, this.handleFocus).unlisten(keyTarget, goog.events.EventType.BLUR, this.handleBlur).unlisten(this.getKeyHandler(), goog.events.KeyHandler.EventType.KEY, this.handleKeyEvent);
+  }
+};
+goog.ui.Container.prototype.exitDocument = function() {
+  this.setHighlightedIndex(-1);
+  if (this.openItem_) {
+    this.openItem_.setOpen(false);
+  }
+  this.mouseButtonPressed_ = false;
+  goog.ui.Container.superClass_.exitDocument.call(this);
+};
+goog.ui.Container.prototype.disposeInternal = function() {
+  goog.ui.Container.superClass_.disposeInternal.call(this);
+  if (this.keyHandler_) {
+    this.keyHandler_.dispose();
+    this.keyHandler_ = null;
+  }
+  this.keyEventTarget_ = null;
+  this.childElementIdMap_ = null;
+  this.openItem_ = null;
+  this.renderer_ = null;
+};
+goog.ui.Container.prototype.handleEnterItem = function(e) {
+  return true;
+};
+goog.ui.Container.prototype.handleHighlightItem = function(e) {
+  var index = this.indexOfChild((e.target));
+  if (index > -1 && index != this.highlightedIndex_) {
+    var item = this.getHighlighted();
+    if (item) {
+      item.setHighlighted(false);
+    }
+    this.highlightedIndex_ = index;
+    item = this.getHighlighted();
+    if (this.isMouseButtonPressed()) {
+      item.setActive(true);
+    }
+    if (this.openFollowsHighlight_ && (this.openItem_ && item != this.openItem_)) {
+      if (item.isSupportedState(goog.ui.Component.State.OPENED)) {
+        item.setOpen(true);
+      } else {
+        this.openItem_.setOpen(false);
+      }
+    }
+  }
+  var element = this.getElement();
+  goog.asserts.assert(element, "The DOM element for the container cannot be null.");
+  if (e.target.getElement() != null) {
+    goog.a11y.aria.setState(element, goog.a11y.aria.State.ACTIVEDESCENDANT, e.target.getElement().id);
+  }
+};
+goog.ui.Container.prototype.handleUnHighlightItem = function(e) {
+  if (e.target == this.getHighlighted()) {
+    this.highlightedIndex_ = -1;
+  }
+  var element = this.getElement();
+  goog.asserts.assert(element, "The DOM element for the container cannot be null.");
+  goog.a11y.aria.removeState(element, goog.a11y.aria.State.ACTIVEDESCENDANT);
+};
+goog.ui.Container.prototype.handleOpenItem = function(e) {
+  var item = (e.target);
+  if (item && (item != this.openItem_ && item.getParent() == this)) {
+    if (this.openItem_) {
+      this.openItem_.setOpen(false);
+    }
+    this.openItem_ = item;
+  }
+};
+goog.ui.Container.prototype.handleCloseItem = function(e) {
+  if (e.target == this.openItem_) {
+    this.openItem_ = null;
+  }
+};
+goog.ui.Container.prototype.handleMouseDown = function(e) {
+  if (this.enabled_) {
+    this.setMouseButtonPressed(true);
+  }
+  var keyTarget = this.getKeyEventTarget();
+  if (keyTarget && goog.dom.isFocusableTabIndex(keyTarget)) {
+    keyTarget.focus();
+  } else {
+    e.preventDefault();
+  }
+};
+goog.ui.Container.prototype.handleDocumentMouseUp = function(e) {
+  this.setMouseButtonPressed(false);
+};
+goog.ui.Container.prototype.handleChildMouseEvents = function(e) {
+  var control = this.getOwnerControl((e.target));
+  if (control) {
+    switch(e.type) {
+      case goog.events.EventType.MOUSEDOWN:
+        control.handleMouseDown(e);
+        break;
+      case goog.events.EventType.MOUSEUP:
+        control.handleMouseUp(e);
+        break;
+      case goog.events.EventType.MOUSEOVER:
+        control.handleMouseOver(e);
+        break;
+      case goog.events.EventType.MOUSEOUT:
+        control.handleMouseOut(e);
+        break;
+      case goog.events.EventType.CONTEXTMENU:
+        control.handleContextMenu(e);
+        break;
+    }
+  }
+};
+goog.ui.Container.prototype.getOwnerControl = function(node) {
+  if (this.childElementIdMap_) {
+    var elem = this.getElement();
+    while (node && node !== elem) {
+      var id = node.id;
+      if (id in this.childElementIdMap_) {
+        return this.childElementIdMap_[id];
+      }
+      node = node.parentNode;
+    }
+  }
+  return null;
+};
+goog.ui.Container.prototype.handleFocus = function(e) {
+};
+goog.ui.Container.prototype.handleBlur = function(e) {
+  this.setHighlightedIndex(-1);
+  this.setMouseButtonPressed(false);
+  if (this.openItem_) {
+    this.openItem_.setOpen(false);
+  }
+};
+goog.ui.Container.prototype.handleKeyEvent = function(e) {
+  if (this.isEnabled() && (this.isVisible() && ((this.getChildCount() != 0 || this.keyEventTarget_) && this.handleKeyEventInternal(e)))) {
+    e.preventDefault();
+    e.stopPropagation();
+    return true;
+  }
+  return false;
+};
+goog.ui.Container.prototype.handleKeyEventInternal = function(e) {
+  var highlighted = this.getHighlighted();
+  if (highlighted && (typeof highlighted.handleKeyEvent == "function" && highlighted.handleKeyEvent(e))) {
+    return true;
+  }
+  if (this.openItem_ && (this.openItem_ != highlighted && (typeof this.openItem_.handleKeyEvent == "function" && this.openItem_.handleKeyEvent(e)))) {
+    return true;
+  }
+  if (e.shiftKey || (e.ctrlKey || (e.metaKey || e.altKey))) {
+    return false;
+  }
+  switch(e.keyCode) {
+    case goog.events.KeyCodes.ESC:
+      if (this.isFocusable()) {
+        this.getKeyEventTarget().blur();
+      } else {
+        return false;
+      }
+      break;
+    case goog.events.KeyCodes.HOME:
+      this.highlightFirst();
+      break;
+    case goog.events.KeyCodes.END:
+      this.highlightLast();
+      break;
+    case goog.events.KeyCodes.UP:
+      if (this.orientation_ == goog.ui.Container.Orientation.VERTICAL) {
+        this.highlightPrevious();
+      } else {
+        return false;
+      }
+      break;
+    case goog.events.KeyCodes.LEFT:
+      if (this.orientation_ == goog.ui.Container.Orientation.HORIZONTAL) {
+        if (this.isRightToLeft()) {
+          this.highlightNext();
+        } else {
+          this.highlightPrevious();
+        }
+      } else {
+        return false;
+      }
+      break;
+    case goog.events.KeyCodes.DOWN:
+      if (this.orientation_ == goog.ui.Container.Orientation.VERTICAL) {
+        this.highlightNext();
+      } else {
+        return false;
+      }
+      break;
+    case goog.events.KeyCodes.RIGHT:
+      if (this.orientation_ == goog.ui.Container.Orientation.HORIZONTAL) {
+        if (this.isRightToLeft()) {
+          this.highlightPrevious();
+        } else {
+          this.highlightNext();
+        }
+      } else {
+        return false;
+      }
+      break;
+    default:
+      return false;
+  }
+  return true;
+};
+goog.ui.Container.prototype.registerChildId_ = function(child) {
+  var childElem = child.getElement();
+  var id = childElem.id || (childElem.id = child.getId());
+  if (!this.childElementIdMap_) {
+    this.childElementIdMap_ = {};
+  }
+  this.childElementIdMap_[id] = child;
+};
+goog.ui.Container.prototype.addChild = function(child, opt_render) {
+  goog.asserts.assertInstanceof(child, goog.ui.Control, "The child of a container must be a control");
+  goog.ui.Container.superClass_.addChild.call(this, child, opt_render);
+};
+goog.ui.Container.prototype.getChild;
+goog.ui.Container.prototype.getChildAt;
+goog.ui.Container.prototype.addChildAt = function(control, index, opt_render) {
+  control.setDispatchTransitionEvents(goog.ui.Component.State.HOVER, true);
+  control.setDispatchTransitionEvents(goog.ui.Component.State.OPENED, true);
+  if (this.isFocusable() || !this.isFocusableChildrenAllowed()) {
+    control.setSupportedState(goog.ui.Component.State.FOCUSED, false);
+  }
+  control.setHandleMouseEvents(false);
+  goog.ui.Container.superClass_.addChildAt.call(this, control, index, opt_render);
+  if (control.isInDocument() && this.isInDocument()) {
+    this.registerChildId_(control);
+  }
+  if (index <= this.highlightedIndex_) {
+    this.highlightedIndex_++;
+  }
+};
+goog.ui.Container.prototype.removeChild = function(control, opt_unrender) {
+  control = goog.isString(control) ? this.getChild(control) : control;
+  if (control) {
+    var index = this.indexOfChild(control);
+    if (index != -1) {
+      if (index == this.highlightedIndex_) {
+        control.setHighlighted(false);
+        this.highlightedIndex_ = -1;
+      } else {
+        if (index < this.highlightedIndex_) {
+          this.highlightedIndex_--;
+        }
+      }
+    }
+    var childElem = control.getElement();
+    if (childElem && (childElem.id && this.childElementIdMap_)) {
+      goog.object.remove(this.childElementIdMap_, childElem.id);
+    }
+  }
+  control = (goog.ui.Container.superClass_.removeChild.call(this, control, opt_unrender));
+  control.setHandleMouseEvents(true);
+  return control;
+};
+goog.ui.Container.prototype.getOrientation = function() {
+  return this.orientation_;
+};
+goog.ui.Container.prototype.setOrientation = function(orientation) {
+  if (this.getElement()) {
+    throw Error(goog.ui.Component.Error.ALREADY_RENDERED);
+  }
+  this.orientation_ = orientation;
+};
+goog.ui.Container.prototype.isVisible = function() {
+  return this.visible_;
+};
+goog.ui.Container.prototype.setVisible = function(visible, opt_force) {
+  if (opt_force || this.visible_ != visible && this.dispatchEvent(visible ? goog.ui.Component.EventType.SHOW : goog.ui.Component.EventType.HIDE)) {
+    this.visible_ = visible;
+    var elem = this.getElement();
+    if (elem) {
+      goog.style.setElementShown(elem, visible);
+      if (this.isFocusable()) {
+        this.renderer_.enableTabIndex(this.getKeyEventTarget(), this.enabled_ && this.visible_);
+      }
+      if (!opt_force) {
+        this.dispatchEvent(this.visible_ ? goog.ui.Container.EventType.AFTER_SHOW : goog.ui.Container.EventType.AFTER_HIDE);
+      }
+    }
+    return true;
+  }
+  return false;
+};
+goog.ui.Container.prototype.isEnabled = function() {
+  return this.enabled_;
+};
+goog.ui.Container.prototype.setEnabled = function(enable) {
+  if (this.enabled_ != enable && this.dispatchEvent(enable ? goog.ui.Component.EventType.ENABLE : goog.ui.Component.EventType.DISABLE)) {
+    if (enable) {
+      this.enabled_ = true;
+      this.forEachChild(function(child) {
+        if (child.wasDisabled) {
+          delete child.wasDisabled;
+        } else {
+          child.setEnabled(true);
+        }
+      });
+    } else {
+      this.forEachChild(function(child) {
+        if (child.isEnabled()) {
+          child.setEnabled(false);
+        } else {
+          child.wasDisabled = true;
+        }
+      });
+      this.enabled_ = false;
+      this.setMouseButtonPressed(false);
+    }
+    if (this.isFocusable()) {
+      this.renderer_.enableTabIndex(this.getKeyEventTarget(), enable && this.visible_);
+    }
+  }
+};
+goog.ui.Container.prototype.isFocusable = function() {
+  return this.focusable_;
+};
+goog.ui.Container.prototype.setFocusable = function(focusable) {
+  if (focusable != this.focusable_ && this.isInDocument()) {
+    this.enableFocusHandling_(focusable);
+  }
+  this.focusable_ = focusable;
+  if (this.enabled_ && this.visible_) {
+    this.renderer_.enableTabIndex(this.getKeyEventTarget(), focusable);
+  }
+};
+goog.ui.Container.prototype.isFocusableChildrenAllowed = function() {
+  return this.allowFocusableChildren_;
+};
+goog.ui.Container.prototype.setFocusableChildrenAllowed = function(focusable) {
+  this.allowFocusableChildren_ = focusable;
+};
+goog.ui.Container.prototype.isOpenFollowsHighlight = function() {
+  return this.openFollowsHighlight_;
+};
+goog.ui.Container.prototype.setOpenFollowsHighlight = function(follow) {
+  this.openFollowsHighlight_ = follow;
+};
+goog.ui.Container.prototype.getHighlightedIndex = function() {
+  return this.highlightedIndex_;
+};
+goog.ui.Container.prototype.setHighlightedIndex = function(index) {
+  var child = this.getChildAt(index);
+  if (child) {
+    child.setHighlighted(true);
+  } else {
+    if (this.highlightedIndex_ > -1) {
+      this.getHighlighted().setHighlighted(false);
+    }
+  }
+};
+goog.ui.Container.prototype.setHighlighted = function(item) {
+  this.setHighlightedIndex(this.indexOfChild(item));
+};
+goog.ui.Container.prototype.getHighlighted = function() {
+  return this.getChildAt(this.highlightedIndex_);
+};
+goog.ui.Container.prototype.highlightFirst = function() {
+  this.highlightHelper(function(index, max) {
+    return(index + 1) % max;
+  }, this.getChildCount() - 1);
+};
+goog.ui.Container.prototype.highlightLast = function() {
+  this.highlightHelper(function(index, max) {
+    index--;
+    return index < 0 ? max - 1 : index;
+  }, 0);
+};
+goog.ui.Container.prototype.highlightNext = function() {
+  this.highlightHelper(function(index, max) {
+    return(index + 1) % max;
+  }, this.highlightedIndex_);
+};
+goog.ui.Container.prototype.highlightPrevious = function() {
+  this.highlightHelper(function(index, max) {
+    index--;
+    return index < 0 ? max - 1 : index;
+  }, this.highlightedIndex_);
+};
+goog.ui.Container.prototype.highlightHelper = function(fn, startIndex) {
+  var curIndex = startIndex < 0 ? this.indexOfChild(this.openItem_) : startIndex;
+  var numItems = this.getChildCount();
+  curIndex = fn.call(this, curIndex, numItems);
+  var visited = 0;
+  while (visited <= numItems) {
+    var control = this.getChildAt(curIndex);
+    if (control && this.canHighlightItem(control)) {
+      this.setHighlightedIndexFromKeyEvent(curIndex);
+      return true;
+    }
+    visited++;
+    curIndex = fn.call(this, curIndex, numItems);
+  }
+  return false;
+};
+goog.ui.Container.prototype.canHighlightItem = function(item) {
+  return item.isVisible() && (item.isEnabled() && item.isSupportedState(goog.ui.Component.State.HOVER));
+};
+goog.ui.Container.prototype.setHighlightedIndexFromKeyEvent = function(index) {
+  this.setHighlightedIndex(index);
+};
+goog.ui.Container.prototype.getOpenItem = function() {
+  return this.openItem_;
+};
+goog.ui.Container.prototype.isMouseButtonPressed = function() {
+  return this.mouseButtonPressed_;
+};
+goog.ui.Container.prototype.setMouseButtonPressed = function(pressed) {
+  this.mouseButtonPressed_ = pressed;
+};
+goog.provide("pear.ui.Row");
+goog.require("goog.ui.Container");
+goog.require("pear.data.RowView");
+goog.require("pear.ui.RowRenderer");
+pear.ui.Row = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
+  goog.ui.Container.call(this, goog.ui.Container.Orientation.HORIZONTAL, opt_renderer || pear.ui.RowRenderer.getInstance(), opt_domHelper);
+  this.setFocusable(false);
+  this.grid_ = grid;
+  this.height_ = height || 25;
+};
+goog.inherits(pear.ui.Row, goog.ui.Container);
+pear.ui.Row.prototype.grid_ = null;
+pear.ui.Row.prototype.height_ = 25;
+pear.ui.Row.prototype.rowPosition_ = -1;
+pear.ui.Row.prototype.disposeInternal = function() {
+  this.grid_ = null;
+  pear.ui.Row.superClass_.disposeInternal.call(this);
+};
+pear.ui.Row.prototype.enterDocument = function() {
+  pear.ui.Row.superClass_.enterDocument.call(this);
+  var elem = this.getElement();
+  this.setPosition_();
+};
+pear.ui.Row.prototype.handleScroll_ = function(be) {
+  var cell = this.getChild(be.target.id);
+  console.dir(cell);
+  be.stopPropagation();
+  be.preventDefault();
+};
+pear.ui.Row.prototype.handleClickEvent_ = function(be) {
+  var cell = this.getChild(be.target.id);
+  console.dir(cell);
+  if (cell) {
+    cell.setSelected(true);
+  }
+};
+pear.ui.Row.prototype.setRowView = function(model) {
+  pear.ui.Row.superClass_.setModel.call(this, model);
+  model.setRowContainer(this);
+};
+pear.ui.Row.prototype.getRowView = function() {
+  return this.getModel();
+};
+pear.ui.Row.prototype.addCell = function(cell, opt_render) {
+  this.addChild(cell, opt_render);
+};
+pear.ui.Row.prototype.getGrid = function() {
+  return this.grid_;
+};
+pear.ui.Row.prototype.setHeight = function(height) {
+  this.height_ = height;
+};
+pear.ui.Row.prototype.getWidth = function() {
+  var width = 0;
+  this.forEachChild(function(child) {
+    width = width + child.getCellWidth();
+  });
+  return width;
+};
+pear.ui.Row.prototype.getHeight = function() {
+  return this.height_;
+};
+pear.ui.Row.prototype.getComputedHeight = function() {
+  return this.getHeight();
+};
+pear.ui.Row.prototype.setRowPosition = function(pos) {
+  this.rowPosition_ = pos;
+};
+pear.ui.Row.prototype.getRowPosition = function() {
+  return this.rowPosition_;
+};
+pear.ui.Row.prototype.getLocationTop = function() {
+  return 0;
+};
+pear.ui.Row.prototype.getCellWidth = function(index) {
+  var child = this.getChildAt(index);
+  return child.getCellWidth();
+};
+pear.ui.Row.prototype.setPosition_ = function() {
+  var left, top;
+  left = 0;
+  top = 0;
+  left = 0;
+  top = this.getLocationTop();
+  goog.style.setPosition(this.getElement(), left, top);
+};
+goog.provide("pear.ui.FooterRow");
+goog.require("pear.ui.FooterRowRenderer");
+goog.require("pear.ui.Row");
+pear.ui.FooterRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
+  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL, pear.ui.FooterRowRenderer.getInstance(), opt_domHelper);
+  this.setFocusable(false);
+};
+goog.inherits(pear.ui.FooterRow, pear.ui.Row);
+pear.ui.FooterRow.prototype.pager_ = null;
+pear.ui.FooterRow.prototype.getPager = function() {
+  return this.pager_;
+};
+pear.ui.FooterRow.prototype.disposeInternal = function() {
+  if (this.pager_) {
+    this.pager_.dispose();
+    this.pager_ = null;
+  }
+  pear.ui.FooterRow.superClass_.disposeInternal.call(this);
+};
+pear.ui.FooterRow.prototype.enterDocument = function() {
+  pear.ui.FooterRow.superClass_.enterDocument.call(this);
+  var config = this.getGrid().getConfiguration();
+  this.setHeight(5);
+  var elem = this.getElement();
+  this.setPosition_();
+  goog.style.setSize(elem, this.getGrid().getWidth(), this.getHeight());
+};
 goog.provide("goog.positioning");
 goog.provide("goog.positioning.Corner");
 goog.provide("goog.positioning.CornerBit");
@@ -10054,6 +10852,349 @@ goog.positioning.MenuAnchoredPosition = function(anchorElement, corner, opt_adju
   }
 };
 goog.inherits(goog.positioning.MenuAnchoredPosition, goog.positioning.AnchoredViewportPosition);
+goog.provide("goog.ui.ButtonSide");
+goog.ui.ButtonSide = {NONE:0, START:1, END:2, BOTH:3};
+goog.provide("goog.ui.ButtonRenderer");
+goog.require("goog.a11y.aria");
+goog.require("goog.a11y.aria.Role");
+goog.require("goog.a11y.aria.State");
+goog.require("goog.asserts");
+goog.require("goog.ui.ButtonSide");
+goog.require("goog.ui.Component");
+goog.require("goog.ui.ControlRenderer");
+goog.ui.ButtonRenderer = function() {
+  goog.ui.ControlRenderer.call(this);
+};
+goog.inherits(goog.ui.ButtonRenderer, goog.ui.ControlRenderer);
+goog.addSingletonGetter(goog.ui.ButtonRenderer);
+goog.ui.ButtonRenderer.CSS_CLASS = goog.getCssName("goog-button");
+goog.ui.ButtonRenderer.prototype.getAriaRole = function() {
+  return goog.a11y.aria.Role.BUTTON;
+};
+goog.ui.ButtonRenderer.prototype.updateAriaState = function(element, state, enable) {
+  switch(state) {
+    case goog.ui.Component.State.SELECTED:
+    ;
+    case goog.ui.Component.State.CHECKED:
+      goog.asserts.assert(element, "The button DOM element cannot be null.");
+      goog.a11y.aria.setState(element, goog.a11y.aria.State.PRESSED, enable);
+      break;
+    default:
+    ;
+    case goog.ui.Component.State.OPENED:
+    ;
+    case goog.ui.Component.State.DISABLED:
+      goog.base(this, "updateAriaState", element, state, enable);
+      break;
+  }
+};
+goog.ui.ButtonRenderer.prototype.createDom = function(button) {
+  var element = goog.base(this, "createDom", button);
+  this.setTooltip(element, button.getTooltip());
+  var value = button.getValue();
+  if (value) {
+    this.setValue(element, value);
+  }
+  if (button.isSupportedState(goog.ui.Component.State.CHECKED)) {
+    this.updateAriaState(element, goog.ui.Component.State.CHECKED, button.isChecked());
+  }
+  return element;
+};
+goog.ui.ButtonRenderer.prototype.decorate = function(button, element) {
+  element = goog.ui.ButtonRenderer.superClass_.decorate.call(this, button, element);
+  button.setValueInternal(this.getValue(element));
+  button.setTooltipInternal(this.getTooltip(element));
+  if (button.isSupportedState(goog.ui.Component.State.CHECKED)) {
+    this.updateAriaState(element, goog.ui.Component.State.CHECKED, button.isChecked());
+  }
+  return element;
+};
+goog.ui.ButtonRenderer.prototype.getValue = goog.nullFunction;
+goog.ui.ButtonRenderer.prototype.setValue = goog.nullFunction;
+goog.ui.ButtonRenderer.prototype.getTooltip = function(element) {
+  return element.title;
+};
+goog.ui.ButtonRenderer.prototype.setTooltip = function(element, tooltip) {
+  if (element && tooltip) {
+    element.title = tooltip;
+  }
+};
+goog.ui.ButtonRenderer.prototype.setCollapsed = function(button, sides) {
+  var isRtl = button.isRightToLeft();
+  var collapseLeftClassName = goog.getCssName(this.getStructuralCssClass(), "collapse-left");
+  var collapseRightClassName = goog.getCssName(this.getStructuralCssClass(), "collapse-right");
+  button.enableClassName(isRtl ? collapseRightClassName : collapseLeftClassName, !!(sides & goog.ui.ButtonSide.START));
+  button.enableClassName(isRtl ? collapseLeftClassName : collapseRightClassName, !!(sides & goog.ui.ButtonSide.END));
+};
+goog.ui.ButtonRenderer.prototype.getCssClass = function() {
+  return goog.ui.ButtonRenderer.CSS_CLASS;
+};
+goog.provide("goog.ui.NativeButtonRenderer");
+goog.require("goog.asserts");
+goog.require("goog.dom.classlist");
+goog.require("goog.events.EventType");
+goog.require("goog.ui.ButtonRenderer");
+goog.require("goog.ui.Component");
+goog.ui.NativeButtonRenderer = function() {
+  goog.ui.ButtonRenderer.call(this);
+};
+goog.inherits(goog.ui.NativeButtonRenderer, goog.ui.ButtonRenderer);
+goog.addSingletonGetter(goog.ui.NativeButtonRenderer);
+goog.ui.NativeButtonRenderer.prototype.getAriaRole = function() {
+  return undefined;
+};
+goog.ui.NativeButtonRenderer.prototype.createDom = function(button) {
+  this.setUpNativeButton_(button);
+  return button.getDomHelper().createDom("button", {"class":this.getClassNames(button).join(" "), "disabled":!button.isEnabled(), "title":button.getTooltip() || "", "value":button.getValue() || ""}, button.getCaption() || "");
+};
+goog.ui.NativeButtonRenderer.prototype.canDecorate = function(element) {
+  return element.tagName == "BUTTON" || element.tagName == "INPUT" && (element.type == "button" || (element.type == "submit" || element.type == "reset"));
+};
+goog.ui.NativeButtonRenderer.prototype.decorate = function(button, element) {
+  this.setUpNativeButton_(button);
+  if (element.disabled) {
+    var disabledClassName = goog.asserts.assertString(this.getClassForState(goog.ui.Component.State.DISABLED));
+    goog.dom.classlist.add(element, disabledClassName);
+  }
+  return goog.ui.NativeButtonRenderer.superClass_.decorate.call(this, button, element);
+};
+goog.ui.NativeButtonRenderer.prototype.initializeDom = function(button) {
+  button.getHandler().listen(button.getElement(), goog.events.EventType.CLICK, button.performActionInternal);
+};
+goog.ui.NativeButtonRenderer.prototype.setAllowTextSelection = goog.nullFunction;
+goog.ui.NativeButtonRenderer.prototype.setRightToLeft = goog.nullFunction;
+goog.ui.NativeButtonRenderer.prototype.isFocusable = function(button) {
+  return button.isEnabled();
+};
+goog.ui.NativeButtonRenderer.prototype.setFocusable = goog.nullFunction;
+goog.ui.NativeButtonRenderer.prototype.setState = function(button, state, enable) {
+  goog.ui.NativeButtonRenderer.superClass_.setState.call(this, button, state, enable);
+  var element = button.getElement();
+  if (element && state == goog.ui.Component.State.DISABLED) {
+    element.disabled = enable;
+  }
+};
+goog.ui.NativeButtonRenderer.prototype.getValue = function(element) {
+  return element.value;
+};
+goog.ui.NativeButtonRenderer.prototype.setValue = function(element, value) {
+  if (element) {
+    element.value = value;
+  }
+};
+goog.ui.NativeButtonRenderer.prototype.updateAriaState = goog.nullFunction;
+goog.ui.NativeButtonRenderer.prototype.setUpNativeButton_ = function(button) {
+  button.setHandleMouseEvents(false);
+  button.setAutoStates(goog.ui.Component.State.ALL, false);
+  button.setSupportedState(goog.ui.Component.State.FOCUSED, false);
+};
+goog.provide("goog.ui.Button");
+goog.provide("goog.ui.Button.Side");
+goog.require("goog.events.EventType");
+goog.require("goog.events.KeyCodes");
+goog.require("goog.events.KeyHandler");
+goog.require("goog.ui.ButtonRenderer");
+goog.require("goog.ui.ButtonSide");
+goog.require("goog.ui.Component");
+goog.require("goog.ui.Control");
+goog.require("goog.ui.NativeButtonRenderer");
+goog.require("goog.ui.registry");
+goog.ui.Button = function(opt_content, opt_renderer, opt_domHelper) {
+  goog.ui.Control.call(this, opt_content, opt_renderer || goog.ui.NativeButtonRenderer.getInstance(), opt_domHelper);
+};
+goog.inherits(goog.ui.Button, goog.ui.Control);
+goog.ui.Button.Side = goog.ui.ButtonSide;
+goog.ui.Button.prototype.value_;
+goog.ui.Button.prototype.tooltip_;
+goog.ui.Button.prototype.getValue = function() {
+  return this.value_;
+};
+goog.ui.Button.prototype.setValue = function(value) {
+  this.value_ = value;
+  var renderer = (this.getRenderer());
+  renderer.setValue(this.getElement(), (value));
+};
+goog.ui.Button.prototype.setValueInternal = function(value) {
+  this.value_ = value;
+};
+goog.ui.Button.prototype.getTooltip = function() {
+  return this.tooltip_;
+};
+goog.ui.Button.prototype.setTooltip = function(tooltip) {
+  this.tooltip_ = tooltip;
+  this.getRenderer().setTooltip(this.getElement(), tooltip);
+};
+goog.ui.Button.prototype.setTooltipInternal = function(tooltip) {
+  this.tooltip_ = tooltip;
+};
+goog.ui.Button.prototype.setCollapsed = function(sides) {
+  this.getRenderer().setCollapsed(this, sides);
+};
+goog.ui.Button.prototype.disposeInternal = function() {
+  goog.ui.Button.superClass_.disposeInternal.call(this);
+  delete this.value_;
+  delete this.tooltip_;
+};
+goog.ui.Button.prototype.enterDocument = function() {
+  goog.ui.Button.superClass_.enterDocument.call(this);
+  if (this.isSupportedState(goog.ui.Component.State.FOCUSED)) {
+    var keyTarget = this.getKeyEventTarget();
+    if (keyTarget) {
+      this.getHandler().listen(keyTarget, goog.events.EventType.KEYUP, this.handleKeyEventInternal);
+    }
+  }
+};
+goog.ui.Button.prototype.handleKeyEventInternal = function(e) {
+  if (e.keyCode == goog.events.KeyCodes.ENTER && e.type == goog.events.KeyHandler.EventType.KEY || e.keyCode == goog.events.KeyCodes.SPACE && e.type == goog.events.EventType.KEYUP) {
+    return this.performActionInternal(e);
+  }
+  return e.keyCode == goog.events.KeyCodes.SPACE;
+};
+goog.ui.registry.setDecoratorByClassName(goog.ui.ButtonRenderer.CSS_CLASS, function() {
+  return new goog.ui.Button(null);
+});
+goog.provide("goog.ui.INLINE_BLOCK_CLASSNAME");
+goog.ui.INLINE_BLOCK_CLASSNAME = goog.getCssName("goog-inline-block");
+goog.provide("goog.ui.FlatButtonRenderer");
+goog.require("goog.a11y.aria.Role");
+goog.require("goog.dom.classlist");
+goog.require("goog.ui.Button");
+goog.require("goog.ui.ButtonRenderer");
+goog.require("goog.ui.INLINE_BLOCK_CLASSNAME");
+goog.require("goog.ui.registry");
+goog.ui.FlatButtonRenderer = function() {
+  goog.ui.ButtonRenderer.call(this);
+};
+goog.inherits(goog.ui.FlatButtonRenderer, goog.ui.ButtonRenderer);
+goog.addSingletonGetter(goog.ui.FlatButtonRenderer);
+goog.ui.FlatButtonRenderer.CSS_CLASS = goog.getCssName("goog-flat-button");
+goog.ui.FlatButtonRenderer.prototype.createDom = function(button) {
+  var classNames = this.getClassNames(button);
+  var attributes = {"class":goog.ui.INLINE_BLOCK_CLASSNAME + " " + classNames.join(" ")};
+  var element = button.getDomHelper().createDom("div", attributes, button.getContent());
+  this.setTooltip(element, button.getTooltip());
+  this.setAriaStates(button, element);
+  return element;
+};
+goog.ui.FlatButtonRenderer.prototype.getAriaRole = function() {
+  return goog.a11y.aria.Role.BUTTON;
+};
+goog.ui.FlatButtonRenderer.prototype.canDecorate = function(element) {
+  return element.tagName == "DIV";
+};
+goog.ui.FlatButtonRenderer.prototype.decorate = function(button, element) {
+  goog.dom.classlist.add(element, goog.ui.INLINE_BLOCK_CLASSNAME);
+  return goog.ui.FlatButtonRenderer.superClass_.decorate.call(this, button, element);
+};
+goog.ui.FlatButtonRenderer.prototype.getValue = function(element) {
+  return "";
+};
+goog.ui.FlatButtonRenderer.prototype.getCssClass = function() {
+  return goog.ui.FlatButtonRenderer.CSS_CLASS;
+};
+goog.ui.registry.setDecoratorByClassName(goog.ui.FlatButtonRenderer.CSS_CLASS, function() {
+  return new goog.ui.Button(null, goog.ui.FlatButtonRenderer.getInstance());
+});
+goog.provide("pear.plugin.HeaderMenu");
+goog.require("goog.ui.Component");
+goog.require("goog.events.Event");
+goog.require("pear.ui.Plugable");
+goog.require("goog.positioning.MenuAnchoredPosition");
+goog.require("goog.ui.FlatButtonRenderer");
+pear.plugin.HeaderMenu = function(grid, opt_renderer, opt_domHelper) {
+  goog.ui.Component.call(this, opt_renderer || pear.ui.RowRenderer.getInstance(), opt_domHelper);
+};
+goog.inherits(pear.plugin.HeaderMenu, goog.ui.Component);
+pear.ui.Plugable.addImplementation(pear.plugin.HeaderMenu);
+pear.plugin.HeaderMenu.prototype.getPageIndex = function() {
+  return this.getGrid().getPageIndex();
+};
+pear.plugin.HeaderMenu.prototype.getGrid = function() {
+  return this.grid_;
+};
+pear.plugin.HeaderMenu.prototype.show = function(grid) {
+  this.grid_ = grid;
+  var gridElem = this.grid_.getElement();
+  var parentElem = goog.dom.getAncestor(gridElem, function() {
+    return true;
+  });
+  this.render(parentElem);
+  goog.events.listen(this.grid_, pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK, this.handleGridHeaderMenuOptionClick_, false, this);
+  goog.style.showElement(this.getElement(), "");
+};
+pear.plugin.HeaderMenu.prototype.createDom = function() {
+  this.element_ = goog.dom.createDom("div", this.getCSSClassName());
+};
+pear.plugin.HeaderMenu.prototype.disposeInternal = function() {
+  this.grid_ = null;
+  this.headerCell_ = null;
+  this.titleContent_ = null;
+  this.filterInput_ = null;
+  pear.plugin.HeaderMenu.superClass_.disposeInternal.call(this);
+};
+pear.plugin.HeaderMenu.prototype.enterDocument = function() {
+  pear.plugin.HeaderMenu.superClass_.enterDocument.call(this);
+  var elem = this.getElement();
+  this.createHeaderMenuDom();
+};
+pear.plugin.HeaderMenu.prototype.createHeaderMenuDom = function() {
+  var titleBar = goog.dom.createDom("div", this.getCSSClassName() + "-title");
+  goog.dom.appendChild(this.getElement(), titleBar);
+  this.titleContent_ = goog.dom.createDom("div", this.getCSSClassName() + "-title-content");
+  goog.dom.appendChild(titleBar, this.titleContent_);
+  var closeElement = goog.dom.createDom("div", "pear-grid-header-cell-menu-title-close fa fa-times");
+  goog.dom.appendChild(titleBar, closeElement);
+  var breakElem = goog.dom.createDom("div", {style:"clear:both"});
+  goog.dom.appendChild(this.getElement(), breakElem);
+  this.createFilterMenu_();
+  goog.events.listen(closeElement, goog.events.EventType.CLICK, this.close_, false, this);
+};
+pear.plugin.HeaderMenu.prototype.close_ = function() {
+  goog.style.showElement(this.getElement(), "");
+};
+pear.plugin.HeaderMenu.prototype.createFilterMenu_ = function() {
+  var domEl = goog.dom.createDom("div", "pear-grid-header-cell-menu-title-filter");
+  goog.dom.appendChild(this.getElement(), domEl);
+  this.filterInput_ = new goog.ui.LabelInput("Filter Text");
+  this.filterInput_.render(domEl);
+  var fbApply = new goog.ui.Button("Apply", goog.ui.FlatButtonRenderer.getInstance());
+  fbApply.render(this.getElement());
+  fbApply.setTooltip("Apply Filter to DataView");
+  var fbClear = new goog.ui.Button("Clear", goog.ui.FlatButtonRenderer.getInstance());
+  fbClear.render(this.getElement());
+  fbClear.setTooltip("clear filter");
+  goog.events.listen(fbApply, goog.ui.Component.EventType.ACTION, this.handleApplyFilter_, false, this);
+  goog.events.listen(fbClear, goog.ui.Component.EventType.ACTION, this.handleCancelFilter_, false, this);
+};
+pear.plugin.HeaderMenu.prototype.handleApplyFilter_ = function(be) {
+  var dv = this.grid_.getDataView();
+  var column = this.headerCell_.getDataViewColumn();
+  dv.addColumnFilter(column.id, {type:pear.data.DataView.FilterType.EQUAL, expression:this.filterInput_.getValue()});
+  dv.applyFilter();
+  this.grid_.refresh();
+  this.close_();
+};
+pear.plugin.HeaderMenu.prototype.handleCancelFilter_ = function(be) {
+  var dv = this.grid_.getDataView();
+  var column = this.headerCell_.getDataViewColumn();
+  dv.clearColumnFilter(column.id);
+  dv.applyFilter();
+  this.grid_.refresh();
+  this.close_();
+};
+pear.plugin.HeaderMenu.prototype.handleGridHeaderMenuOptionClick_ = function(ge) {
+  console.dir(ge);
+  this.headerCell_ = ge.cell;
+  var menuElement = this.headerCell_.getMenuElement();
+  var menuPosition = goog.style.getPosition(menuElement);
+  var position = new goog.positioning.MenuAnchoredPosition(menuElement, goog.positioning.Corner.BOTTOM_START, true);
+  position.reposition(this.getElement(), goog.positioning.Corner.TOP_START);
+  goog.style.showElement(this.getElement(), "inline-block");
+  goog.dom.setTextContent(this.titleContent_, this.headerCell_.getContentText());
+};
+pear.plugin.HeaderMenu.prototype.getCSSClassName = function() {
+  return "pear-grid-header-cell-menu";
+};
 goog.provide("goog.ui.ItemEvent");
 goog.require("goog.events.Event");
 goog.ui.ItemEvent = function(type, target, item) {
@@ -11785,138 +12926,6 @@ goog.log.fine = function(logger, msg, opt_exception) {
     logger.fine(msg, opt_exception);
   }
 };
-goog.provide("goog.ui.ContainerRenderer");
-goog.require("goog.a11y.aria");
-goog.require("goog.array");
-goog.require("goog.asserts");
-goog.require("goog.dom.NodeType");
-goog.require("goog.dom.classlist");
-goog.require("goog.string");
-goog.require("goog.style");
-goog.require("goog.ui.registry");
-goog.require("goog.userAgent");
-goog.ui.ContainerRenderer = function() {
-};
-goog.addSingletonGetter(goog.ui.ContainerRenderer);
-goog.ui.ContainerRenderer.getCustomRenderer = function(ctor, cssClassName) {
-  var renderer = new ctor;
-  renderer.getCssClass = function() {
-    return cssClassName;
-  };
-  return renderer;
-};
-goog.ui.ContainerRenderer.CSS_CLASS = goog.getCssName("goog-container");
-goog.ui.ContainerRenderer.prototype.getAriaRole = function() {
-  return undefined;
-};
-goog.ui.ContainerRenderer.prototype.enableTabIndex = function(element, enable) {
-  if (element) {
-    element.tabIndex = enable ? 0 : -1;
-  }
-};
-goog.ui.ContainerRenderer.prototype.createDom = function(container) {
-  return container.getDomHelper().createDom("div", this.getClassNames(container).join(" "));
-};
-goog.ui.ContainerRenderer.prototype.getContentElement = function(element) {
-  return element;
-};
-goog.ui.ContainerRenderer.prototype.canDecorate = function(element) {
-  return element.tagName == "DIV";
-};
-goog.ui.ContainerRenderer.prototype.decorate = function(container, element) {
-  if (element.id) {
-    container.setId(element.id);
-  }
-  var baseClass = this.getCssClass();
-  var hasBaseClass = false;
-  var classNames = goog.dom.classlist.get(element);
-  if (classNames) {
-    goog.array.forEach(classNames, function(className) {
-      if (className == baseClass) {
-        hasBaseClass = true;
-      } else {
-        if (className) {
-          this.setStateFromClassName(container, className, baseClass);
-        }
-      }
-    }, this);
-  }
-  if (!hasBaseClass) {
-    goog.dom.classlist.add(element, baseClass);
-  }
-  this.decorateChildren(container, this.getContentElement(element));
-  return element;
-};
-goog.ui.ContainerRenderer.prototype.setStateFromClassName = function(container, className, baseClass) {
-  if (className == goog.getCssName(baseClass, "disabled")) {
-    container.setEnabled(false);
-  } else {
-    if (className == goog.getCssName(baseClass, "horizontal")) {
-      container.setOrientation(goog.ui.Container.Orientation.HORIZONTAL);
-    } else {
-      if (className == goog.getCssName(baseClass, "vertical")) {
-        container.setOrientation(goog.ui.Container.Orientation.VERTICAL);
-      }
-    }
-  }
-};
-goog.ui.ContainerRenderer.prototype.decorateChildren = function(container, element, opt_firstChild) {
-  if (element) {
-    var node = opt_firstChild || element.firstChild, next;
-    while (node && node.parentNode == element) {
-      next = node.nextSibling;
-      if (node.nodeType == goog.dom.NodeType.ELEMENT) {
-        var child = this.getDecoratorForChild((node));
-        if (child) {
-          child.setElementInternal((node));
-          if (!container.isEnabled()) {
-            child.setEnabled(false);
-          }
-          container.addChild(child);
-          child.decorate((node));
-        }
-      } else {
-        if (!node.nodeValue || goog.string.trim(node.nodeValue) == "") {
-          element.removeChild(node);
-        }
-      }
-      node = next;
-    }
-  }
-};
-goog.ui.ContainerRenderer.prototype.getDecoratorForChild = function(element) {
-  return(goog.ui.registry.getDecorator(element));
-};
-goog.ui.ContainerRenderer.prototype.initializeDom = function(container) {
-  var elem = container.getElement();
-  goog.asserts.assert(elem, "The container DOM element cannot be null.");
-  goog.style.setUnselectable(elem, true, goog.userAgent.GECKO);
-  if (goog.userAgent.IE) {
-    elem.hideFocus = true;
-  }
-  var ariaRole = this.getAriaRole();
-  if (ariaRole) {
-    goog.a11y.aria.setRole(elem, ariaRole);
-  }
-};
-goog.ui.ContainerRenderer.prototype.getKeyEventTarget = function(container) {
-  return container.getElement();
-};
-goog.ui.ContainerRenderer.prototype.getCssClass = function() {
-  return goog.ui.ContainerRenderer.CSS_CLASS;
-};
-goog.ui.ContainerRenderer.prototype.getClassNames = function(container) {
-  var baseClass = this.getCssClass();
-  var isHorizontal = container.getOrientation() == goog.ui.Container.Orientation.HORIZONTAL;
-  var classNames = [baseClass, isHorizontal ? goog.getCssName(baseClass, "horizontal") : goog.getCssName(baseClass, "vertical")];
-  if (!container.isEnabled()) {
-    classNames.push(goog.getCssName(baseClass, "disabled"));
-  }
-  return classNames;
-};
-goog.ui.ContainerRenderer.prototype.getDefaultOrientation = function() {
-  return goog.ui.Container.Orientation.VERTICAL;
-};
 goog.provide("goog.ui.MenuSeparatorRenderer");
 goog.require("goog.dom");
 goog.require("goog.dom.classlist");
@@ -12240,523 +13249,6 @@ goog.ui.MenuItem.prototype.getMnemonic = function() {
 goog.ui.registry.setDecoratorByClassName(goog.ui.MenuItemRenderer.CSS_CLASS, function() {
   return new goog.ui.MenuItem(null);
 });
-goog.provide("goog.ui.Container");
-goog.provide("goog.ui.Container.EventType");
-goog.provide("goog.ui.Container.Orientation");
-goog.require("goog.a11y.aria");
-goog.require("goog.a11y.aria.State");
-goog.require("goog.asserts");
-goog.require("goog.dom");
-goog.require("goog.events.EventType");
-goog.require("goog.events.KeyCodes");
-goog.require("goog.events.KeyHandler");
-goog.require("goog.object");
-goog.require("goog.style");
-goog.require("goog.ui.Component");
-goog.require("goog.ui.ContainerRenderer");
-goog.require("goog.ui.Control");
-goog.ui.Container = function(opt_orientation, opt_renderer, opt_domHelper) {
-  goog.ui.Component.call(this, opt_domHelper);
-  this.renderer_ = opt_renderer || goog.ui.ContainerRenderer.getInstance();
-  this.orientation_ = opt_orientation || this.renderer_.getDefaultOrientation();
-};
-goog.inherits(goog.ui.Container, goog.ui.Component);
-goog.ui.Container.EventType = {AFTER_SHOW:"aftershow", AFTER_HIDE:"afterhide"};
-goog.ui.Container.Orientation = {HORIZONTAL:"horizontal", VERTICAL:"vertical"};
-goog.ui.Container.prototype.keyEventTarget_ = null;
-goog.ui.Container.prototype.keyHandler_ = null;
-goog.ui.Container.prototype.renderer_ = null;
-goog.ui.Container.prototype.orientation_ = null;
-goog.ui.Container.prototype.visible_ = true;
-goog.ui.Container.prototype.enabled_ = true;
-goog.ui.Container.prototype.focusable_ = true;
-goog.ui.Container.prototype.highlightedIndex_ = -1;
-goog.ui.Container.prototype.openItem_ = null;
-goog.ui.Container.prototype.mouseButtonPressed_ = false;
-goog.ui.Container.prototype.allowFocusableChildren_ = false;
-goog.ui.Container.prototype.openFollowsHighlight_ = true;
-goog.ui.Container.prototype.childElementIdMap_ = null;
-goog.ui.Container.prototype.getKeyEventTarget = function() {
-  return this.keyEventTarget_ || this.renderer_.getKeyEventTarget(this);
-};
-goog.ui.Container.prototype.setKeyEventTarget = function(element) {
-  if (this.focusable_) {
-    var oldTarget = this.getKeyEventTarget();
-    var inDocument = this.isInDocument();
-    this.keyEventTarget_ = element;
-    var newTarget = this.getKeyEventTarget();
-    if (inDocument) {
-      this.keyEventTarget_ = oldTarget;
-      this.enableFocusHandling_(false);
-      this.keyEventTarget_ = element;
-      this.getKeyHandler().attach(newTarget);
-      this.enableFocusHandling_(true);
-    }
-  } else {
-    throw Error("Can't set key event target for container " + "that doesn't support keyboard focus!");
-  }
-};
-goog.ui.Container.prototype.getKeyHandler = function() {
-  return this.keyHandler_ || (this.keyHandler_ = new goog.events.KeyHandler(this.getKeyEventTarget()));
-};
-goog.ui.Container.prototype.getRenderer = function() {
-  return this.renderer_;
-};
-goog.ui.Container.prototype.setRenderer = function(renderer) {
-  if (this.getElement()) {
-    throw Error(goog.ui.Component.Error.ALREADY_RENDERED);
-  }
-  this.renderer_ = renderer;
-};
-goog.ui.Container.prototype.createDom = function() {
-  this.setElementInternal(this.renderer_.createDom(this));
-};
-goog.ui.Container.prototype.getContentElement = function() {
-  return this.renderer_.getContentElement(this.getElement());
-};
-goog.ui.Container.prototype.canDecorate = function(element) {
-  return this.renderer_.canDecorate(element);
-};
-goog.ui.Container.prototype.decorateInternal = function(element) {
-  this.setElementInternal(this.renderer_.decorate(this, element));
-  if (element.style.display == "none") {
-    this.visible_ = false;
-  }
-};
-goog.ui.Container.prototype.enterDocument = function() {
-  goog.ui.Container.superClass_.enterDocument.call(this);
-  this.forEachChild(function(child) {
-    if (child.isInDocument()) {
-      this.registerChildId_(child);
-    }
-  }, this);
-  var elem = this.getElement();
-  this.renderer_.initializeDom(this);
-  this.setVisible(this.visible_, true);
-  this.getHandler().listen(this, goog.ui.Component.EventType.ENTER, this.handleEnterItem).listen(this, goog.ui.Component.EventType.HIGHLIGHT, this.handleHighlightItem).listen(this, goog.ui.Component.EventType.UNHIGHLIGHT, this.handleUnHighlightItem).listen(this, goog.ui.Component.EventType.OPEN, this.handleOpenItem).listen(this, goog.ui.Component.EventType.CLOSE, this.handleCloseItem).listen(elem, goog.events.EventType.MOUSEDOWN, this.handleMouseDown).listen(goog.dom.getOwnerDocument(elem), goog.events.EventType.MOUSEUP, 
-  this.handleDocumentMouseUp).listen(elem, [goog.events.EventType.MOUSEDOWN, goog.events.EventType.MOUSEUP, goog.events.EventType.MOUSEOVER, goog.events.EventType.MOUSEOUT, goog.events.EventType.CONTEXTMENU], this.handleChildMouseEvents);
-  if (this.isFocusable()) {
-    this.enableFocusHandling_(true);
-  }
-};
-goog.ui.Container.prototype.enableFocusHandling_ = function(enable) {
-  var handler = this.getHandler();
-  var keyTarget = this.getKeyEventTarget();
-  if (enable) {
-    handler.listen(keyTarget, goog.events.EventType.FOCUS, this.handleFocus).listen(keyTarget, goog.events.EventType.BLUR, this.handleBlur).listen(this.getKeyHandler(), goog.events.KeyHandler.EventType.KEY, this.handleKeyEvent);
-  } else {
-    handler.unlisten(keyTarget, goog.events.EventType.FOCUS, this.handleFocus).unlisten(keyTarget, goog.events.EventType.BLUR, this.handleBlur).unlisten(this.getKeyHandler(), goog.events.KeyHandler.EventType.KEY, this.handleKeyEvent);
-  }
-};
-goog.ui.Container.prototype.exitDocument = function() {
-  this.setHighlightedIndex(-1);
-  if (this.openItem_) {
-    this.openItem_.setOpen(false);
-  }
-  this.mouseButtonPressed_ = false;
-  goog.ui.Container.superClass_.exitDocument.call(this);
-};
-goog.ui.Container.prototype.disposeInternal = function() {
-  goog.ui.Container.superClass_.disposeInternal.call(this);
-  if (this.keyHandler_) {
-    this.keyHandler_.dispose();
-    this.keyHandler_ = null;
-  }
-  this.keyEventTarget_ = null;
-  this.childElementIdMap_ = null;
-  this.openItem_ = null;
-  this.renderer_ = null;
-};
-goog.ui.Container.prototype.handleEnterItem = function(e) {
-  return true;
-};
-goog.ui.Container.prototype.handleHighlightItem = function(e) {
-  var index = this.indexOfChild((e.target));
-  if (index > -1 && index != this.highlightedIndex_) {
-    var item = this.getHighlighted();
-    if (item) {
-      item.setHighlighted(false);
-    }
-    this.highlightedIndex_ = index;
-    item = this.getHighlighted();
-    if (this.isMouseButtonPressed()) {
-      item.setActive(true);
-    }
-    if (this.openFollowsHighlight_ && (this.openItem_ && item != this.openItem_)) {
-      if (item.isSupportedState(goog.ui.Component.State.OPENED)) {
-        item.setOpen(true);
-      } else {
-        this.openItem_.setOpen(false);
-      }
-    }
-  }
-  var element = this.getElement();
-  goog.asserts.assert(element, "The DOM element for the container cannot be null.");
-  if (e.target.getElement() != null) {
-    goog.a11y.aria.setState(element, goog.a11y.aria.State.ACTIVEDESCENDANT, e.target.getElement().id);
-  }
-};
-goog.ui.Container.prototype.handleUnHighlightItem = function(e) {
-  if (e.target == this.getHighlighted()) {
-    this.highlightedIndex_ = -1;
-  }
-  var element = this.getElement();
-  goog.asserts.assert(element, "The DOM element for the container cannot be null.");
-  goog.a11y.aria.removeState(element, goog.a11y.aria.State.ACTIVEDESCENDANT);
-};
-goog.ui.Container.prototype.handleOpenItem = function(e) {
-  var item = (e.target);
-  if (item && (item != this.openItem_ && item.getParent() == this)) {
-    if (this.openItem_) {
-      this.openItem_.setOpen(false);
-    }
-    this.openItem_ = item;
-  }
-};
-goog.ui.Container.prototype.handleCloseItem = function(e) {
-  if (e.target == this.openItem_) {
-    this.openItem_ = null;
-  }
-};
-goog.ui.Container.prototype.handleMouseDown = function(e) {
-  if (this.enabled_) {
-    this.setMouseButtonPressed(true);
-  }
-  var keyTarget = this.getKeyEventTarget();
-  if (keyTarget && goog.dom.isFocusableTabIndex(keyTarget)) {
-    keyTarget.focus();
-  } else {
-    e.preventDefault();
-  }
-};
-goog.ui.Container.prototype.handleDocumentMouseUp = function(e) {
-  this.setMouseButtonPressed(false);
-};
-goog.ui.Container.prototype.handleChildMouseEvents = function(e) {
-  var control = this.getOwnerControl((e.target));
-  if (control) {
-    switch(e.type) {
-      case goog.events.EventType.MOUSEDOWN:
-        control.handleMouseDown(e);
-        break;
-      case goog.events.EventType.MOUSEUP:
-        control.handleMouseUp(e);
-        break;
-      case goog.events.EventType.MOUSEOVER:
-        control.handleMouseOver(e);
-        break;
-      case goog.events.EventType.MOUSEOUT:
-        control.handleMouseOut(e);
-        break;
-      case goog.events.EventType.CONTEXTMENU:
-        control.handleContextMenu(e);
-        break;
-    }
-  }
-};
-goog.ui.Container.prototype.getOwnerControl = function(node) {
-  if (this.childElementIdMap_) {
-    var elem = this.getElement();
-    while (node && node !== elem) {
-      var id = node.id;
-      if (id in this.childElementIdMap_) {
-        return this.childElementIdMap_[id];
-      }
-      node = node.parentNode;
-    }
-  }
-  return null;
-};
-goog.ui.Container.prototype.handleFocus = function(e) {
-};
-goog.ui.Container.prototype.handleBlur = function(e) {
-  this.setHighlightedIndex(-1);
-  this.setMouseButtonPressed(false);
-  if (this.openItem_) {
-    this.openItem_.setOpen(false);
-  }
-};
-goog.ui.Container.prototype.handleKeyEvent = function(e) {
-  if (this.isEnabled() && (this.isVisible() && ((this.getChildCount() != 0 || this.keyEventTarget_) && this.handleKeyEventInternal(e)))) {
-    e.preventDefault();
-    e.stopPropagation();
-    return true;
-  }
-  return false;
-};
-goog.ui.Container.prototype.handleKeyEventInternal = function(e) {
-  var highlighted = this.getHighlighted();
-  if (highlighted && (typeof highlighted.handleKeyEvent == "function" && highlighted.handleKeyEvent(e))) {
-    return true;
-  }
-  if (this.openItem_ && (this.openItem_ != highlighted && (typeof this.openItem_.handleKeyEvent == "function" && this.openItem_.handleKeyEvent(e)))) {
-    return true;
-  }
-  if (e.shiftKey || (e.ctrlKey || (e.metaKey || e.altKey))) {
-    return false;
-  }
-  switch(e.keyCode) {
-    case goog.events.KeyCodes.ESC:
-      if (this.isFocusable()) {
-        this.getKeyEventTarget().blur();
-      } else {
-        return false;
-      }
-      break;
-    case goog.events.KeyCodes.HOME:
-      this.highlightFirst();
-      break;
-    case goog.events.KeyCodes.END:
-      this.highlightLast();
-      break;
-    case goog.events.KeyCodes.UP:
-      if (this.orientation_ == goog.ui.Container.Orientation.VERTICAL) {
-        this.highlightPrevious();
-      } else {
-        return false;
-      }
-      break;
-    case goog.events.KeyCodes.LEFT:
-      if (this.orientation_ == goog.ui.Container.Orientation.HORIZONTAL) {
-        if (this.isRightToLeft()) {
-          this.highlightNext();
-        } else {
-          this.highlightPrevious();
-        }
-      } else {
-        return false;
-      }
-      break;
-    case goog.events.KeyCodes.DOWN:
-      if (this.orientation_ == goog.ui.Container.Orientation.VERTICAL) {
-        this.highlightNext();
-      } else {
-        return false;
-      }
-      break;
-    case goog.events.KeyCodes.RIGHT:
-      if (this.orientation_ == goog.ui.Container.Orientation.HORIZONTAL) {
-        if (this.isRightToLeft()) {
-          this.highlightPrevious();
-        } else {
-          this.highlightNext();
-        }
-      } else {
-        return false;
-      }
-      break;
-    default:
-      return false;
-  }
-  return true;
-};
-goog.ui.Container.prototype.registerChildId_ = function(child) {
-  var childElem = child.getElement();
-  var id = childElem.id || (childElem.id = child.getId());
-  if (!this.childElementIdMap_) {
-    this.childElementIdMap_ = {};
-  }
-  this.childElementIdMap_[id] = child;
-};
-goog.ui.Container.prototype.addChild = function(child, opt_render) {
-  goog.asserts.assertInstanceof(child, goog.ui.Control, "The child of a container must be a control");
-  goog.ui.Container.superClass_.addChild.call(this, child, opt_render);
-};
-goog.ui.Container.prototype.getChild;
-goog.ui.Container.prototype.getChildAt;
-goog.ui.Container.prototype.addChildAt = function(control, index, opt_render) {
-  control.setDispatchTransitionEvents(goog.ui.Component.State.HOVER, true);
-  control.setDispatchTransitionEvents(goog.ui.Component.State.OPENED, true);
-  if (this.isFocusable() || !this.isFocusableChildrenAllowed()) {
-    control.setSupportedState(goog.ui.Component.State.FOCUSED, false);
-  }
-  control.setHandleMouseEvents(false);
-  goog.ui.Container.superClass_.addChildAt.call(this, control, index, opt_render);
-  if (control.isInDocument() && this.isInDocument()) {
-    this.registerChildId_(control);
-  }
-  if (index <= this.highlightedIndex_) {
-    this.highlightedIndex_++;
-  }
-};
-goog.ui.Container.prototype.removeChild = function(control, opt_unrender) {
-  control = goog.isString(control) ? this.getChild(control) : control;
-  if (control) {
-    var index = this.indexOfChild(control);
-    if (index != -1) {
-      if (index == this.highlightedIndex_) {
-        control.setHighlighted(false);
-        this.highlightedIndex_ = -1;
-      } else {
-        if (index < this.highlightedIndex_) {
-          this.highlightedIndex_--;
-        }
-      }
-    }
-    var childElem = control.getElement();
-    if (childElem && (childElem.id && this.childElementIdMap_)) {
-      goog.object.remove(this.childElementIdMap_, childElem.id);
-    }
-  }
-  control = (goog.ui.Container.superClass_.removeChild.call(this, control, opt_unrender));
-  control.setHandleMouseEvents(true);
-  return control;
-};
-goog.ui.Container.prototype.getOrientation = function() {
-  return this.orientation_;
-};
-goog.ui.Container.prototype.setOrientation = function(orientation) {
-  if (this.getElement()) {
-    throw Error(goog.ui.Component.Error.ALREADY_RENDERED);
-  }
-  this.orientation_ = orientation;
-};
-goog.ui.Container.prototype.isVisible = function() {
-  return this.visible_;
-};
-goog.ui.Container.prototype.setVisible = function(visible, opt_force) {
-  if (opt_force || this.visible_ != visible && this.dispatchEvent(visible ? goog.ui.Component.EventType.SHOW : goog.ui.Component.EventType.HIDE)) {
-    this.visible_ = visible;
-    var elem = this.getElement();
-    if (elem) {
-      goog.style.setElementShown(elem, visible);
-      if (this.isFocusable()) {
-        this.renderer_.enableTabIndex(this.getKeyEventTarget(), this.enabled_ && this.visible_);
-      }
-      if (!opt_force) {
-        this.dispatchEvent(this.visible_ ? goog.ui.Container.EventType.AFTER_SHOW : goog.ui.Container.EventType.AFTER_HIDE);
-      }
-    }
-    return true;
-  }
-  return false;
-};
-goog.ui.Container.prototype.isEnabled = function() {
-  return this.enabled_;
-};
-goog.ui.Container.prototype.setEnabled = function(enable) {
-  if (this.enabled_ != enable && this.dispatchEvent(enable ? goog.ui.Component.EventType.ENABLE : goog.ui.Component.EventType.DISABLE)) {
-    if (enable) {
-      this.enabled_ = true;
-      this.forEachChild(function(child) {
-        if (child.wasDisabled) {
-          delete child.wasDisabled;
-        } else {
-          child.setEnabled(true);
-        }
-      });
-    } else {
-      this.forEachChild(function(child) {
-        if (child.isEnabled()) {
-          child.setEnabled(false);
-        } else {
-          child.wasDisabled = true;
-        }
-      });
-      this.enabled_ = false;
-      this.setMouseButtonPressed(false);
-    }
-    if (this.isFocusable()) {
-      this.renderer_.enableTabIndex(this.getKeyEventTarget(), enable && this.visible_);
-    }
-  }
-};
-goog.ui.Container.prototype.isFocusable = function() {
-  return this.focusable_;
-};
-goog.ui.Container.prototype.setFocusable = function(focusable) {
-  if (focusable != this.focusable_ && this.isInDocument()) {
-    this.enableFocusHandling_(focusable);
-  }
-  this.focusable_ = focusable;
-  if (this.enabled_ && this.visible_) {
-    this.renderer_.enableTabIndex(this.getKeyEventTarget(), focusable);
-  }
-};
-goog.ui.Container.prototype.isFocusableChildrenAllowed = function() {
-  return this.allowFocusableChildren_;
-};
-goog.ui.Container.prototype.setFocusableChildrenAllowed = function(focusable) {
-  this.allowFocusableChildren_ = focusable;
-};
-goog.ui.Container.prototype.isOpenFollowsHighlight = function() {
-  return this.openFollowsHighlight_;
-};
-goog.ui.Container.prototype.setOpenFollowsHighlight = function(follow) {
-  this.openFollowsHighlight_ = follow;
-};
-goog.ui.Container.prototype.getHighlightedIndex = function() {
-  return this.highlightedIndex_;
-};
-goog.ui.Container.prototype.setHighlightedIndex = function(index) {
-  var child = this.getChildAt(index);
-  if (child) {
-    child.setHighlighted(true);
-  } else {
-    if (this.highlightedIndex_ > -1) {
-      this.getHighlighted().setHighlighted(false);
-    }
-  }
-};
-goog.ui.Container.prototype.setHighlighted = function(item) {
-  this.setHighlightedIndex(this.indexOfChild(item));
-};
-goog.ui.Container.prototype.getHighlighted = function() {
-  return this.getChildAt(this.highlightedIndex_);
-};
-goog.ui.Container.prototype.highlightFirst = function() {
-  this.highlightHelper(function(index, max) {
-    return(index + 1) % max;
-  }, this.getChildCount() - 1);
-};
-goog.ui.Container.prototype.highlightLast = function() {
-  this.highlightHelper(function(index, max) {
-    index--;
-    return index < 0 ? max - 1 : index;
-  }, 0);
-};
-goog.ui.Container.prototype.highlightNext = function() {
-  this.highlightHelper(function(index, max) {
-    return(index + 1) % max;
-  }, this.highlightedIndex_);
-};
-goog.ui.Container.prototype.highlightPrevious = function() {
-  this.highlightHelper(function(index, max) {
-    index--;
-    return index < 0 ? max - 1 : index;
-  }, this.highlightedIndex_);
-};
-goog.ui.Container.prototype.highlightHelper = function(fn, startIndex) {
-  var curIndex = startIndex < 0 ? this.indexOfChild(this.openItem_) : startIndex;
-  var numItems = this.getChildCount();
-  curIndex = fn.call(this, curIndex, numItems);
-  var visited = 0;
-  while (visited <= numItems) {
-    var control = this.getChildAt(curIndex);
-    if (control && this.canHighlightItem(control)) {
-      this.setHighlightedIndexFromKeyEvent(curIndex);
-      return true;
-    }
-    visited++;
-    curIndex = fn.call(this, curIndex, numItems);
-  }
-  return false;
-};
-goog.ui.Container.prototype.canHighlightItem = function(item) {
-  return item.isVisible() && (item.isEnabled() && item.isSupportedState(goog.ui.Component.State.HOVER));
-};
-goog.ui.Container.prototype.setHighlightedIndexFromKeyEvent = function(index) {
-  this.setHighlightedIndex(index);
-};
-goog.ui.Container.prototype.getOpenItem = function() {
-  return this.openItem_;
-};
-goog.ui.Container.prototype.isMouseButtonPressed = function() {
-  return this.mouseButtonPressed_;
-};
-goog.ui.Container.prototype.setMouseButtonPressed = function(pressed) {
-  this.mouseButtonPressed_ = pressed;
-};
 goog.provide("goog.ui.MenuHeaderRenderer");
 goog.require("goog.ui.ControlRenderer");
 goog.ui.MenuHeaderRenderer = function() {
@@ -13740,7 +14232,9 @@ pear.plugin.FooterStatus.prototype.enterDocument = function() {
   this.footerStatus_ = new goog.ui.Control(goog.dom.createDom("div"), pear.plugin.FooterStatusRenderer.getInstance());
   this.footerStatus_.render(this.getElement());
   this.updateMsg_();
-  goog.events.listen(this.grid_, pear.ui.Grid.EventType.AFTER_PAGING, this.updateMsg_, false, this);
+  goog.events.listen(this.grid_.getDataView(), pear.data.DataView.EventType.PAGE_INDEX_CHANGED, this.updateMsg_, false, this);
+  goog.events.listen(this.grid_.getDataView(), pear.data.DataView.EventType.PAGE_SIZE_CHANGED, this.updateMsg_, false, this);
+  goog.events.listen(this.grid_.getDataView(), pear.data.DataView.EventType.ROWCOUNT_CHANGED, this.updateMsg_, false, this);
 };
 pear.plugin.FooterStatus.prototype.updateMsg_ = function() {
   var grid = this.grid_;
@@ -13772,282 +14266,6 @@ pear.plugin.FooterStatusRenderer.prototype.createDom = function(control) {
   this.setAriaStates(control, element);
   return element;
 };
-goog.provide("pear.plugin.Pager");
-goog.require("goog.ui.Component");
-goog.require("goog.events.Event");
-goog.require("goog.ui.ComboBox");
-goog.require("pear.ui.Plugable");
-pear.plugin.Pager = function(grid, opt_renderer, opt_domHelper) {
-  goog.ui.Component.call(this, opt_renderer || pear.ui.RowRenderer.getInstance(), opt_domHelper);
-};
-goog.inherits(pear.plugin.Pager, goog.ui.Component);
-pear.ui.Plugable.addImplementation(pear.plugin.Pager);
-pear.plugin.Pager.prototype.getPageIndex = function() {
-  return this.getGrid().getPageIndex();
-};
-pear.plugin.Pager.prototype.getGrid = function() {
-  return this.grid_;
-};
-pear.plugin.Pager.prototype.show = function(grid) {
-  this.grid_ = grid;
-  var parentElem = grid.getElement();
-  if (this.grid_.getConfiguration().AllowPaging) {
-    this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
-    if (this.footer_ && goog.dom.classes.has(this.footer_, "pear-grid-footer")) {
-    } else {
-      this.footer_ = goog.dom.createDom("div", "pear-grid-footer");
-      goog.dom.insertSiblingAfter(this.footer_, parentElem);
-    }
-    this.render(this.footer_);
-  }
-};
-pear.plugin.Pager.prototype.createDom = function() {
-  this.element_ = goog.dom.createDom("div", "pear-grid-pager");
-};
-pear.plugin.Pager.prototype.disposeInternal = function() {
-  if (this.grid_.getConfiguration().AllowPaging) {
-    this.pagerComboBox_.dispose();
-    this.pagerComboBox_ = null;
-  }
-  if (this.footer_) {
-    this.footer_.remove();
-    this.footer_ = null;
-  }
-  this.grid_ = null;
-  pear.plugin.Pager.superClass_.disposeInternal.call(this);
-};
-pear.plugin.Pager.prototype.enterDocument = function() {
-  pear.plugin.Pager.superClass_.enterDocument.call(this);
-  var elem = this.getElement();
-  this.createPager_();
-};
-pear.plugin.Pager.prototype.createPager_ = function() {
-  this.createPagerNavControls_();
-  this.createPagerDropDown_();
-  this.changePageIndex_(this.getPageIndex());
-};
-pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
-  var elem = this.getElement();
-  var grid = this.getGrid();
-  var rowsPerPage = grid.getConfiguration().PageSize;
-  var totalRows = grid.getRowCount();
-  this.pagerComboBox_ = new goog.ui.ComboBox;
-  this.pagerComboBox_.setUseDropdownArrow(true);
-  var i = 0;
-  do {
-    this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i + 1)));
-    i++;
-  } while (i * rowsPerPage < totalRows);
-  this.pagerComboBox_.render(this.getElement());
-  goog.style.setWidth(this.pagerComboBox_.getInputElement(), 30);
-  goog.style.setHeight(this.pagerComboBox_.getMenu().getElement(), 150);
-  this.pagerComboBox_.getMenu().getElement().style.overflowY = "auto";
-  this.getHandler().listen(this.pagerComboBox_, goog.ui.Component.EventType.CHANGE, this.handleChange_, false, this);
-};
-pear.plugin.Pager.prototype.createPagerNavControls_ = function() {
-  var elem = this.getElement();
-  var grid = this.getGrid();
-  var rowsPerPage = grid.getConfiguration().PageSize;
-  var totalRows = grid.getRowCount();
-  var prev = new goog.ui.Control(goog.dom.createDom("span", "fa fa-chevron-left"), pear.plugin.PagerCellRenderer.getInstance());
-  prev.render(elem);
-  var next = new goog.ui.Control(goog.dom.createDom("span", "fa fa-chevron-right"), pear.plugin.PagerCellRenderer.getInstance());
-  next.render(elem);
-  this.navControl_ = [prev, next];
-  goog.array.forEach(this.navControl_, function(value) {
-    value.setHandleMouseEvents(true);
-    this.getHandler().listen(value, goog.ui.Component.EventType.ACTION, this.handleAction_, false, this);
-  }, this);
-};
-pear.plugin.Pager.prototype.handleAction_ = function(ge) {
-  var pageIndex = this.getPageIndex();
-  if (ge.target === this.navControl_[0]) {
-    pageIndex--;
-    this.changePageIndex_(pageIndex);
-  } else {
-    if (ge.target === this.navControl_[1]) {
-      pageIndex++;
-      this.changePageIndex_(pageIndex);
-    }
-  }
-  ge.stopPropagation();
-};
-pear.plugin.Pager.prototype.changePageIndex_ = function(index) {
-  index = index < 0 ? 0 : index;
-  index = index <= this.pagerComboBox_.getItemCount() - 1 ? index : this.pagerComboBox_.getItemCount() - 1;
-  this.pagerComboBox_.setValue(index + 1);
-};
-pear.plugin.Pager.prototype.handleChange_ = function(ge) {
-  var grid = this.getGrid();
-  grid.setPageIndex(parseInt(this.pagerComboBox_.getValue()) - 1);
-};
-goog.provide("pear.plugin.PagerCellRenderer");
-goog.require("goog.ui.Component");
-goog.require("goog.ui.ControlRenderer");
-pear.plugin.PagerCellRenderer = function() {
-  goog.ui.ControlRenderer.call(this);
-};
-goog.inherits(pear.plugin.PagerCellRenderer, goog.ui.ControlRenderer);
-goog.addSingletonGetter(pear.plugin.PagerCellRenderer);
-pear.plugin.PagerCellRenderer.CSS_CLASS = goog.getCssName("pear-grid-pager-cell");
-pear.plugin.PagerCellRenderer.prototype.getCssClass = function() {
-  return pear.plugin.PagerCellRenderer.CSS_CLASS;
-};
-pear.plugin.PagerCellRenderer.prototype.createDom = function(cellControl) {
-  var element = cellControl.getDomHelper().createDom("div", this.getClassNames(cellControl).join(" "), cellControl.getContent());
-  this.setAriaStates(cellControl, element);
-  return element;
-};
-goog.provide("pear.ui.Body");
-goog.require("goog.ui.Component");
-pear.ui.Body = function(opt_domHelper, opt_renderer) {
-  goog.ui.Component.call(this, opt_domHelper);
-  this.renderer_ = opt_renderer || goog.ui.ContainerRenderer.getInstance();
-};
-goog.inherits(pear.ui.Body, goog.ui.Component);
-pear.ui.Body.prototype.createDom = function() {
-  pear.ui.Grid.superClass_.createDom.call(this);
-  var elem = this.getElement();
-  goog.dom.classes.set(elem, "pear-grid-body");
-};
-goog.provide("pear.ui.RowRenderer");
-goog.require("goog.ui.ContainerRenderer");
-pear.ui.RowRenderer = function() {
-  goog.ui.ContainerRenderer.call(this);
-};
-goog.inherits(pear.ui.RowRenderer, goog.ui.ContainerRenderer);
-goog.addSingletonGetter(pear.ui.RowRenderer);
-pear.ui.RowRenderer.CSS_CLASS = goog.getCssName("pear-grid-row");
-pear.ui.RowRenderer.prototype.getCssClass = function() {
-  return pear.ui.RowRenderer.CSS_CLASS;
-};
-pear.ui.RowRenderer.prototype.getDefaultOrientation = function() {
-  return goog.ui.Container.Orientation.HORIZONTAL;
-};
-goog.provide("pear.ui.FooterRowRenderer");
-goog.require("pear.ui.RowRenderer");
-pear.ui.FooterRowRenderer = function() {
-  pear.ui.RowRenderer.call(this);
-};
-goog.inherits(pear.ui.FooterRowRenderer, pear.ui.RowRenderer);
-goog.addSingletonGetter(pear.ui.FooterRowRenderer);
-pear.ui.FooterRowRenderer.CSS_CLASS = goog.getCssName("pear-grid-row-footer");
-pear.ui.FooterRowRenderer.prototype.getCssClass = function() {
-  return pear.ui.FooterRowRenderer.CSS_CLASS;
-};
-goog.provide("pear.ui.Row");
-goog.require("goog.ui.Container");
-goog.require("pear.data.RowView");
-goog.require("pear.ui.RowRenderer");
-pear.ui.Row = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
-  goog.ui.Container.call(this, goog.ui.Container.Orientation.HORIZONTAL, opt_renderer || pear.ui.RowRenderer.getInstance(), opt_domHelper);
-  this.setFocusable(false);
-  this.grid_ = grid;
-  this.height_ = height || 25;
-};
-goog.inherits(pear.ui.Row, goog.ui.Container);
-pear.ui.Row.prototype.grid_ = null;
-pear.ui.Row.prototype.height_ = 25;
-pear.ui.Row.prototype.rowPosition_ = -1;
-pear.ui.Row.prototype.disposeInternal = function() {
-  this.grid_ = null;
-  pear.ui.Row.superClass_.disposeInternal.call(this);
-};
-pear.ui.Row.prototype.enterDocument = function() {
-  pear.ui.Row.superClass_.enterDocument.call(this);
-  var elem = this.getElement();
-  this.setPosition_();
-};
-pear.ui.Row.prototype.handleScroll_ = function(be) {
-  var cell = this.getChild(be.target.id);
-  console.dir(cell);
-  be.stopPropagation();
-  be.preventDefault();
-};
-pear.ui.Row.prototype.handleClickEvent_ = function(be) {
-  var cell = this.getChild(be.target.id);
-  console.dir(cell);
-  if (cell) {
-    cell.setSelected(true);
-  }
-};
-pear.ui.Row.prototype.setRowView = function(model) {
-  pear.ui.Row.superClass_.setModel.call(this, model);
-  model.setRowContainer(this);
-};
-pear.ui.Row.prototype.getRowView = function() {
-  return this.getModel();
-};
-pear.ui.Row.prototype.addCell = function(cell, opt_render) {
-  this.addChild(cell, opt_render);
-};
-pear.ui.Row.prototype.getGrid = function() {
-  return this.grid_;
-};
-pear.ui.Row.prototype.setHeight = function(height) {
-  this.height_ = height;
-};
-pear.ui.Row.prototype.getWidth = function() {
-  var width = 0;
-  this.forEachChild(function(child) {
-    width = width + child.getCellWidth();
-  });
-  return width;
-};
-pear.ui.Row.prototype.getHeight = function() {
-  return this.height_;
-};
-pear.ui.Row.prototype.getComputedHeight = function() {
-  return this.getHeight();
-};
-pear.ui.Row.prototype.setRowPosition = function(pos) {
-  this.rowPosition_ = pos;
-};
-pear.ui.Row.prototype.getRowPosition = function() {
-  return this.rowPosition_;
-};
-pear.ui.Row.prototype.getLocationTop = function() {
-  return 0;
-};
-pear.ui.Row.prototype.getCellWidth = function(index) {
-  var child = this.getChildAt(index);
-  return child.getCellWidth();
-};
-pear.ui.Row.prototype.setPosition_ = function() {
-  var left, top;
-  left = 0;
-  top = 0;
-  left = 0;
-  top = this.getLocationTop();
-  goog.style.setPosition(this.getElement(), left, top);
-};
-goog.provide("pear.ui.FooterRow");
-goog.require("pear.ui.FooterRowRenderer");
-goog.require("pear.ui.Row");
-pear.ui.FooterRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
-  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL, pear.ui.FooterRowRenderer.getInstance(), opt_domHelper);
-  this.setFocusable(false);
-};
-goog.inherits(pear.ui.FooterRow, pear.ui.Row);
-pear.ui.FooterRow.prototype.pager_ = null;
-pear.ui.FooterRow.prototype.getPager = function() {
-  return this.pager_;
-};
-pear.ui.FooterRow.prototype.disposeInternal = function() {
-  if (this.pager_) {
-    this.pager_.dispose();
-    this.pager_ = null;
-  }
-  pear.ui.FooterRow.superClass_.disposeInternal.call(this);
-};
-pear.ui.FooterRow.prototype.enterDocument = function() {
-  pear.ui.FooterRow.superClass_.enterDocument.call(this);
-  var config = this.getGrid().getConfiguration();
-  this.setHeight(5);
-  var elem = this.getElement();
-  this.setPosition_();
-  goog.style.setSize(elem, this.getGrid().getWidth(), this.getHeight());
-};
 goog.provide("pear.ui.BodyCanvas");
 goog.require("goog.ui.Component");
 goog.require("goog.ui.ContainerRenderer");
@@ -14060,6 +14278,18 @@ pear.ui.BodyCanvas.prototype.createDom = function() {
   pear.ui.Grid.superClass_.createDom.call(this);
   var elem = this.getElement();
   goog.dom.classes.set(elem, "pear-grid-body-canvas");
+};
+goog.provide("pear.ui.Body");
+goog.require("goog.ui.Component");
+pear.ui.Body = function(opt_domHelper, opt_renderer) {
+  goog.ui.Component.call(this, opt_domHelper);
+  this.renderer_ = opt_renderer || goog.ui.ContainerRenderer.getInstance();
+};
+goog.inherits(pear.ui.Body, goog.ui.Component);
+pear.ui.Body.prototype.createDom = function() {
+  pear.ui.Grid.superClass_.createDom.call(this);
+  var elem = this.getElement();
+  goog.dom.classes.set(elem, "pear-grid-body");
 };
 goog.provide("pear.ui.DataCellRenderer");
 goog.require("pear.ui.CellRenderer");
@@ -14088,418 +14318,6 @@ pear.ui.DataCell.prototype.getContent = function() {
 };
 pear.ui.DataCell.prototype.disposeInternal = function() {
   pear.ui.DataCell.superClass_.disposeInternal.call(this);
-};
-goog.provide("goog.ui.ButtonSide");
-goog.ui.ButtonSide = {NONE:0, START:1, END:2, BOTH:3};
-goog.provide("goog.ui.ButtonRenderer");
-goog.require("goog.a11y.aria");
-goog.require("goog.a11y.aria.Role");
-goog.require("goog.a11y.aria.State");
-goog.require("goog.asserts");
-goog.require("goog.ui.ButtonSide");
-goog.require("goog.ui.Component");
-goog.require("goog.ui.ControlRenderer");
-goog.ui.ButtonRenderer = function() {
-  goog.ui.ControlRenderer.call(this);
-};
-goog.inherits(goog.ui.ButtonRenderer, goog.ui.ControlRenderer);
-goog.addSingletonGetter(goog.ui.ButtonRenderer);
-goog.ui.ButtonRenderer.CSS_CLASS = goog.getCssName("goog-button");
-goog.ui.ButtonRenderer.prototype.getAriaRole = function() {
-  return goog.a11y.aria.Role.BUTTON;
-};
-goog.ui.ButtonRenderer.prototype.updateAriaState = function(element, state, enable) {
-  switch(state) {
-    case goog.ui.Component.State.SELECTED:
-    ;
-    case goog.ui.Component.State.CHECKED:
-      goog.asserts.assert(element, "The button DOM element cannot be null.");
-      goog.a11y.aria.setState(element, goog.a11y.aria.State.PRESSED, enable);
-      break;
-    default:
-    ;
-    case goog.ui.Component.State.OPENED:
-    ;
-    case goog.ui.Component.State.DISABLED:
-      goog.base(this, "updateAriaState", element, state, enable);
-      break;
-  }
-};
-goog.ui.ButtonRenderer.prototype.createDom = function(button) {
-  var element = goog.base(this, "createDom", button);
-  this.setTooltip(element, button.getTooltip());
-  var value = button.getValue();
-  if (value) {
-    this.setValue(element, value);
-  }
-  if (button.isSupportedState(goog.ui.Component.State.CHECKED)) {
-    this.updateAriaState(element, goog.ui.Component.State.CHECKED, button.isChecked());
-  }
-  return element;
-};
-goog.ui.ButtonRenderer.prototype.decorate = function(button, element) {
-  element = goog.ui.ButtonRenderer.superClass_.decorate.call(this, button, element);
-  button.setValueInternal(this.getValue(element));
-  button.setTooltipInternal(this.getTooltip(element));
-  if (button.isSupportedState(goog.ui.Component.State.CHECKED)) {
-    this.updateAriaState(element, goog.ui.Component.State.CHECKED, button.isChecked());
-  }
-  return element;
-};
-goog.ui.ButtonRenderer.prototype.getValue = goog.nullFunction;
-goog.ui.ButtonRenderer.prototype.setValue = goog.nullFunction;
-goog.ui.ButtonRenderer.prototype.getTooltip = function(element) {
-  return element.title;
-};
-goog.ui.ButtonRenderer.prototype.setTooltip = function(element, tooltip) {
-  if (element && tooltip) {
-    element.title = tooltip;
-  }
-};
-goog.ui.ButtonRenderer.prototype.setCollapsed = function(button, sides) {
-  var isRtl = button.isRightToLeft();
-  var collapseLeftClassName = goog.getCssName(this.getStructuralCssClass(), "collapse-left");
-  var collapseRightClassName = goog.getCssName(this.getStructuralCssClass(), "collapse-right");
-  button.enableClassName(isRtl ? collapseRightClassName : collapseLeftClassName, !!(sides & goog.ui.ButtonSide.START));
-  button.enableClassName(isRtl ? collapseLeftClassName : collapseRightClassName, !!(sides & goog.ui.ButtonSide.END));
-};
-goog.ui.ButtonRenderer.prototype.getCssClass = function() {
-  return goog.ui.ButtonRenderer.CSS_CLASS;
-};
-goog.provide("goog.ui.NativeButtonRenderer");
-goog.require("goog.asserts");
-goog.require("goog.dom.classlist");
-goog.require("goog.events.EventType");
-goog.require("goog.ui.ButtonRenderer");
-goog.require("goog.ui.Component");
-goog.ui.NativeButtonRenderer = function() {
-  goog.ui.ButtonRenderer.call(this);
-};
-goog.inherits(goog.ui.NativeButtonRenderer, goog.ui.ButtonRenderer);
-goog.addSingletonGetter(goog.ui.NativeButtonRenderer);
-goog.ui.NativeButtonRenderer.prototype.getAriaRole = function() {
-  return undefined;
-};
-goog.ui.NativeButtonRenderer.prototype.createDom = function(button) {
-  this.setUpNativeButton_(button);
-  return button.getDomHelper().createDom("button", {"class":this.getClassNames(button).join(" "), "disabled":!button.isEnabled(), "title":button.getTooltip() || "", "value":button.getValue() || ""}, button.getCaption() || "");
-};
-goog.ui.NativeButtonRenderer.prototype.canDecorate = function(element) {
-  return element.tagName == "BUTTON" || element.tagName == "INPUT" && (element.type == "button" || (element.type == "submit" || element.type == "reset"));
-};
-goog.ui.NativeButtonRenderer.prototype.decorate = function(button, element) {
-  this.setUpNativeButton_(button);
-  if (element.disabled) {
-    var disabledClassName = goog.asserts.assertString(this.getClassForState(goog.ui.Component.State.DISABLED));
-    goog.dom.classlist.add(element, disabledClassName);
-  }
-  return goog.ui.NativeButtonRenderer.superClass_.decorate.call(this, button, element);
-};
-goog.ui.NativeButtonRenderer.prototype.initializeDom = function(button) {
-  button.getHandler().listen(button.getElement(), goog.events.EventType.CLICK, button.performActionInternal);
-};
-goog.ui.NativeButtonRenderer.prototype.setAllowTextSelection = goog.nullFunction;
-goog.ui.NativeButtonRenderer.prototype.setRightToLeft = goog.nullFunction;
-goog.ui.NativeButtonRenderer.prototype.isFocusable = function(button) {
-  return button.isEnabled();
-};
-goog.ui.NativeButtonRenderer.prototype.setFocusable = goog.nullFunction;
-goog.ui.NativeButtonRenderer.prototype.setState = function(button, state, enable) {
-  goog.ui.NativeButtonRenderer.superClass_.setState.call(this, button, state, enable);
-  var element = button.getElement();
-  if (element && state == goog.ui.Component.State.DISABLED) {
-    element.disabled = enable;
-  }
-};
-goog.ui.NativeButtonRenderer.prototype.getValue = function(element) {
-  return element.value;
-};
-goog.ui.NativeButtonRenderer.prototype.setValue = function(element, value) {
-  if (element) {
-    element.value = value;
-  }
-};
-goog.ui.NativeButtonRenderer.prototype.updateAriaState = goog.nullFunction;
-goog.ui.NativeButtonRenderer.prototype.setUpNativeButton_ = function(button) {
-  button.setHandleMouseEvents(false);
-  button.setAutoStates(goog.ui.Component.State.ALL, false);
-  button.setSupportedState(goog.ui.Component.State.FOCUSED, false);
-};
-goog.provide("goog.ui.Button");
-goog.provide("goog.ui.Button.Side");
-goog.require("goog.events.EventType");
-goog.require("goog.events.KeyCodes");
-goog.require("goog.events.KeyHandler");
-goog.require("goog.ui.ButtonRenderer");
-goog.require("goog.ui.ButtonSide");
-goog.require("goog.ui.Component");
-goog.require("goog.ui.Control");
-goog.require("goog.ui.NativeButtonRenderer");
-goog.require("goog.ui.registry");
-goog.ui.Button = function(opt_content, opt_renderer, opt_domHelper) {
-  goog.ui.Control.call(this, opt_content, opt_renderer || goog.ui.NativeButtonRenderer.getInstance(), opt_domHelper);
-};
-goog.inherits(goog.ui.Button, goog.ui.Control);
-goog.ui.Button.Side = goog.ui.ButtonSide;
-goog.ui.Button.prototype.value_;
-goog.ui.Button.prototype.tooltip_;
-goog.ui.Button.prototype.getValue = function() {
-  return this.value_;
-};
-goog.ui.Button.prototype.setValue = function(value) {
-  this.value_ = value;
-  var renderer = (this.getRenderer());
-  renderer.setValue(this.getElement(), (value));
-};
-goog.ui.Button.prototype.setValueInternal = function(value) {
-  this.value_ = value;
-};
-goog.ui.Button.prototype.getTooltip = function() {
-  return this.tooltip_;
-};
-goog.ui.Button.prototype.setTooltip = function(tooltip) {
-  this.tooltip_ = tooltip;
-  this.getRenderer().setTooltip(this.getElement(), tooltip);
-};
-goog.ui.Button.prototype.setTooltipInternal = function(tooltip) {
-  this.tooltip_ = tooltip;
-};
-goog.ui.Button.prototype.setCollapsed = function(sides) {
-  this.getRenderer().setCollapsed(this, sides);
-};
-goog.ui.Button.prototype.disposeInternal = function() {
-  goog.ui.Button.superClass_.disposeInternal.call(this);
-  delete this.value_;
-  delete this.tooltip_;
-};
-goog.ui.Button.prototype.enterDocument = function() {
-  goog.ui.Button.superClass_.enterDocument.call(this);
-  if (this.isSupportedState(goog.ui.Component.State.FOCUSED)) {
-    var keyTarget = this.getKeyEventTarget();
-    if (keyTarget) {
-      this.getHandler().listen(keyTarget, goog.events.EventType.KEYUP, this.handleKeyEventInternal);
-    }
-  }
-};
-goog.ui.Button.prototype.handleKeyEventInternal = function(e) {
-  if (e.keyCode == goog.events.KeyCodes.ENTER && e.type == goog.events.KeyHandler.EventType.KEY || e.keyCode == goog.events.KeyCodes.SPACE && e.type == goog.events.EventType.KEYUP) {
-    return this.performActionInternal(e);
-  }
-  return e.keyCode == goog.events.KeyCodes.SPACE;
-};
-goog.ui.registry.setDecoratorByClassName(goog.ui.ButtonRenderer.CSS_CLASS, function() {
-  return new goog.ui.Button(null);
-});
-goog.provide("goog.ui.INLINE_BLOCK_CLASSNAME");
-goog.ui.INLINE_BLOCK_CLASSNAME = goog.getCssName("goog-inline-block");
-goog.provide("goog.ui.FlatButtonRenderer");
-goog.require("goog.a11y.aria.Role");
-goog.require("goog.dom.classlist");
-goog.require("goog.ui.Button");
-goog.require("goog.ui.ButtonRenderer");
-goog.require("goog.ui.INLINE_BLOCK_CLASSNAME");
-goog.require("goog.ui.registry");
-goog.ui.FlatButtonRenderer = function() {
-  goog.ui.ButtonRenderer.call(this);
-};
-goog.inherits(goog.ui.FlatButtonRenderer, goog.ui.ButtonRenderer);
-goog.addSingletonGetter(goog.ui.FlatButtonRenderer);
-goog.ui.FlatButtonRenderer.CSS_CLASS = goog.getCssName("goog-flat-button");
-goog.ui.FlatButtonRenderer.prototype.createDom = function(button) {
-  var classNames = this.getClassNames(button);
-  var attributes = {"class":goog.ui.INLINE_BLOCK_CLASSNAME + " " + classNames.join(" ")};
-  var element = button.getDomHelper().createDom("div", attributes, button.getContent());
-  this.setTooltip(element, button.getTooltip());
-  this.setAriaStates(button, element);
-  return element;
-};
-goog.ui.FlatButtonRenderer.prototype.getAriaRole = function() {
-  return goog.a11y.aria.Role.BUTTON;
-};
-goog.ui.FlatButtonRenderer.prototype.canDecorate = function(element) {
-  return element.tagName == "DIV";
-};
-goog.ui.FlatButtonRenderer.prototype.decorate = function(button, element) {
-  goog.dom.classlist.add(element, goog.ui.INLINE_BLOCK_CLASSNAME);
-  return goog.ui.FlatButtonRenderer.superClass_.decorate.call(this, button, element);
-};
-goog.ui.FlatButtonRenderer.prototype.getValue = function(element) {
-  return "";
-};
-goog.ui.FlatButtonRenderer.prototype.getCssClass = function() {
-  return goog.ui.FlatButtonRenderer.CSS_CLASS;
-};
-goog.ui.registry.setDecoratorByClassName(goog.ui.FlatButtonRenderer.CSS_CLASS, function() {
-  return new goog.ui.Button(null, goog.ui.FlatButtonRenderer.getInstance());
-});
-goog.provide("pear.plugin.HeaderMenu");
-goog.require("goog.ui.Component");
-goog.require("goog.events.Event");
-goog.require("pear.ui.Plugable");
-goog.require("goog.positioning.MenuAnchoredPosition");
-goog.require("goog.ui.FlatButtonRenderer");
-pear.plugin.HeaderMenu = function(grid, opt_renderer, opt_domHelper) {
-  goog.ui.Component.call(this, opt_renderer || pear.ui.RowRenderer.getInstance(), opt_domHelper);
-};
-goog.inherits(pear.plugin.HeaderMenu, goog.ui.Component);
-pear.ui.Plugable.addImplementation(pear.plugin.HeaderMenu);
-pear.plugin.HeaderMenu.prototype.getPageIndex = function() {
-  return this.getGrid().getPageIndex();
-};
-pear.plugin.HeaderMenu.prototype.getGrid = function() {
-  return this.grid_;
-};
-pear.plugin.HeaderMenu.prototype.show = function(grid) {
-  this.grid_ = grid;
-  var gridElem = this.grid_.getElement();
-  var parentElem = goog.dom.getAncestor(gridElem, function() {
-    return true;
-  });
-  this.render(parentElem);
-  goog.events.listen(this.grid_, pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK, this.handleGridHeaderMenuOptionClick_, false, this);
-  goog.style.showElement(this.getElement(), "");
-};
-pear.plugin.HeaderMenu.prototype.createDom = function() {
-  this.element_ = goog.dom.createDom("div", this.getCSSClassName());
-};
-pear.plugin.HeaderMenu.prototype.disposeInternal = function() {
-  this.grid_ = null;
-  this.headerCell_ = null;
-  this.titleContent_ = null;
-  this.filterInput_ = null;
-  pear.plugin.HeaderMenu.superClass_.disposeInternal.call(this);
-};
-pear.plugin.HeaderMenu.prototype.enterDocument = function() {
-  pear.plugin.HeaderMenu.superClass_.enterDocument.call(this);
-  var elem = this.getElement();
-  this.createHeaderMenuDom();
-};
-pear.plugin.HeaderMenu.prototype.createHeaderMenuDom = function() {
-  var titleBar = goog.dom.createDom("div", this.getCSSClassName() + "-title");
-  goog.dom.appendChild(this.getElement(), titleBar);
-  this.titleContent_ = goog.dom.createDom("div", this.getCSSClassName() + "-title-content");
-  goog.dom.appendChild(titleBar, this.titleContent_);
-  var closeElement = goog.dom.createDom("div", "pear-grid-header-cell-menu-title-close fa fa-times");
-  goog.dom.appendChild(titleBar, closeElement);
-  var breakElem = goog.dom.createDom("div", {style:"clear:both"});
-  goog.dom.appendChild(this.getElement(), breakElem);
-  this.createFilterMenu_();
-  goog.events.listen(closeElement, goog.events.EventType.CLICK, this.close_, false, this);
-};
-pear.plugin.HeaderMenu.prototype.close_ = function() {
-  goog.style.showElement(this.getElement(), "");
-};
-pear.plugin.HeaderMenu.prototype.createFilterMenu_ = function() {
-  var domEl = goog.dom.createDom("div", "pear-grid-header-cell-menu-title-filter");
-  goog.dom.appendChild(this.getElement(), domEl);
-  this.filterInput_ = new goog.ui.LabelInput("Filter Text");
-  this.filterInput_.render(domEl);
-  var fbApply = new goog.ui.Button("Apply", goog.ui.FlatButtonRenderer.getInstance());
-  fbApply.render(this.getElement());
-  fbApply.setTooltip("Apply Filter to DataView");
-  var fbClear = new goog.ui.Button("Clear", goog.ui.FlatButtonRenderer.getInstance());
-  fbClear.render(this.getElement());
-  fbClear.setTooltip("clear filter");
-  goog.events.listen(fbApply, goog.ui.Component.EventType.ACTION, this.handleApplyFilter_, false, this);
-  goog.events.listen(fbClear, goog.ui.Component.EventType.ACTION, this.handleCancelFilter_, false, this);
-};
-pear.plugin.HeaderMenu.prototype.handleApplyFilter_ = function(be) {
-  var dv = this.grid_.getDataView();
-  var column = this.headerCell_.getDataViewColumn();
-  dv.addColumnFilter(column.id, {type:pear.data.DataView.FilterType.EQUAL, expression:this.filterInput_.getValue()});
-  dv.applyFilter();
-  this.grid_.refresh();
-  this.close_();
-};
-pear.plugin.HeaderMenu.prototype.handleCancelFilter_ = function(be) {
-  var dv = this.grid_.getDataView();
-  var column = this.headerCell_.getDataViewColumn();
-  dv.clearColumnFilter(column.id);
-  this.grid_.refresh();
-  this.close_();
-};
-pear.plugin.HeaderMenu.prototype.handleGridHeaderMenuOptionClick_ = function(ge) {
-  console.dir(ge);
-  this.headerCell_ = ge.cell;
-  var menuElement = this.headerCell_.getMenuElement();
-  var menuPosition = goog.style.getPosition(menuElement);
-  var position = new goog.positioning.MenuAnchoredPosition(menuElement, goog.positioning.Corner.BOTTOM_START, true);
-  position.reposition(this.getElement(), goog.positioning.Corner.TOP_START);
-  goog.style.showElement(this.getElement(), "inline-block");
-  goog.dom.setTextContent(this.titleContent_, this.headerCell_.getContentText());
-};
-pear.plugin.HeaderMenu.prototype.getCSSClassName = function() {
-  return "pear-grid-header-cell-menu";
-};
-goog.provide("pear.ui.DataRowRenderer");
-goog.require("pear.ui.RowRenderer");
-pear.ui.DataRowRenderer = function() {
-  pear.ui.RowRenderer.call(this);
-};
-goog.inherits(pear.ui.DataRowRenderer, pear.ui.RowRenderer);
-goog.addSingletonGetter(pear.ui.DataRowRenderer);
-pear.ui.DataRowRenderer.CSS_CLASS = goog.getCssName("pear-grid-row-data");
-pear.ui.DataRowRenderer.prototype.getCssClass = function() {
-  return pear.ui.DataRowRenderer.CSS_CLASS;
-};
-pear.ui.DataRowRenderer.prototype.getClassNames = function(container) {
-  var baseClass = this.getCssClass();
-  var isHorizontal = container.getOrientation() == goog.ui.Container.Orientation.HORIZONTAL;
-  var even = container.getRowPosition() % 2 == 0;
-  var classNames = [baseClass, isHorizontal ? goog.getCssName(baseClass, "horizontal") : goog.getCssName(baseClass, "vertical"), even ? goog.getCssName(baseClass, "even") : goog.getCssName(baseClass, "odd")];
-  if (!container.isEnabled()) {
-    classNames.push(goog.getCssName(baseClass, "disabled"));
-  }
-  return classNames;
-};
-goog.provide("pear.ui.DataRow");
-goog.require("pear.ui.DataRowRenderer");
-goog.require("pear.ui.Row");
-pear.ui.DataRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
-  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL, pear.ui.DataRowRenderer.getInstance(), opt_domHelper);
-};
-goog.inherits(pear.ui.DataRow, pear.ui.Row);
-pear.ui.DataRow.prototype.top_ = 0;
-pear.ui.DataRow.prototype.getLocationTop = function() {
-  return this.top_;
-};
-pear.ui.DataRow.prototype.setLocationTop = function(top) {
-  this.top_ = top;
-};
-pear.ui.DataRow.prototype.disposeInternal = function() {
-  pear.ui.DataRow.superClass_.disposeInternal.call(this);
-};
-pear.ui.DataRow.prototype.enterDocument = function() {
-  pear.ui.Row.superClass_.enterDocument.call(this);
-  var elem = this.getElement();
-  this.setPosition_();
-  this.getHandler().listen(elem, goog.events.EventType.MOUSEOVER, this.handleMouseOver_, false, this).listen(elem, goog.events.EventType.MOUSEOUT, this.handleMouseOut_, false, this);
-};
-pear.ui.DataRow.prototype.handleMouseOver_ = function(be) {
-  var elem = this.getElement();
-  goog.dom.classes.add(elem, "pear-grid-row-over");
-  if (this.getRowPosition() % 2 > 0) {
-    goog.dom.classes.remove(elem, "pear-grid-row-data-odd");
-  }
-};
-pear.ui.DataRow.prototype.handleMouseOut_ = function(be) {
-  var elem = this.getElement();
-  goog.dom.classes.remove(elem, "pear-grid-row-over");
-  if (this.getRowPosition() % 2 > 0) {
-    goog.dom.classes.add(elem, "pear-grid-row-data-odd");
-  }
-};
-goog.provide("pear.ui.Header");
-goog.require("goog.ui.Component");
-pear.ui.Header = function(opt_domHelper, opt_renderer) {
-  goog.ui.Component.call(this, opt_domHelper);
-  this.renderer_ = opt_renderer || goog.ui.ContainerRenderer.getInstance();
-};
-goog.inherits(pear.ui.Header, goog.ui.Component);
-pear.ui.Header.prototype.createDom = function() {
-  pear.ui.Grid.superClass_.createDom.call(this);
-  var elem = this.getElement();
-  goog.dom.classes.set(elem, "pear-grid-header");
 };
 goog.provide("goog.userAgent.product");
 goog.require("goog.userAgent");
@@ -15238,6 +15056,215 @@ pear.ui.HeaderRow.prototype.disposeInternal = function() {
 pear.ui.HeaderRow.prototype.enterDocument = function() {
   pear.ui.HeaderRow.superClass_.enterDocument.call(this);
 };
+goog.provide("pear.plugin.Pager");
+goog.require("goog.ui.Component");
+goog.require("goog.events.Event");
+goog.require("goog.ui.ComboBox");
+goog.require("pear.ui.Plugable");
+pear.plugin.Pager = function(grid, opt_renderer, opt_domHelper) {
+  goog.ui.Component.call(this, opt_renderer || pear.ui.RowRenderer.getInstance(), opt_domHelper);
+};
+goog.inherits(pear.plugin.Pager, goog.ui.Component);
+pear.ui.Plugable.addImplementation(pear.plugin.Pager);
+pear.plugin.Pager.prototype.getPageIndex = function() {
+  return this.getGrid().getPageIndex();
+};
+pear.plugin.Pager.prototype.getGrid = function() {
+  return this.grid_;
+};
+pear.plugin.Pager.prototype.show = function(grid) {
+  this.grid_ = grid;
+  var parentElem = grid.getElement();
+  if (this.grid_.getConfiguration().AllowPaging) {
+    this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
+    if (this.footer_ && goog.dom.classes.has(this.footer_, "pear-grid-footer")) {
+    } else {
+      this.footer_ = goog.dom.createDom("div", "pear-grid-footer");
+      goog.dom.insertSiblingAfter(this.footer_, parentElem);
+    }
+    this.render(this.footer_);
+  }
+};
+pear.plugin.Pager.prototype.createDom = function() {
+  this.element_ = goog.dom.createDom("div", "pear-grid-pager");
+};
+pear.plugin.Pager.prototype.disposeInternal = function() {
+  if (this.grid_.getConfiguration().AllowPaging) {
+    this.pagerComboBox_.dispose();
+    this.pagerComboBox_ = null;
+  }
+  if (this.footer_) {
+    this.footer_.remove();
+    this.footer_ = null;
+  }
+  this.grid_ = null;
+  pear.plugin.Pager.superClass_.disposeInternal.call(this);
+};
+pear.plugin.Pager.prototype.enterDocument = function() {
+  pear.plugin.Pager.superClass_.enterDocument.call(this);
+  var elem = this.getElement();
+  this.createPager_();
+};
+pear.plugin.Pager.prototype.createPager_ = function() {
+  this.createPagerNavControls_();
+  this.createPagerDropDown_();
+  this.changePageIndex_(this.getPageIndex());
+  goog.events.listen(this.grid_.getDataView(), pear.data.DataView.EventType.ROWCOUNT_CHANGED, this.handleRowCountChange_, false, this);
+};
+pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
+  var elem = this.getElement();
+  var grid = this.getGrid();
+  var rowsPerPage = grid.getConfiguration().PageSize;
+  var totalRows = grid.getRowCount();
+  this.pagerComboBox_ = new goog.ui.ComboBox;
+  this.pagerComboBox_.setUseDropdownArrow(true);
+  var i = 0;
+  do {
+    this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i + 1)));
+    i++;
+  } while (i * rowsPerPage < totalRows);
+  this.pagerComboBox_.render(this.getElement());
+  goog.style.setWidth(this.pagerComboBox_.getInputElement(), 30);
+  goog.style.setHeight(this.pagerComboBox_.getMenu().getElement(), 150);
+  this.pagerComboBox_.getMenu().getElement().style.overflowY = "auto";
+  this.getHandler().listen(this.pagerComboBox_, goog.ui.Component.EventType.CHANGE, this.handleChange_, false, this);
+};
+pear.plugin.Pager.prototype.createPagerNavControls_ = function() {
+  var elem = this.getElement();
+  var grid = this.getGrid();
+  var rowsPerPage = grid.getConfiguration().PageSize;
+  var totalRows = grid.getRowCount();
+  var prev = new goog.ui.Control(goog.dom.createDom("span", "fa fa-chevron-left"), pear.plugin.PagerCellRenderer.getInstance());
+  prev.render(elem);
+  var next = new goog.ui.Control(goog.dom.createDom("span", "fa fa-chevron-right"), pear.plugin.PagerCellRenderer.getInstance());
+  next.render(elem);
+  this.navControl_ = [prev, next];
+  goog.array.forEach(this.navControl_, function(value) {
+    value.setHandleMouseEvents(true);
+    this.getHandler().listen(value, goog.ui.Component.EventType.ACTION, this.handleAction_, false, this);
+  }, this);
+};
+pear.plugin.Pager.prototype.handleAction_ = function(ge) {
+  var pageIndex = this.getPageIndex();
+  if (ge.target === this.navControl_[0]) {
+    pageIndex--;
+    this.changePageIndex_(pageIndex);
+  } else {
+    if (ge.target === this.navControl_[1]) {
+      pageIndex++;
+      this.changePageIndex_(pageIndex);
+    }
+  }
+  ge.stopPropagation();
+};
+pear.plugin.Pager.prototype.changePageIndex_ = function(index) {
+  index = index < 0 ? 0 : index;
+  index = index <= this.pagerComboBox_.getItemCount() - 1 ? index : this.pagerComboBox_.getItemCount() - 1;
+  this.pagerComboBox_.setValue(index + 1);
+};
+pear.plugin.Pager.prototype.handleChange_ = function(ge) {
+  var grid = this.getGrid();
+  grid.setPageIndex(parseInt(this.pagerComboBox_.getValue()) - 1);
+};
+pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge) {
+  var elem = this.getElement();
+  var grid = this.getGrid();
+  var rowsPerPage = grid.getConfiguration().PageSize;
+  var totalRows = grid.getRowCount();
+  this.pagerComboBox_.removeAllItems();
+  var i = 0;
+  do {
+    this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i + 1)));
+    i++;
+  } while (i * rowsPerPage < totalRows);
+};
+goog.provide("pear.plugin.PagerCellRenderer");
+goog.require("goog.ui.Component");
+goog.require("goog.ui.ControlRenderer");
+pear.plugin.PagerCellRenderer = function() {
+  goog.ui.ControlRenderer.call(this);
+};
+goog.inherits(pear.plugin.PagerCellRenderer, goog.ui.ControlRenderer);
+goog.addSingletonGetter(pear.plugin.PagerCellRenderer);
+pear.plugin.PagerCellRenderer.CSS_CLASS = goog.getCssName("pear-grid-pager-cell");
+pear.plugin.PagerCellRenderer.prototype.getCssClass = function() {
+  return pear.plugin.PagerCellRenderer.CSS_CLASS;
+};
+pear.plugin.PagerCellRenderer.prototype.createDom = function(cellControl) {
+  var element = cellControl.getDomHelper().createDom("div", this.getClassNames(cellControl).join(" "), cellControl.getContent());
+  this.setAriaStates(cellControl, element);
+  return element;
+};
+goog.provide("pear.ui.DataRowRenderer");
+goog.require("pear.ui.RowRenderer");
+pear.ui.DataRowRenderer = function() {
+  pear.ui.RowRenderer.call(this);
+};
+goog.inherits(pear.ui.DataRowRenderer, pear.ui.RowRenderer);
+goog.addSingletonGetter(pear.ui.DataRowRenderer);
+pear.ui.DataRowRenderer.CSS_CLASS = goog.getCssName("pear-grid-row-data");
+pear.ui.DataRowRenderer.prototype.getCssClass = function() {
+  return pear.ui.DataRowRenderer.CSS_CLASS;
+};
+pear.ui.DataRowRenderer.prototype.getClassNames = function(container) {
+  var baseClass = this.getCssClass();
+  var isHorizontal = container.getOrientation() == goog.ui.Container.Orientation.HORIZONTAL;
+  var even = container.getRowPosition() % 2 == 0;
+  var classNames = [baseClass, isHorizontal ? goog.getCssName(baseClass, "horizontal") : goog.getCssName(baseClass, "vertical"), even ? goog.getCssName(baseClass, "even") : goog.getCssName(baseClass, "odd")];
+  if (!container.isEnabled()) {
+    classNames.push(goog.getCssName(baseClass, "disabled"));
+  }
+  return classNames;
+};
+goog.provide("pear.ui.DataRow");
+goog.require("pear.ui.DataRowRenderer");
+goog.require("pear.ui.Row");
+pear.ui.DataRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
+  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL, pear.ui.DataRowRenderer.getInstance(), opt_domHelper);
+};
+goog.inherits(pear.ui.DataRow, pear.ui.Row);
+pear.ui.DataRow.prototype.top_ = 0;
+pear.ui.DataRow.prototype.getLocationTop = function() {
+  return this.top_;
+};
+pear.ui.DataRow.prototype.setLocationTop = function(top) {
+  this.top_ = top;
+};
+pear.ui.DataRow.prototype.disposeInternal = function() {
+  pear.ui.DataRow.superClass_.disposeInternal.call(this);
+};
+pear.ui.DataRow.prototype.enterDocument = function() {
+  pear.ui.Row.superClass_.enterDocument.call(this);
+  var elem = this.getElement();
+  this.setPosition_();
+  this.getHandler().listen(elem, goog.events.EventType.MOUSEOVER, this.handleMouseOver_, false, this).listen(elem, goog.events.EventType.MOUSEOUT, this.handleMouseOut_, false, this);
+};
+pear.ui.DataRow.prototype.handleMouseOver_ = function(be) {
+  var elem = this.getElement();
+  goog.dom.classes.add(elem, "pear-grid-row-over");
+  if (this.getRowPosition() % 2 > 0) {
+    goog.dom.classes.remove(elem, "pear-grid-row-data-odd");
+  }
+};
+pear.ui.DataRow.prototype.handleMouseOut_ = function(be) {
+  var elem = this.getElement();
+  goog.dom.classes.remove(elem, "pear-grid-row-over");
+  if (this.getRowPosition() % 2 > 0) {
+    goog.dom.classes.add(elem, "pear-grid-row-data-odd");
+  }
+};
+goog.provide("pear.ui.Header");
+goog.require("goog.ui.Component");
+pear.ui.Header = function(opt_domHelper, opt_renderer) {
+  goog.ui.Component.call(this, opt_domHelper);
+  this.renderer_ = opt_renderer || goog.ui.ContainerRenderer.getInstance();
+};
+goog.inherits(pear.ui.Header, goog.ui.Component);
+pear.ui.Header.prototype.createDom = function() {
+  pear.ui.Grid.superClass_.createDom.call(this);
+  var elem = this.getElement();
+  goog.dom.classes.set(elem, "pear-grid-header");
+};
 /*
 
  Distributed under - The MIT License (MIT).
@@ -15270,6 +15297,11 @@ pear.ui.HeaderRow.prototype.enterDocument = function() {
 goog.provide("pear.ui.Grid");
 goog.provide("pear.ui.Grid.GridDataCellEvent");
 goog.provide("pear.ui.Grid.GridHeaderCellEvent");
+goog.require("goog.dom");
+goog.require("goog.events");
+goog.require("goog.events.EventType");
+goog.require("goog.array");
+goog.require("goog.object");
 goog.require("goog.Timer");
 goog.require("pear.data.DataModel");
 goog.require("pear.ui.Header");
@@ -15296,7 +15328,7 @@ pear.ui.Grid = function(opt_domHelper) {
 goog.inherits(pear.ui.Grid, goog.ui.Component);
 pear.ui.Grid.ScrollDirection = {UP:1, DOWN:2, LEFT:3, RIGHT:4, NONE:0};
 pear.ui.Grid.SortDirection = {NONE:0, ASC:1, DESC:2};
-pear.ui.Grid.prototype.Configuration_ = {Width:500, Height:600, RowHeight:25, RowHeaderHeight:30, RowFooterHeight:20, ColumnWidth:125, PageSize:50, AllowSorting:true, AllowPaging:true, AllowColumnResize:true, AllowColumnHeaderMenu:true};
+pear.ui.Grid.prototype.Configuration_ = {Width:500, Height:600, RowHeight:25, RowHeaderHeight:30, RowFooterHeight:20, ColumnWidth:125, PageSize:50, AllowSorting:false, AllowPaging:false, AllowColumnResize:false, AllowColumnHeaderMenu:false};
 pear.ui.Grid.EventType = {BEFORE_SORT:"before-sort", AFTER_SORT:"after-sort", BEFORE_PAGING:"before-paging", AFTER_PAGING:"after-paging", HEADER_CELL_MENU_CLICK:"headercell-menu-click", DATACELL_BEFORE_CLICK:"datacell-before-click", DATACELL_AFTER_CLICK:"datacell-after-click"};
 pear.ui.Grid.prototype.headerRow_ = null;
 pear.ui.Grid.prototype.body_ = null;
@@ -15309,10 +15341,10 @@ pear.ui.Grid.prototype.currentPageIndex_ = null;
 pear.ui.Grid.prototype.getConfiguration = function() {
   return this.Configuration_;
 };
-pear.ui.Grid.prototype.getColumnsDataModel = function() {
+pear.ui.Grid.prototype.getColumns = function() {
   var cols;
   var dv = this.getDataView();
-  cols = dv.getColumns();
+  cols = dv.getDataColumns();
   return cols;
 };
 pear.ui.Grid.prototype.getBody = function() {
@@ -15341,12 +15373,12 @@ pear.ui.Grid.prototype.setHeight = function(height) {
   return this.height_ = height;
 };
 pear.ui.Grid.prototype.getColumnWidth = function(index) {
-  var coldata = this.getColumnsDataModel();
+  var coldata = this.getColumns();
   coldata[index]["width"] = coldata[index]["width"] || this.Configuration_.ColumnWidth;
   return coldata[index]["width"];
 };
 pear.ui.Grid.prototype.setColumnWidth = function(index, width, opt_render) {
-  var coldata = this.getColumnsDataModel();
+  var coldata = this.getColumns();
   coldata[index]["width"] = width || this.Configuration_.ColumnWidth;
   var headerCell = this.headerRow_.getChildAt(index);
   if (opt_render && headerCell) {
@@ -15358,10 +15390,15 @@ pear.ui.Grid.prototype.getScrollbarWidth = function() {
   return this.scrollbarWidth_;
 };
 pear.ui.Grid.prototype.getDataView = function() {
-  return this.getModel();
+  this.dataview_ = this.dataview_ || new pear.data.DataView([], []);
+  return this.dataview_;
+};
+pear.ui.Grid.prototype.setDataView_ = function(dv) {
+  this.dataview_ = dv;
+  dv.setGrid(this);
 };
 pear.ui.Grid.prototype.getRowCount = function() {
-  return this.getModel().getRowCount();
+  return this.getDataView().getDataRowViewCount();
 };
 pear.ui.Grid.prototype.getHeaderRow = function() {
   return this.headerRow_;
@@ -15395,10 +15432,15 @@ pear.ui.Grid.prototype.getPageIndex = function() {
 pear.ui.Grid.prototype.getSortedHeaderCell = function() {
   return this.getHeaderRow().getChildAt(this.getSortColumnIndex());
 };
-pear.ui.Grid.prototype.setDataView = function(dv) {
-  this.setModel(dv);
+pear.ui.Grid.prototype.setColumns = function(datacolumns) {
+  var dv = this.getDataView();
+  dv.setDataColumns(datacolumns);
   dv.setGrid(this);
-  this.prepareControlHierarchy_();
+};
+pear.ui.Grid.prototype.setDataSource = function(data) {
+  var dv = this.getDataView();
+  dv.setDataRows(data);
+  dv.setGrid(this);
 };
 pear.ui.Grid.prototype.addPlugin = function(plugin) {
   var plugins = this.getPlugins();
@@ -15450,8 +15492,8 @@ pear.ui.Grid.prototype.disposeInternal = function() {
     this.footerRow_.dispose();
   }
   this.footerRow_ = null;
-  dv = this.getModel();
-  dv.dispose();
+  this.dataview_.dispose();
+  this.dataview_ = null;
   this.width_ = null;
   this.height_ = null;
   this.sortColumnIndex_ = null;
@@ -15489,7 +15531,7 @@ pear.ui.Grid.prototype.createHeader_ = function() {
   this.createHeaderCells_();
 };
 pear.ui.Grid.prototype.createHeaderCells_ = function() {
-  var columns = this.getColumnsDataModel();
+  var columns = this.getColumns();
   goog.array.forEach(columns, function(column, index) {
     var headerCell = new pear.ui.HeaderCell;
     headerCell.setModel(column);
@@ -15514,8 +15556,9 @@ pear.ui.Grid.prototype.renderBody_ = function() {
 };
 pear.ui.Grid.prototype.setCanvasHeight_ = function() {
   var height = 0;
+  var pagesize = this.getDataView().getPageSize();
   if (this.Configuration_.AllowPaging) {
-    height = this.Configuration_.PageSize * this.Configuration_.RowHeight;
+    height = pagesize * this.Configuration_.RowHeight;
   } else {
     height = this.getRowCount() * this.Configuration_.RowHeight;
   }
@@ -15534,13 +15577,14 @@ pear.ui.Grid.prototype.syncHeaderRow_ = function() {
 pear.ui.Grid.prototype.prepareDataRows_ = function() {
   var dv = this.getDataView();
   var rows = dv.getRowViews();
+  var pagesize = dv.getPageSize();
   this.dataRows_ = [];
   goog.array.forEach(rows, function(value, index) {
     var row = new pear.ui.DataRow(this, this.Configuration_.RowHeight);
     row.setModel(value);
     row.setRowPosition(index);
     if (this.Configuration_.AllowPaging) {
-      row.setLocationTop(index % this.Configuration_.PageSize * this.Configuration_.RowHeight);
+      row.setLocationTop(index % pagesize * this.Configuration_.RowHeight);
     } else {
       row.setLocationTop(index * this.Configuration_.RowHeight);
     }
@@ -15548,9 +15592,9 @@ pear.ui.Grid.prototype.prepareDataRows_ = function() {
   }, this);
 };
 pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
-  var model = row.getRowView().getRowData();
+  var model = row.getRowView();
   var dv = this.getDataView();
-  var columns = dv.getColumns();
+  var columns = this.getColumns();
   if (row.getChildCount() > 0) {
     row.removeChildren(true);
   }
@@ -15612,13 +15656,14 @@ pear.ui.Grid.prototype.draw_ = function() {
 pear.ui.Grid.prototype.refresh = function() {
   this.renderedDataRowsCache_ = [];
   this.renderedDataRows_ = [];
+  this.setCanvasHeight_();
   this.prepareDataRows_();
   this.refreshRenderRows_();
   this.bodyCanvasRender_(true);
 };
 pear.ui.Grid.prototype.setColumnResize = function(index, width) {
   var cell = this.headerRow_.getChildAt(index);
-  var coldata = grid.getColumnsDataModel();
+  var coldata = grid.getColumns();
   var diff = width - coldata[index]["width"];
   this.setColumnWidth(index, coldata[index]["width"] + diff, true);
   goog.array.forEach(coldata, function(data, pos) {

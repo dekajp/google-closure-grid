@@ -2,7 +2,7 @@ goog.provide('pear.data.DataView');
 
 goog.require('pear.data.DataModel');
 goog.require('pear.data.RowView');
-goog.require('goog.Disposable');
+goog.require('goog.events.EventTarget');
 
 
 /**
@@ -10,15 +10,10 @@ goog.require('goog.Disposable');
  * @param {pear.data.DataView} datamodel
  * @extends {goog.Disposable}
  */
-pear.data.DataView = function(datamodel) {
-  goog.Disposable.call(this);
-  
-  this.datamodel_ = datamodel;
-
-
-  this.init_();
+pear.data.DataView = function(datacolumns,datarows) {
+  pear.data.DataModel.call(this,datacolumns,datarows);
 };
-goog.inherits(pear.data.DataView, goog.Disposable);
+goog.inherits(pear.data.DataView, pear.data.DataModel);
 
 
 /**
@@ -32,11 +27,13 @@ pear.data.DataView.FilterType = {
   BETWEEN:5
 };
 
-/**
- * @private
- * @type {pear.data.DataView}
- */
-pear.data.DataView.prototype.datamodel_ = null;
+
+pear.data.DataView.EventType = {
+  ROWCOUNT_CHANGED: 'rowcount-changed',
+  PAGE_INDEX_CHANGED: 'page-index-changed',
+  PAGE_SIZE_CHANGED: 'page-size-changed'
+};
+
 
 /**
  * @private
@@ -46,9 +43,14 @@ pear.data.DataView.prototype.grid_ = null;
 
 /**
  * @private
+ * @type {pear.ui.Grid}
+ */
+pear.data.DataView.prototype.dataRowidx_ = [];
+/**
+ * @private
  * @type {Object}
  */
-pear.data.DataView.prototype.rowViews_ = [];
+pear.data.DataView.prototype.dataRowViews_ = [];
 
 pear.data.DataView.prototype.sortField_ = null;
 
@@ -59,59 +61,38 @@ pear.data.DataView.prototype.pageIndex_ = null;
 
 pear.data.DataView.prototype.pageSize_ = null;
 
-/**
- * @private
- * @type {pear.ui.Grid}
- */
-pear.data.DataView.prototype.rowidx_ = [];
+
 
 pear.data.DataView.prototype.disposeInternal = function() {
-  this.rowidx_ = null;
-  this.originalRowViews_ = null;
-  this.rowViews_ = null; 
+  this.dataRowidx_ = null;
+  this.originaldataRowViews_ = null;
+  this.dataRowViews_ = null; 
   this.grid_ = null;
   this.pageIndex_ = null;
   this.pageSize_ = null;
   this.sortFieldId_ = null;
   this.sortDirection_ = null;
-  this.datamodel_.dispose();
-  this.datamodel_=null;
-
+ 
   pear.data.DataView.superClass_.disposeInternal.call(this);
 };
 
 
+pear.data.DataView.prototype.setDataRows = function(dr) {
+  pear.data.DataView.superClass_.setDataRows.call(this,dr);
+  this.init_();
+};
+
 pear.data.DataView.prototype.init_ = function() {
-  this.initLocalCacheRowViews_();
+  this.initLocalCachedataRowViews_();
 };
 
 
-pear.data.DataView.prototype.initLocalCacheRowViews_ = function() {
+pear.data.DataView.prototype.initLocalCachedataRowViews_ = function() {
   // TODO - Cache
-  this.rowViews_ = [];
-  this.rowidx_=[];
-  this.transformToRowViews_(this.datamodel_.getRows());
+  this.dataRowViews_ = this.getDataRows().slice(0);
   this.updateRowsIdx();
 };
 
-/**
- * @param {Array.<Object>} rows
- */
-pear.data.DataView.prototype.transformToRowViews_ = function(rows) {
-  goog.array.forEach(rows, function(value) {
-    this.addRowView_(value);
-  },this);
-};
-
-
-/**
- * @param {Object} row
- */
-pear.data.DataView.prototype.addRowView_ = function(row) {
-  var rv = new pear.data.RowView(row,this);
-  this.rowViews_.push(rv);
-
-};
 
 /**
  * @return {Array}
@@ -123,12 +104,7 @@ pear.data.DataView.prototype.getSortField = function() {
 pear.data.DataView.prototype.getSortDirection = function(){
   return this.sortDirection_;
 };
-/**
- * @return {Array}
- */
-pear.data.DataView.prototype.getColumns = function() {
-  return this.datamodel_.getColumns();
-};
+
 
 /**
  * @param {pear.ui.Grid} grid
@@ -139,20 +115,30 @@ pear.data.DataView.prototype.setGrid = function(grid) {
 
 pear.data.DataView.prototype.setPageIndex = function(pageIndex) {
   this.pageIndex_ = pageIndex;
+  var evt = new pear.data.DataViewEvent ( pear.data.DataView.EventType.PAGE_INDEX_CHANGED, this );
+  this.dispatchEvent(evt);
 };
 
 pear.data.DataView.prototype.getPageIndex = function() {
   var index = ( this.pageSize_ && this.pageSize_ > 0 ) ? 
                   ( this.pageIndex_ ? this.pageIndex_ : 0 ) : 0;
+  var rowcount = this.getDataRowViewCount();
+  var pagesize = this.getPageSize();
+
+  index = (index * pagesize ) < rowcount ? index : 0;
   return index;
 };
 
 pear.data.DataView.prototype.setPageSize = function(pageSize) {
   this.pageSize_ = pageSize;
+  var evt = new pear.data.DataViewEvent ( pear.data.DataView.EventType.PAGE_SIZE_CHANGED, this );
+  this.dispatchEvent(evt);
 };
 
 pear.data.DataView.prototype.getPageSize = function() {
-  this.pageSize_ = this.pageSize_ || this.getRowCount();
+  var rowcount = this.getDataRowViewCount();
+  this.pageSize_ = this.pageSize_ || rowcount;
+  this.pageSize_ = ( this.pageSize_ > rowcount ) ? rowcount : this.pageSize_;
   return this.pageSize_;
 };
 
@@ -182,30 +168,31 @@ pear.data.DataView.prototype.clearColumnFilter = function(columnMapId) {
       column.filter = null;
     }
   },this);
+  this.initLocalCachedataRowViews_();
 };
 
 
 pear.data.DataView.prototype.applyFilter = function() {
-  var columns = this.getColumns();
-  this.rowViews_ =[];
-  this.transformToRowViews_(this.datamodel_.getRows());
-
-  this.updateRowsIdx();
-  this.rowViews_ = this.rowViews_.filter(this.filter_,this);
+  var filteredRows = this.dataRowViews_.filter(this.filterFn_,this);
+  console.dir(filteredRows);
+  this.setRowViews(filteredRows);
 };
 
-pear.data.DataView.prototype.filter_ = function(row) {
+pear.data.DataView.prototype.filterFn_ = function(row) {
   var columns = this.getColumns();
   var rowdata = row.getRowData();
-  var ret = false;
+  var ret = true;
   goog.array.forEach(columns,function(column){
     if (column.filter && column.filter.length > 0){
       goog.array.forEach(column.filter,function(filter){
         if (rowdata[column.id] == filter.expression){
-          ret = true;
-          return ret;
+          ret = ret && true;
+        }else{
+          ret = ret && false;
         }
       },this);
+    }else{
+
     }
   },this);
   return ret;
@@ -231,7 +218,7 @@ pear.data.DataView.prototype.filter_ = function(row) {
  */
 pear.data.DataView.prototype.getRowViewByRowId = function(rowId) {
   var rv = null;
-  rv = this.rowViews_[rowId] || [];
+  rv = this.dataRowViews_[rowId] || [];
   return rv;
 };
 
@@ -251,33 +238,41 @@ pear.data.DataView.prototype.getRowViewByRowId = function(rowId) {
  * @return {Array.<pear.data.RowModel>}
  */
 pear.data.DataView.prototype.getRowViews = function() {
-  return this.getPagedRowsViews_();
+  var rows =  (this.grid_.Configuration_.AllowPaging) ? this.getPagedRowsViews_() : this.dataRowViews_;
+  return rows;
+  
 };
 
 pear.data.DataView.prototype.getPagedRowsViews_ = function() {
   var pgIdx = this.getPageIndex();
   var pgSize = this.getPageSize();
-  var start = (pgIdx * pgSize) > this.rowViews_.length ? this.rowViews_.length : (pgIdx * pgSize);
-  var end  = (start + pgSize) > this.rowViews_.length ? this.rowViews_.length : (start + pgSize);
-  var rows = this.rowViews_.slice( start,end );
+  var start = (pgIdx * pgSize) > this.dataRowViews_.length ? this.dataRowViews_.length : (pgIdx * pgSize);
+  var end  = (start + pgSize) > this.dataRowViews_.length ? this.dataRowViews_.length : (start + pgSize);
+  var rows = this.dataRowViews_.slice( start,end );
 
   return rows; 
 
 };
 
 pear.data.DataView.prototype.setRowViews = function(rowviews) {
-  this.rowViews_= rowviews;
+  this.dataRowViews_= rowviews;
   this.updateRowsIdx();
+  var evt = new pear.data.DataViewEvent ( pear.data.DataView.EventType.ROWCOUNT_CHANGED, this );
+  this.dispatchEvent(evt);
 };
 
 pear.data.DataView.prototype.getRowCount = function() {
-  return this.datamodel_.getRows().length;
+  return this.getDataRows().length;
+};
+
+pear.data.DataView.prototype.getDataRowViewCount = function() {
+  return this.dataRowViews_.length;
 };
 
 pear.data.DataView.prototype.updateRowsIdx = function() {
-  this.rowidx_=[];
-  goog.array.forEach(this.rowViews_ , function (value,index){
-    this.rowidx_.push(index);
+  this.dataRowidx_=[];
+  goog.array.forEach(this.dataRowViews_ , function (value,index){
+    this.dataRowidx_.push(index);
   },this);
 };
   
@@ -293,7 +288,7 @@ pear.data.DataView.prototype.sort = function(col) {
 
 
   var sortFn = function (column){
-    var rv = this.rowViews_;
+    var rv = this.dataRowViews_;
     if (column.datatype === "number"){
       rv.sort(this.numberCompare);
     }else if (column.datatype === "datetime"){
@@ -308,7 +303,6 @@ pear.data.DataView.prototype.sort = function(col) {
   };
   
   this.setRowViews(sortFn.call(this,col));
-
 };
 
 
@@ -358,3 +352,16 @@ pear.data.DataView.prototype.dateCompare = function(value1,value2) {
 };
 
 
+/**
+ * Object representing DataViewEvent.
+ *
+ * @param {string} type Event type.
+ * @param {pear.data.DataView} target
+ * @extends {goog.events.Event}
+ * @constructor
+ * @final
+ */
+pear.data.DataViewEvent = function(type, target) {
+  goog.events.Event.call(this, type, target);
+};
+goog.inherits(pear.data.DataViewEvent, goog.events.Event);
