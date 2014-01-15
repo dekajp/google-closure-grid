@@ -625,14 +625,15 @@ pear.ui.Grid.prototype.setCanvasHeight_ = function(){
 
 
 pear.ui.Grid.prototype.syncWidth_ = function(){
-  var width = this.headerRow_.getWidth();
+  var headerWidth = this.headerRow_.getWidth();
   //width = width + 10;
   var bounds = goog.style.getBounds(this.getElement());
-  width = ( width > bounds.width )?width :bounds.width;
+  width = ( headerWidth > bounds.width )? headerWidth :bounds.width;
   // Take care of scrollbar width
   goog.style.setWidth(this.headerRow_.getElement(),width+this.getScrollbarWidth());
   //goog.style.setWidth(this.body_.getElement(), width);
-  goog.style.setWidth(this.bodyCanvas_.getElement(), width);
+  var canvasWidth = (headerWidth < width) ? width-this.getScrollbarWidth() : width;
+  goog.style.setWidth(this.bodyCanvas_.getElement(), canvasWidth);
   //goog.style.setWidth(this.footerRow_.getElement(), width);
 }
 

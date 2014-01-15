@@ -15567,11 +15567,12 @@ pear.ui.Grid.prototype.setCanvasHeight_ = function() {
   goog.style.setHeight(this.bodyCanvas_.getElement(), height);
 };
 pear.ui.Grid.prototype.syncWidth_ = function() {
-  var width = this.headerRow_.getWidth();
+  var headerWidth = this.headerRow_.getWidth();
   var bounds = goog.style.getBounds(this.getElement());
-  width = width > bounds.width ? width : bounds.width;
+  width = headerWidth > bounds.width ? headerWidth : bounds.width;
   goog.style.setWidth(this.headerRow_.getElement(), width + this.getScrollbarWidth());
-  goog.style.setWidth(this.bodyCanvas_.getElement(), width);
+  var canvasWidth = headerWidth < width ? width - this.getScrollbarWidth() : width;
+  goog.style.setWidth(this.bodyCanvas_.getElement(), canvasWidth);
 };
 pear.ui.Grid.prototype.syncHeaderRow_ = function() {
   this.header_.getElement().scrollLeft = this.body_.getElement().scrollLeft;
