@@ -117,8 +117,8 @@ pear.ui.Grid.prototype.Configuration_ = {
 };
 
 pear.ui.Grid.EventType = {
-  BEFORE_SORT: 'before-sort',
-  AFTER_SORT: 'after-sort',
+  BEFORE_HEADER_CELL_CLICK: 'before-header-cell-click',
+  AFTER_HEADER_CELL_CLICK: 'after-header-cell-click',
   BEFORE_PAGING: 'before-paging',
   AFTER_PAGING: 'after-paging',
   HEADER_CELL_MENU_CLICK: 'headercell-menu-click',
@@ -869,23 +869,23 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
 
   var headerCell = ge.target;
   var grid = ge.currentTarget;
-  var prevSortedCell = this.getSortedHeaderCell();
+  //var prevSortedCell = this.getSortedHeaderCell();
 
-  var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.BEFORE_SORT,
+  var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.BEFORE_HEADER_CELL_CLICK,
       this,headerCell);
   this.dispatchEvent(evt);
 
-  if (prevSortedCell && prevSortedCell !== headerCell){
-    prevSortedCell.resetSortDirection();
-  }
-  headerCell.toggleSortDirection();
-  var index = this.getHeaderRow().indexOfChild(headerCell);
-  this.setSortColumnIndex(index);
+ // if (prevSortedCell && prevSortedCell !== headerCell){
+  //  prevSortedCell.resetSortDirection();
+ // }
+ // headerCell.toggleSortDirection();
+  var columnid = headerCell.getModel()["id"];
+  //this.setSortColumnIndex(index);
 
-  var dv = this.getDataView();
-  dv.sort(headerCell.getModel());
-  this.refresh();
-  evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.AFTER_SORT,
+ // var dv = this.getDataView();
+ // dv.sort(headerCell.getModel());
+ // this.refresh();
+  evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.AFTER_HEADER_CELL_CLICK,
       this,headerCell);
   this.dispatchEvent(evt);
 };

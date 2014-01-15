@@ -277,10 +277,12 @@ pear.data.DataView.prototype.updateRowsIdx = function() {
 };
   
 
+pear.data.DataView.prototype.sort = function(col) {
+};
 /**
  * @return {Array.<pear.data.RowModel>}
  */
-pear.data.DataView.prototype.sort = function(col) {
+pear.data.DataView.prototype.sort_ = function(col) {
   if (this.sortFieldId_ === col.id){
     this.sortDirection_ = !this.sortDirection_;
   }

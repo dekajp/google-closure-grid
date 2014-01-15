@@ -44,7 +44,7 @@
   <fieldset class="goog-debug-panel">
     <legend>Data / Debug</legend>
     <div id="">
-      <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  checked="true" /> </div>
+      <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir" /> </div>
       <div class="config-item"> Nos Of Rows : 
           <select id ="id_rows">
              <option value="10">10</option>
@@ -110,19 +110,19 @@
     { 
       id: "orderno",
       headerText: "Order No",
-      width:50,
+      width:75,
       datatype:pear.data.DataModel.DataType.NUMBER
     },
     {
       id: "item",
       headerText: "Item",
-      width:150,
+      width:75,
       datatype:pear.data.DataModel.DataType.TEXT
     },
     {
       id: "unitprice",
       headerText: "Unit Price",
-      width:150,
+      width:75,
       datatype:pear.data.DataModel.DataType.NUMBER
     },
     {
@@ -155,9 +155,9 @@
     var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
     var temp;
     var start = new Date(2013,12,31);
-    for (var i = 1; i <= parseInt(limit,10); i++) {
+    for (var i = 0; i < parseInt(limit,10); i++) {
       data[i] = {
-        orderno:  i 
+        orderno:  i+1 
       };
       temp = Math.round(Math.random() * 9);
      
@@ -183,8 +183,9 @@
 
     grid.setWidth(800);
     grid.setHeight(400);
-    dataModel = new pear.data.DataModel (columns,data);
-    grid.setDataView(new pear.data.DataView(dataModel));
+    grid.setColumns(columns);
+    grid.setDataSource(data);
+
 
     grid.render(goog.dom.getElement('target1'));
     var end =  +new Date();  
@@ -193,9 +194,38 @@
     
     goog.events.listen(grid, EVENTS2, logEvent);
     goog.events.listen(grid.getDataView(), EVENTS3, logEvent);
+
+    goog.events.listen(grid, pear.ui.Grid.EventType.BEFORE_HEADER_CELL_CLICK, handlesort);
+
   };
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
+
+
+  var prevSortColumnId = null;
+  var prevSortDirection = 0;
+  var handlesort = function(ge){
+    var grid = ge.target;
+    var dv = grid.getDataView();
+    var dataRows = dv.getDataRows();
+    var headerCell = ge.cell;
+    var columnid = headerCell.getModel()["id"];
+    if (columnid === prevSortColumnId){
+      prevSortDirection = ! prevSortDirection;
+    }
+    dataRows.sort (function (a, b) {
+                            if (a[columnid] > b[columnid])
+                              return ( prevSortDirection ) ? -1 : 1
+                            if (a[columnid] < b[columnid])
+                              return ( prevSortDirection ) ? 1 : -1
+                            // a must be equal to b
+                            return 0;
+                        });
+
+    grid.setDataSource(dataRows);
+    grid.refresh();
+    prevSortColumnId=columnid;
+  }
   
  </script>
 

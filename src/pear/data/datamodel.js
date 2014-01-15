@@ -1,6 +1,6 @@
 goog.provide('pear.data.DataModel');
 
-goog.require('goog.Disposable');
+goog.require('goog.events.EventTarget');
 
 
 
@@ -13,12 +13,12 @@ goog.require('goog.Disposable');
  * @extends {goog.Disposable}
  */
 pear.data.DataModel = function(datacolumns, datarows) {
-  goog.Disposable.call(this);
+  goog.events.EventTarget.call(this);
 
   this.dataColumns_ = datacolumns || [];
   this.dataRows_ = datarows || [];
 };
-goog.inherits(pear.data.DataModel, goog.Disposable);
+goog.inherits(pear.data.DataModel, goog.events.EventTarget);
 
 
 pear.data.DataModel.DataType ={
