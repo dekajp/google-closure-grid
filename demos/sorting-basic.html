@@ -48,9 +48,10 @@
       <div class="config-item"> Nos Of Rows : 
           <select id ="id_rows">
              <option value="10">10</option>
-             <option value="1000">1000</option>
+             <option selected value="1000">1000</option>
+             <option value="10000">10,000</option>
              <option value="50000">50,000</option>
-             <option selected value="100000">100,000</option>
+             <option value="100000">100,000</option>
              <option value="500000">500,000</option>
            </select> 
         </div>
@@ -174,10 +175,8 @@
 
     grid = new pear.ui.Grid();
     var config = {
-      AllowPaging:false,
       AllowSorting:true,
-      AllowColumnResize:true,
-      AllowColumnHeaderMenu: false
+      AllowColumnResize:true
     };
     config = grid.setConfiguration(config);
 
@@ -195,36 +194,31 @@
     goog.events.listen(grid, EVENTS2, logEvent);
     goog.events.listen(grid.getDataView(), EVENTS3, logEvent);
 
-    goog.events.listen(grid, pear.ui.Grid.EventType.BEFORE_HEADER_CELL_CLICK, handlesort);
+    goog.events.listen(grid, pear.ui.Grid.EventType.SORT, handlesort);
 
   };
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
 
 
-  var prevSortColumnId = null;
-  var prevSortDirection = 0;
-  var handlesort = function(ge){
+   var handlesort = function(ge){
     var grid = ge.target;
     var dv = grid.getDataView();
     var dataRows = dv.getDataRows();
-    var headerCell = ge.cell;
-    var columnid = headerCell.getModel()["id"];
-    if (columnid === prevSortColumnId){
-      prevSortDirection = ! prevSortDirection;
-    }
-    dataRows.sort (function (a, b) {
+    var headerCell = ge.sortCell;
+    var columnid = headerCell.getColumnId();
+    var sortDirection = ge.sortDirection;
+    goog.array.sort(dataRows,function (a, b) {
                             if (a[columnid] > b[columnid])
-                              return ( prevSortDirection ) ? -1 : 1
+                              return ( sortDirection === pear.ui.Grid.SortDirection.ASC ) ? -1 : 1
                             if (a[columnid] < b[columnid])
-                              return ( prevSortDirection ) ? 1 : -1
+                              return ( sortDirection === pear.ui.Grid.SortDirection.ASC ) ? 1 : -1
                             // a must be equal to b
                             return 0;
                         });
 
     grid.setDataSource(dataRows);
     grid.refresh();
-    prevSortColumnId=columnid;
   }
   
  </script>

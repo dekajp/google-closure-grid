@@ -12,6 +12,10 @@ goog.require('goog.events.EventTarget');
  */
 pear.data.DataView = function(datacolumns,datarows) {
   pear.data.DataModel.call(this,datacolumns,datarows);
+
+  if (datacolumns && datarows){
+    this.init_();
+  }
 };
 goog.inherits(pear.data.DataView, pear.data.DataModel);
 
@@ -94,16 +98,7 @@ pear.data.DataView.prototype.initLocalCachedataRowViews_ = function() {
 };
 
 
-/**
- * @return {Array}
- */
-pear.data.DataView.prototype.getSortField = function() {
-  return this.sortFieldId_;
-};
 
-pear.data.DataView.prototype.getSortDirection = function(){
-  return this.sortDirection_;
-};
 
 
 /**
@@ -276,83 +271,6 @@ pear.data.DataView.prototype.updateRowsIdx = function() {
   },this);
 };
   
-
-pear.data.DataView.prototype.sort = function(col) {
-};
-/**
- * @return {Array.<pear.data.RowModel>}
- */
-pear.data.DataView.prototype.sort_ = function(col) {
-  if (this.sortFieldId_ === col.id){
-    this.sortDirection_ = !this.sortDirection_;
-  }
-  this.sortFieldId_= col.id;
-
-
-  var sortFn = function (column){
-    var rv = this.dataRowViews_;
-    if (column.datatype === "number"){
-      rv.sort(this.numberCompare);
-    }else if (column.datatype === "datetime"){
-      rv.sort(this.dateCompare);
-    }else if (column.datatype === "booleam"){
-      rv.sort(this.defaultCompare);
-    }else{
-      rv.sort(this.defaultCompare);
-    } 
-
-    return rv;
-  };
-  
-  this.setRowViews(sortFn.call(this,col));
-};
-
-
-pear.data.DataView.prototype.defaultCompare = function(value1,value2) {
-  var dv = value1.getDataView();
-  var sortfield = dv.getSortField();
-  var temp;
-  if (dv.getSortDirection()){
-    temp = value1;
-    value1=value2;
-    value2 = temp;
-  }
-  if (value1.getRowData()[sortfield]>value2.getRowData()[sortfield]){
-    return 1;
-  }
-
-  if (value1.getRowData()[sortfield]<value2.getRowData()[sortfield]){
-    return -1;
-  }
-
-  return 0;
-};
-
-pear.data.DataView.prototype.numberCompare = function(value1,value2) {
-  var dv = value1.getDataView();
-  var sortfield = dv.getSortField();
-  var temp;
-  if (dv.getSortDirection()){
-    temp = value1;
-    value1=value2;
-    value2 = temp;
-  }
-  return value1.getRowData()[sortfield] - value2.getRowData()[sortfield];
-};
-
-pear.data.DataView.prototype.dateCompare = function(value1,value2) {
-  var dv = value1.getDataView();
-  var sortfield = dv.getSortField();
-  var temp;
-  if (dv.getSortDirection()){
-    temp = value1;
-    value1=value2;
-    value2 = temp;
-  }
-  var dateA=new Date(value1.getRowData()[sortfield]), dateB=new Date(value2.getRowData()[sortfield]);
-  return dateA-dateB; //sort by date ascending
-};
-
 
 /**
  * Object representing DataViewEvent.

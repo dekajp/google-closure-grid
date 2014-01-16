@@ -119,6 +119,7 @@ pear.ui.Grid.prototype.Configuration_ = {
 pear.ui.Grid.EventType = {
   BEFORE_HEADER_CELL_CLICK: 'before-header-cell-click',
   AFTER_HEADER_CELL_CLICK: 'after-header-cell-click',
+  SORT: 'onsort',
   BEFORE_PAGING: 'before-paging',
   AFTER_PAGING: 'after-paging',
   HEADER_CELL_MENU_CLICK: 'headercell-menu-click',
@@ -165,9 +166,9 @@ pear.ui.Grid.prototype.height_ = null;
 
 /**
  * @private 
- * @type {number}
+ * @type {string}
  */
-pear.ui.Grid.prototype.sortColumnIndex_ = null ;
+pear.ui.Grid.prototype.sortColumnId_ = null ;
 
 
 /**
@@ -317,7 +318,7 @@ pear.ui.Grid.prototype.getDataView = function() {
   return  this.dataview_;
 };
 
-pear.ui.Grid.prototype.setDataView_ = function(dv) {
+pear.ui.Grid.prototype.setDataView = function(dv) {
   this.dataview_ = dv;
   dv.setGrid(this);
 };
@@ -351,23 +352,26 @@ pear.ui.Grid.prototype.getFooterRow = function() {
  * Sorted Column Index
  * @return {number} 
  */
-pear.ui.Grid.prototype.getSortColumnIndex = function() {
-  this.sortColumnIndex_ = this.sortColumnIndex_ || -1;
-  return this.sortColumnIndex_;
-};
+//pear.ui.Grid.prototype.getSortColumnIndex = function() {
+//  this.sortColumnIndex_ = this.sortColumnIndex_ || -1;
+//  return this.sortColumnIndex_;
+//};
 
 pear.ui.Grid.prototype.getCurrentPageIndex = function() {
   this.currentPageIndex_ = this.currentPageIndex_ || 0;
   return this.currentPageIndex_;
 };
 
+pear.ui.Grid.prototype.getSortColumnId = function() {
+  return this.sortColumnId_;
+};
 
 /**
  * Sorted Column Index
  * @param {number}  n
  */
-pear.ui.Grid.prototype.setSortColumnIndex = function(n) {
-  return this.sortColumnIndex_ = n;
+pear.ui.Grid.prototype.setSortColumnId = function(id) {
+  return this.sortColumnId_ = id;
 };
 
 pear.ui.Grid.prototype.setPageIndex = function (index){
@@ -390,10 +394,11 @@ pear.ui.Grid.prototype.getPageIndex = function (){
 
 /**
  * Header Cell on which Sort is applied
- * @return {number} 
+ * @return {pear.ui.HeaderCell} 
  */
 pear.ui.Grid.prototype.getSortedHeaderCell = function() {
-  return this.getHeaderRow().getChildAt(this.getSortColumnIndex());
+  var cell = this.headerRow_.getHeaderCellById(this.getSortColumnId());
+  return cell;
 };
 
 pear.ui.Grid.prototype.setColumns = function(datacolumns) {
@@ -506,7 +511,7 @@ pear.ui.Grid.prototype.disposeInternal = function() {
 
   this.width_ = null;
   this.height_ = null;
-  this.sortColumnIndex_ = null;
+  this.sortColumnId_ = null;
   this.currentPageIndex_  = null;
   this.previousScrollTop_ = null;
   this.bodyScrollTriggerDirection_ = null;
@@ -870,22 +875,24 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
 
   var headerCell = ge.target;
   var grid = ge.currentTarget;
-  //var prevSortedCell = this.getSortedHeaderCell();
+  var prevSortedCell = this.getSortedHeaderCell();
 
   var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.BEFORE_HEADER_CELL_CLICK,
       this,headerCell);
   this.dispatchEvent(evt);
 
- // if (prevSortedCell && prevSortedCell !== headerCell){
-  //  prevSortedCell.resetSortDirection();
- // }
- // headerCell.toggleSortDirection();
-  var columnid = headerCell.getModel()["id"];
-  //this.setSortColumnIndex(index);
-
- // var dv = this.getDataView();
- // dv.sort(headerCell.getModel());
- // this.refresh();
+  if ( this.getConfiguration().AllowSorting ){
+    if (prevSortedCell && prevSortedCell !== headerCell){
+      prevSortedCell.resetSortDirection();
+    }
+    
+    this.setSortColumnId(headerCell.getColumnId());
+    headerCell.toggleSortDirection();
+    evt = new pear.ui.Grid.GridSortCellEvent(pear.ui.Grid.EventType.SORT,
+        this,headerCell);
+    this.dispatchEvent(evt);
+  }
+ 
   evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.AFTER_HEADER_CELL_CLICK,
       this,headerCell);
   this.dispatchEvent(evt);
@@ -954,3 +961,25 @@ pear.ui.Grid.GridHeaderCellEvent = function(type, target, cell) {
   this.cell = cell;
 };
 goog.inherits(pear.ui.Grid.GridHeaderCellEvent, goog.events.Event);
+
+
+/**
+ * Object representing GridHeaderCellEvent.
+ *
+ * @param {string} type Event type.
+ * @param {goog.ui.Control} target
+ * @param {pear.ui.HeaderCell} cell
+ * @extends {goog.events.Event}
+ * @constructor
+ * @final
+ */
+pear.ui.Grid.GridSortCellEvent = function(type, target, cell ) {
+  goog.events.Event.call(this, type, target);
+
+  /**
+   * @type {pear.ui.HeaderCell}
+   */
+  this.sortCell = cell;
+  this.sortDirection = cell.getSortDirection();
+};
+goog.inherits(pear.ui.Grid.GridSortCellEvent, goog.events.Event);

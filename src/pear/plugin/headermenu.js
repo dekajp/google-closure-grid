@@ -133,7 +133,7 @@ pear.plugin.HeaderMenu.prototype.createFilterMenu_ = function() {
 
 pear.plugin.HeaderMenu.prototype.handleApplyFilter_ = function(be){
   var dv = this.grid_.getDataView();
-  var column = this.headerCell_.getDataViewColumn();
+  var column = this.headerCell_.getCellData();
   dv.addColumnFilter(column.id , {
     type:pear.data.DataView.FilterType.EQUAL,
     expression:this.filterInput_.getValue()
@@ -146,7 +146,7 @@ pear.plugin.HeaderMenu.prototype.handleApplyFilter_ = function(be){
 
 pear.plugin.HeaderMenu.prototype.handleCancelFilter_ = function(be){
   var dv = this.grid_.getDataView();
-  var column = this.headerCell_.getDataViewColumn();
+  var column = this.headerCell_.getCellData();
   dv.clearColumnFilter(column.id );
   dv.applyFilter();
   this.grid_.refresh();

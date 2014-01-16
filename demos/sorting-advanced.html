@@ -48,9 +48,9 @@
       <div class="config-item"> Nos Of Rows : 
           <select id ="id_rows">
              <option value="10">10</option>
-             <option value="1000">1000</option>
+             <option selected value="1000">1000</option>
              <option value="50000">50,000</option>
-             <option selected value="100000">100,000</option>
+             <option value="100000">100,000</option>
              <option value="500000">500,000</option>
            </select> 
         </div>
@@ -101,6 +101,87 @@
     var elem = goog.dom.getElement(id);
     return  elem.checked;
   };
+
+
+  function SortedDataView (datacolumns,datarows) {
+    pear.data.DataView.call(this,datacolumns,datarows);
+  };
+  goog.inherits(SortedDataView, pear.data.DataView);
+
+
+
+
+  SortedDataView.prototype.handleSort = function (ge){
+    var headerCell = ge.sortCell;
+    var grid = ge.target;
+    var sortedData = this.sort_(headerCell,headerCell.getColumnId(),ge.sortDirection);
+    this.setRowViews(sortedData);
+    grid.refresh();
+  };
+
+  SortedDataView.prototype.sort_ = function(sortCell,sortField,sortDirection) {
+    var rv = this.dataRowViews_;
+    var sortFn = function (column){
+      
+      var fn;
+      if (column.datatype === "number"){
+        fn=goog.partial(this.numberCompare,sortField,sortDirection);
+      }else if (column.datatype === "datetime"){
+        fn=goog.partial(this.dateCompare,sortField,sortDirection);
+      }else if (column.datatype === "booleam"){
+        fn=goog.partial(this.defaultCompare,sortField,sortDirection);
+      }else{
+        fn=goog.partial(this.defaultCompare,sortField,sortDirection);
+      } 
+
+      return fn;
+    };
+    
+    return rv.sort(sortFn.call(this,sortCell.getCellData()));
+    
+  };
+
+
+  SortedDataView.prototype.defaultCompare = function(sortfield,sortDirection,value1,value2) {
+    
+    if (sortDirection === 1){
+      temp = value1;
+      value1=value2;
+      value2 = temp;
+    }
+    if (value1[sortfield]>value2[sortfield]){
+      return 1;
+    }
+
+    if (value1[sortfield]<value2[sortfield]){
+      return -1;
+    }
+
+    return 0;
+  };
+
+  SortedDataView.prototype.numberCompare = function(sortfield,sortDirection,value1,value2) {
+    if (sortDirection === 1){
+      temp = value1;
+      value1=value2;
+      value2 = temp;
+    }
+    return value1[sortfield] - value2[sortfield];
+  };
+
+  SortedDataView.prototype.dateCompare = function(sortfield,sortDirection,value1,value2) {
+    
+    if (sortDirection === 1){
+      temp = value1;
+      value1=value2;
+      value2 = temp;
+    }
+    var dateA=new Date(value1[sortfield]), dateB=new Date(value2[sortfield]);
+    return dateA-dateB; //sort by date ascending
+  };
+
+
+
 
   var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
   var unitprice = [1.01,2.25,3.45,4.97,5.0,6.0,7.0,8.2,9.5,10];
@@ -183,8 +264,9 @@
 
     grid.setWidth(800);
     grid.setHeight(400);
-    grid.setColumns(columns);
-    grid.setDataSource(data);
+    grid.setDataView( new SortedDataView(columns,data))
+    //grid.setColumns(columns);
+    //grid.setDataSource(data);
 
 
     grid.render(goog.dom.getElement('target1'));
@@ -195,38 +277,12 @@
     goog.events.listen(grid, EVENTS2, logEvent);
     goog.events.listen(grid.getDataView(), EVENTS3, logEvent);
 
-    goog.events.listen(grid, pear.ui.Grid.EventType.BEFORE_HEADER_CELL_CLICK, handleBasicSort);
+    goog.events.listen(grid, pear.ui.Grid.EventType.SORT, grid.getDataView().handleSort ,false ,grid.getDataView());
 
   };
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
 
-
-  var prevSortColumnId = null;
-  var prevSortDirection = 0;
-  var handleBasicSort = function(ge){
-    var grid = ge.target;
-    var dv = grid.getDataView();
-    var dataRows = dv.getDataRows();
-    var headerCell = ge.cell;
-    var columnid = headerCell.getModel()["id"];
-    if (columnid === prevSortColumnId){
-      prevSortDirection = ! prevSortDirection;
-    }
-    dataRows.sort (function (a, b) {
-                            if (a[columnid] > b[columnid])
-                              return ( prevSortDirection ) ? -1 : 1
-                            if (a[columnid] < b[columnid])
-                              return ( prevSortDirection ) ? 1 : -1
-                            // a must be equal to b
-                            return 0;
-                        });
-
-    grid.setDataSource(dataRows);
-    grid.refresh();
-    prevSortColumnId=columnid;
-  }
-  
  </script>
 
 </html>

@@ -57,7 +57,7 @@ pear.ui.HeaderCell.prototype.disposeInternal = function() {
 pear.ui.HeaderCell.prototype.sortDirection_ = null;
 pear.ui.HeaderCell.prototype.resizable_ = null;
 
-pear.ui.HeaderCell.prototype.getsortDirection = function() {
+pear.ui.HeaderCell.prototype.getSortDirection = function() {
   this.sortDirection_ = this.sortDirection_ || pear.ui.Grid.SortDirection.NONE;
   return this.sortDirection_;
 };
@@ -86,10 +86,13 @@ pear.ui.HeaderCell.prototype.getContentText = function() {
   return this.getModel()['headerText']
 };
 
-pear.ui.HeaderCell.prototype.getDataViewColumn = function() {
+pear.ui.HeaderCell.prototype.getCellData = function() {
   return this.getModel();
 };
 
+pear.ui.HeaderCell.prototype.getColumnId = function() {
+  return this.getCellData()["id"];
+};
 
 /**
  * Configures the component after its DOM has been rendered, and sets up event
@@ -211,14 +214,14 @@ pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
   
   
 
-  if (this.getsortDirection() && 
+  if (this.getSortDirection() && 
       this.headerMenu_ && 
       goog.style.isElementShown(this.headerMenu_)){
     goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
     marginleft = marginleft + 16;
     goog.dom.appendChild(this.contentIndicator_,this.headerMenu_);
     marginleft = marginleft + 16;
-  }else if (this.getsortDirection()){
+  }else if (this.getSortDirection()){
     goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
     marginleft = marginleft + 16;
     goog.dom.removeNode(this.headerMenu_);
@@ -340,15 +343,15 @@ pear.ui.HeaderCell.prototype.resetSortDirection = function(be){
 /**
  * @public
  */
-pear.ui.HeaderCell.prototype.toggleSortDirection = function(be){
+pear.ui.HeaderCell.prototype.toggleSortDirection = function(){
   var sortNode;
   goog.dom.removeChildren(this.sortIndicator_);
-  if (this.getsortDirection() === pear.ui.Grid.SortDirection.ASC){
+  if (this.getSortDirection() === pear.ui.Grid.SortDirection.ASC){
     this.setsortDirection(pear.ui.Grid.SortDirection.DESC);
     sortNode = goog.dom.createDom('div',
                                   'fa fa-arrow-circle-down'
                                   );
-  }else if (this.getsortDirection() === pear.ui.Grid.SortDirection.DESC){
+  }else if (this.getSortDirection() === pear.ui.Grid.SortDirection.DESC){
     this.setsortDirection(pear.ui.Grid.SortDirection.ASC);
     sortNode = goog.dom.createDom('div',
                                   'fa fa-arrow-circle-up'

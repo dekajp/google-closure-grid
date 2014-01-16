@@ -9419,7 +9419,7 @@ pear.ui.HeaderCell.prototype.disposeInternal = function() {
 };
 pear.ui.HeaderCell.prototype.sortDirection_ = null;
 pear.ui.HeaderCell.prototype.resizable_ = null;
-pear.ui.HeaderCell.prototype.getsortDirection = function() {
+pear.ui.HeaderCell.prototype.getSortDirection = function() {
   this.sortDirection_ = this.sortDirection_ || pear.ui.Grid.SortDirection.NONE;
   return this.sortDirection_;
 };
@@ -9435,8 +9435,11 @@ pear.ui.HeaderCell.prototype.getContent = function() {
 pear.ui.HeaderCell.prototype.getContentText = function() {
   return this.getModel()["headerText"];
 };
-pear.ui.HeaderCell.prototype.getDataViewColumn = function() {
+pear.ui.HeaderCell.prototype.getCellData = function() {
   return this.getModel();
+};
+pear.ui.HeaderCell.prototype.getColumnId = function() {
+  return this.getCellData()["id"];
 };
 pear.ui.HeaderCell.prototype.enterDocument = function() {
   pear.ui.HeaderCell.superClass_.enterDocument.call(this);
@@ -9488,13 +9491,13 @@ pear.ui.HeaderCell.prototype.syncContentCellOnResize_ = function() {
 pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function() {
   var marginleft = 0;
   var left = 0;
-  if (this.getsortDirection() && (this.headerMenu_ && goog.style.isElementShown(this.headerMenu_))) {
+  if (this.getSortDirection() && (this.headerMenu_ && goog.style.isElementShown(this.headerMenu_))) {
     goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
     marginleft = marginleft + 16;
     goog.dom.appendChild(this.contentIndicator_, this.headerMenu_);
     marginleft = marginleft + 16;
   } else {
-    if (this.getsortDirection()) {
+    if (this.getSortDirection()) {
       goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
       marginleft = marginleft + 16;
       goog.dom.removeNode(this.headerMenu_);
@@ -9566,14 +9569,14 @@ pear.ui.HeaderCell.prototype.resetSortDirection = function(be) {
   goog.dom.removeChildren(this.sortIndicator_);
   this.syncContentIndicatorLocation_();
 };
-pear.ui.HeaderCell.prototype.toggleSortDirection = function(be) {
+pear.ui.HeaderCell.prototype.toggleSortDirection = function() {
   var sortNode;
   goog.dom.removeChildren(this.sortIndicator_);
-  if (this.getsortDirection() === pear.ui.Grid.SortDirection.ASC) {
+  if (this.getSortDirection() === pear.ui.Grid.SortDirection.ASC) {
     this.setsortDirection(pear.ui.Grid.SortDirection.DESC);
     sortNode = goog.dom.createDom("div", "fa fa-arrow-circle-down");
   } else {
-    if (this.getsortDirection() === pear.ui.Grid.SortDirection.DESC) {
+    if (this.getSortDirection() === pear.ui.Grid.SortDirection.DESC) {
       this.setsortDirection(pear.ui.Grid.SortDirection.ASC);
       sortNode = goog.dom.createDom("div", "fa fa-arrow-circle-up");
     } else {
@@ -9593,6 +9596,9 @@ goog.require("pear.data.RowView");
 goog.require("goog.events.EventTarget");
 pear.data.DataView = function(datacolumns, datarows) {
   pear.data.DataModel.call(this, datacolumns, datarows);
+  if (datacolumns && datarows) {
+    this.init_();
+  }
 };
 goog.inherits(pear.data.DataView, pear.data.DataModel);
 pear.data.DataView.FilterType = {LIKE:1, EQUAL:2, GREATER_THAN:3, LESS_THAN:4, BETWEEN:5};
@@ -9625,12 +9631,6 @@ pear.data.DataView.prototype.init_ = function() {
 pear.data.DataView.prototype.initLocalCachedataRowViews_ = function() {
   this.dataRowViews_ = this.getDataRows().slice(0);
   this.updateRowsIdx();
-};
-pear.data.DataView.prototype.getSortField = function() {
-  return this.sortFieldId_;
-};
-pear.data.DataView.prototype.getSortDirection = function() {
-  return this.sortDirection_;
 };
 pear.data.DataView.prototype.setGrid = function(grid) {
   this.grid_ = grid;
@@ -9734,72 +9734,6 @@ pear.data.DataView.prototype.updateRowsIdx = function() {
   goog.array.forEach(this.dataRowViews_, function(value, index) {
     this.dataRowidx_.push(index);
   }, this);
-};
-pear.data.DataView.prototype.sort = function(col) {
-};
-pear.data.DataView.prototype.sort_ = function(col) {
-  if (this.sortFieldId_ === col.id) {
-    this.sortDirection_ = !this.sortDirection_;
-  }
-  this.sortFieldId_ = col.id;
-  var sortFn = function(column) {
-    var rv = this.dataRowViews_;
-    if (column.datatype === "number") {
-      rv.sort(this.numberCompare);
-    } else {
-      if (column.datatype === "datetime") {
-        rv.sort(this.dateCompare);
-      } else {
-        if (column.datatype === "booleam") {
-          rv.sort(this.defaultCompare);
-        } else {
-          rv.sort(this.defaultCompare);
-        }
-      }
-    }
-    return rv;
-  };
-  this.setRowViews(sortFn.call(this, col));
-};
-pear.data.DataView.prototype.defaultCompare = function(value1, value2) {
-  var dv = value1.getDataView();
-  var sortfield = dv.getSortField();
-  var temp;
-  if (dv.getSortDirection()) {
-    temp = value1;
-    value1 = value2;
-    value2 = temp;
-  }
-  if (value1.getRowData()[sortfield] > value2.getRowData()[sortfield]) {
-    return 1;
-  }
-  if (value1.getRowData()[sortfield] < value2.getRowData()[sortfield]) {
-    return-1;
-  }
-  return 0;
-};
-pear.data.DataView.prototype.numberCompare = function(value1, value2) {
-  var dv = value1.getDataView();
-  var sortfield = dv.getSortField();
-  var temp;
-  if (dv.getSortDirection()) {
-    temp = value1;
-    value1 = value2;
-    value2 = temp;
-  }
-  return value1.getRowData()[sortfield] - value2.getRowData()[sortfield];
-};
-pear.data.DataView.prototype.dateCompare = function(value1, value2) {
-  var dv = value1.getDataView();
-  var sortfield = dv.getSortField();
-  var temp;
-  if (dv.getSortDirection()) {
-    temp = value1;
-    value1 = value2;
-    value2 = temp;
-  }
-  var dateA = new Date(value1.getRowData()[sortfield]), dateB = new Date(value2.getRowData()[sortfield]);
-  return dateA - dateB;
 };
 pear.data.DataViewEvent = function(type, target) {
   goog.events.Event.call(this, type, target);
@@ -11170,7 +11104,7 @@ pear.plugin.HeaderMenu.prototype.createFilterMenu_ = function() {
 };
 pear.plugin.HeaderMenu.prototype.handleApplyFilter_ = function(be) {
   var dv = this.grid_.getDataView();
-  var column = this.headerCell_.getDataViewColumn();
+  var column = this.headerCell_.getCellData();
   dv.addColumnFilter(column.id, {type:pear.data.DataView.FilterType.EQUAL, expression:this.filterInput_.getValue()});
   dv.applyFilter();
   this.grid_.refresh();
@@ -11178,7 +11112,7 @@ pear.plugin.HeaderMenu.prototype.handleApplyFilter_ = function(be) {
 };
 pear.plugin.HeaderMenu.prototype.handleCancelFilter_ = function(be) {
   var dv = this.grid_.getDataView();
-  var column = this.headerCell_.getDataViewColumn();
+  var column = this.headerCell_.getCellData();
   dv.clearColumnFilter(column.id);
   dv.applyFilter();
   this.grid_.refresh();
@@ -15052,6 +14986,15 @@ goog.inherits(pear.ui.HeaderRow, pear.ui.Row);
 pear.ui.HeaderRow.prototype.addCell = function(cell, opt_render) {
   pear.ui.HeaderRow.superClass_.addCell.call(this, cell, true);
 };
+pear.ui.Row.prototype.getHeaderCellById = function(id) {
+  var cell;
+  this.forEachChild(function(child) {
+    if (!cell && id === child.getColumnId()) {
+      cell = child;
+    }
+  });
+  return cell;
+};
 pear.ui.HeaderRow.prototype.disposeInternal = function() {
   pear.ui.HeaderRow.superClass_.disposeInternal.call(this);
 };
@@ -15331,14 +15274,14 @@ goog.inherits(pear.ui.Grid, goog.ui.Component);
 pear.ui.Grid.ScrollDirection = {UP:1, DOWN:2, LEFT:3, RIGHT:4, NONE:0};
 pear.ui.Grid.SortDirection = {NONE:0, ASC:1, DESC:2};
 pear.ui.Grid.prototype.Configuration_ = {Width:500, Height:600, RowHeight:25, RowHeaderHeight:30, RowFooterHeight:20, ColumnWidth:125, PageSize:50, AllowSorting:false, AllowPaging:false, AllowColumnResize:false, AllowColumnHeaderMenu:false};
-pear.ui.Grid.EventType = {BEFORE_HEADER_CELL_CLICK:"before-header-cell-click", AFTER_HEADER_CELL_CLICK:"after-header-cell-click", BEFORE_PAGING:"before-paging", AFTER_PAGING:"after-paging", HEADER_CELL_MENU_CLICK:"headercell-menu-click", DATACELL_BEFORE_CLICK:"datacell-before-click", DATACELL_AFTER_CLICK:"datacell-after-click"};
+pear.ui.Grid.EventType = {BEFORE_HEADER_CELL_CLICK:"before-header-cell-click", AFTER_HEADER_CELL_CLICK:"after-header-cell-click", SORT:"onsort", BEFORE_PAGING:"before-paging", AFTER_PAGING:"after-paging", HEADER_CELL_MENU_CLICK:"headercell-menu-click", DATACELL_BEFORE_CLICK:"datacell-before-click", DATACELL_AFTER_CLICK:"datacell-after-click"};
 pear.ui.Grid.prototype.headerRow_ = null;
 pear.ui.Grid.prototype.body_ = null;
 pear.ui.Grid.prototype.dataRows_ = null;
 pear.ui.Grid.prototype.plugins_ = null;
 pear.ui.Grid.prototype.width_ = null;
 pear.ui.Grid.prototype.height_ = null;
-pear.ui.Grid.prototype.sortColumnIndex_ = null;
+pear.ui.Grid.prototype.sortColumnId_ = null;
 pear.ui.Grid.prototype.currentPageIndex_ = null;
 pear.ui.Grid.prototype.getConfiguration = function() {
   return this.Configuration_;
@@ -15395,7 +15338,7 @@ pear.ui.Grid.prototype.getDataView = function() {
   this.dataview_ = this.dataview_ || new pear.data.DataView([], []);
   return this.dataview_;
 };
-pear.ui.Grid.prototype.setDataView_ = function(dv) {
+pear.ui.Grid.prototype.setDataView = function(dv) {
   this.dataview_ = dv;
   dv.setGrid(this);
 };
@@ -15408,16 +15351,15 @@ pear.ui.Grid.prototype.getHeaderRow = function() {
 pear.ui.Grid.prototype.getFooterRow = function() {
   return this.footerRow_;
 };
-pear.ui.Grid.prototype.getSortColumnIndex = function() {
-  this.sortColumnIndex_ = this.sortColumnIndex_ || -1;
-  return this.sortColumnIndex_;
-};
 pear.ui.Grid.prototype.getCurrentPageIndex = function() {
   this.currentPageIndex_ = this.currentPageIndex_ || 0;
   return this.currentPageIndex_;
 };
-pear.ui.Grid.prototype.setSortColumnIndex = function(n) {
-  return this.sortColumnIndex_ = n;
+pear.ui.Grid.prototype.getSortColumnId = function() {
+  return this.sortColumnId_;
+};
+pear.ui.Grid.prototype.setSortColumnId = function(id) {
+  return this.sortColumnId_ = id;
 };
 pear.ui.Grid.prototype.setPageIndex = function(index) {
   var evt = new goog.events.Event(pear.ui.Grid.EventType.BEFORE_PAGING, this);
@@ -15432,7 +15374,8 @@ pear.ui.Grid.prototype.getPageIndex = function() {
   return this.currentPageIndex_;
 };
 pear.ui.Grid.prototype.getSortedHeaderCell = function() {
-  return this.getHeaderRow().getChildAt(this.getSortColumnIndex());
+  var cell = this.headerRow_.getHeaderCellById(this.getSortColumnId());
+  return cell;
 };
 pear.ui.Grid.prototype.setColumns = function(datacolumns) {
   var dv = this.getDataView();
@@ -15498,7 +15441,7 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   this.dataview_ = null;
   this.width_ = null;
   this.height_ = null;
-  this.sortColumnIndex_ = null;
+  this.sortColumnId_ = null;
   this.currentPageIndex_ = null;
   this.previousScrollTop_ = null;
   this.bodyScrollTriggerDirection_ = null;
@@ -15724,9 +15667,18 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
   ge.stopPropagation();
   var headerCell = ge.target;
   var grid = ge.currentTarget;
+  var prevSortedCell = this.getSortedHeaderCell();
   var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.BEFORE_HEADER_CELL_CLICK, this, headerCell);
   this.dispatchEvent(evt);
-  var columnid = headerCell.getModel()["id"];
+  if (this.getConfiguration().AllowSorting) {
+    if (prevSortedCell && prevSortedCell !== headerCell) {
+      prevSortedCell.resetSortDirection();
+    }
+    this.setSortColumnId(headerCell.getColumnId());
+    headerCell.toggleSortDirection();
+    evt = new pear.ui.Grid.GridSortCellEvent(pear.ui.Grid.EventType.SORT, this, headerCell);
+    this.dispatchEvent(evt);
+  }
   evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.AFTER_HEADER_CELL_CLICK, this, headerCell);
   this.dispatchEvent(evt);
 };
@@ -15753,4 +15705,10 @@ pear.ui.Grid.GridHeaderCellEvent = function(type, target, cell) {
   this.cell = cell;
 };
 goog.inherits(pear.ui.Grid.GridHeaderCellEvent, goog.events.Event);
+pear.ui.Grid.GridSortCellEvent = function(type, target, cell) {
+  goog.events.Event.call(this, type, target);
+  this.sortCell = cell;
+  this.sortDirection = cell.getSortDirection();
+};
+goog.inherits(pear.ui.Grid.GridSortCellEvent, goog.events.Event);
 

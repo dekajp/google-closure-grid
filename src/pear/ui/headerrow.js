@@ -39,6 +39,22 @@ pear.ui.HeaderRow.prototype.addCell = function(cell, opt_render) {
   pear.ui.HeaderRow.superClass_.addCell.call(this, cell, true);
 };
 
+/**
+  @public
+  @param {pear.ui.Cell} cell
+  @param {boolean=} opt_render Whether the new child should be rendered
+      immediately after being added (defaults to false).
+*/
+pear.ui.Row.prototype.getHeaderCellById = function(id) {
+  var cell;
+  this.forEachChild(function(child){
+    if (!cell && id === child.getColumnId()){
+      cell= child;
+    }
+  })
+  return cell;
+};
+
 
 pear.ui.HeaderRow.prototype.disposeInternal = function() {
   pear.ui.HeaderRow.superClass_.disposeInternal.call(this);
