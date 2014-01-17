@@ -37,6 +37,7 @@ goog.require('goog.events');
 goog.require('goog.events.EventType');
 goog.require('goog.array');
 goog.require('goog.object');
+goog.require('goog.log');
 
 goog.require('goog.Timer');
 goog.require('pear.data.DataModel');
@@ -49,12 +50,9 @@ goog.require('pear.ui.FooterRow');
 goog.require('pear.ui.HeaderCell');
 goog.require('pear.ui.HeaderRow');
 goog.require('pear.data.DataView');
-goog.require('pear.ui.Plugable');
+goog.require('pear.ui.Plugin');
 
-
-goog.require('pear.plugin.Pager');
 goog.require('pear.plugin.FooterStatus');
-goog.require('pear.plugin.HeaderMenu');
 
 
 
@@ -74,6 +72,13 @@ pear.ui.Grid = function(opt_domHelper) {
   this.renderedDataRows_ = [];
   this.renderedDataRowsCache_ = [];
   this.scrollbarWidth_ = goog.style.getScrollbarWidth();
+
+  /**
+   * Map of class id to registered plugin.
+   * @type {Object}
+   * @private
+   */
+  this.plugins_ = {};
 };
 goog.inherits(pear.ui.Grid, goog.ui.Component);
 
@@ -97,6 +102,11 @@ pear.ui.Grid.SortDirection = {
   NONE: 0,
   ASC: 1,
   DESC: 2
+};
+
+pear.ui.Grid.RenderState_ = {
+  RENDERING: 1,
+  RENDERED: 2
 };
 
 /**
@@ -145,11 +155,7 @@ pear.ui.Grid.prototype.body_ = null;
  */
 pear.ui.Grid.prototype.dataRows_ = null;
 
-/**
- * @private 
- * @type {Array}
- */
-pear.ui.Grid.prototype.plugins_ = null;
+
 
 /**
  * @private 
@@ -177,6 +183,13 @@ pear.ui.Grid.prototype.sortColumnId_ = null ;
  */
 pear.ui.Grid.prototype.currentPageIndex_ = null ;
 
+/**
+ * Logging object.
+ * @type {goog.log.Logger}
+ * @protected
+ */
+pear.ui.Grid.prototype.logger =
+    goog.log.getLogger('pear.ui.Grid');
 
 /**
  * @return {*}
@@ -235,6 +248,10 @@ pear.ui.Grid.prototype.getDataRows = function() {
   return this.dataRows_;
 };
 
+pear.ui.Grid.prototype.isRendered = function() {
+  return this.renderState_ == pear.ui.Grid.RenderState_.RENDERED;
+};
+
 /**
  * @return {Array.<Object>}
  */
@@ -242,6 +259,55 @@ pear.ui.Grid.prototype.getPlugins = function() {
   this.plugins_ = this.plugins_ || [];
   return this.plugins_;
 };
+
+
+/**
+ * Returns the registered plugin with the given classId.
+ * @param {string} classId classId of the plugin.
+ * @return {pear.ui.Plugin} Registered plugin with the given classId.
+ */
+pear.ui.Grid.prototype.getPluginByClassId = function(classId) {
+  return this.plugins_[classId];
+};
+
+
+/**
+ * Registers the plugin with the grid.
+ * @param {pear.ui.Plugin} plugin The plugin to register.
+ */
+pear.ui.Grid.prototype.registerPlugin = function(plugin) {
+  var classId = plugin.getClassId();
+  if (this.plugins_[classId]) {
+    goog.log.error(this.logger,
+        'Cannot register the same class of plugin twice.');
+  }
+  this.plugins_[classId] = plugin;
+
+  plugin.registerGrid(this);
+
+  // By default we enable all plugins for fields that are currently loaded.
+  if (this.isRendered()) {
+    plugin.enable(this);
+    plugin.init();
+  }
+};
+
+
+/**
+ * Unregisters the plugin with this field.
+ * @param {pear.ui.Grid} plugin The plugin to unregister.
+ */
+pear.ui.Grid.prototype.unregisterPlugin = function(plugin) {
+  var classId = plugin.getClassId();
+  if (!this.plugins_[classId]) {
+    goog.log.error(this.logger,
+        'Cannot unregister a plugin that isn\'t registered.');
+  }
+  delete this.plugins_[classId];
+
+  plugin.unregisterFieldObject(this);
+};
+
 
 /**
  * @return {number}
@@ -417,16 +483,6 @@ pear.ui.Grid.prototype.setDataSource = function(data) {
   dv.setGrid(this);
 };
 
-pear.ui.Grid.prototype.addPlugin = function(plugin) {
-  var plugins = this.getPlugins();
-  plugins.push(plugin);
-};
-
-pear.ui.Grid.prototype.pluginShow_ = function() {
-  goog.array.forEach(this.getPlugins(),function(plugin){
-    plugin.show(this);
-  },this);
-};
 
 
 pear.ui.Grid.prototype.setConfiguration = function(config){
@@ -464,8 +520,15 @@ pear.ui.Grid.prototype.createDom = function() {
 pear.ui.Grid.prototype.enterDocument = function() {
   pear.ui.Grid.superClass_.enterDocument.call(this);
 
+  // Grid Rendering Started
   this.renderGrid_();
-  this.pluginShow_();
+  this.renderState_ = pear.ui.Grid.RenderState_.RENDERED;
+
+  // Enable and Init - plugins
+  for (var classId in this.plugins_) {
+    this.plugins_[classId].enable(this);
+    this.plugins_[classId].init();
+  }
 };
 
 /**
@@ -481,10 +544,11 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   // TODO : better dispose needs to be done
   // call dispose on each child
 
-  goog.array.forEach(this.getPlugins() ,function(value){
-    value.dispose();
-  })
-  this.plugins_ = null;
+  for (var classId in this.plugins_) {
+    var plugin = this.plugins_[classId];
+    plugin.dispose();
+  }
+  delete(this.plugins_);
 
   this.headerRow_.dispose();
   this.headerRow_ = null;

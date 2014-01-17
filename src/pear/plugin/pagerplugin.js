@@ -3,30 +3,17 @@ goog.provide('pear.plugin.Pager');
 goog.require('goog.ui.Component');
 goog.require('goog.events.Event');
 goog.require('goog.ui.ComboBox');
-goog.require('pear.ui.Plugable');
 
 
 
-/**
- * Pager - Pager Navigation and Pager Dropdown Plugin
- *
- * @constructor
- * @extends {goog.ui.Container}
- * @param {pear.ui.Grid} grid
- * @param {number} height
- * @param {?goog.ui.Container.Orientation=} opt_orientation Container
- *     orientation; defaults to {@code VERTICAL}.
- * @param {goog.ui.ContainerRenderer=} opt_renderer Renderer used to render or
- *     decorate the container; defaults to {@link goog.ui.ContainerRenderer}.
- * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
- *     interaction.
- */
+
+
 pear.plugin.Pager = function(grid,opt_renderer,opt_domHelper) {
   goog.ui.Component.call(this,opt_renderer || pear.ui.RowRenderer.getInstance(),
                           opt_domHelper);
 };
 goog.inherits(pear.plugin.Pager, goog.ui.Component);
-pear.ui.Plugable.addImplementation(pear.plugin.Pager);
+
 
 /**
  * 

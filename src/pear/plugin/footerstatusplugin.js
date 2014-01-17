@@ -1,59 +1,24 @@
 goog.provide('pear.plugin.FooterStatus');
-goog.provide('pear.plugin.FooterStatusRenderer');
 
-goog.require('goog.ui.Component');
-goog.require('goog.events.Event');
-goog.require('goog.ui.ComboBox');
-goog.require('pear.ui.Plugable');
+goog.require('pear.ui.Plugin');
 
 
 
-/**
- * Pager - Pager Navigation and Pager Dropdown Plugin
- *
- * @constructor
- * @extends {goog.ui.Container}
- * @param {pear.ui.Grid} grid
- * @param {number} height
- * @param {?goog.ui.Container.Orientation=} opt_orientation Container
- *     orientation; defaults to {@code VERTICAL}.
- * @param {goog.ui.ContainerRenderer=} opt_renderer Renderer used to render or
- *     decorate the container; defaults to {@link goog.ui.ContainerRenderer}.
- * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
- *     interaction.
- */
-pear.plugin.FooterStatus = function(grid,opt_renderer,opt_domHelper) {
-  goog.ui.Component.call(this,opt_renderer || pear.ui.RowRenderer.getInstance(),
-      opt_domHelper);
+
+pear.plugin.FooterStatus = function() {
+  pear.ui.Plugin.call(this);
 };
-goog.inherits(pear.plugin.FooterStatus, goog.ui.Component);
-pear.ui.Plugable.addImplementation(pear.plugin.FooterStatus);
+goog.inherits(pear.plugin.FooterStatus, pear.ui.Plugin);
 
 
-
-pear.plugin.FooterStatus.prototype.getGrid = function() {
-  return this.grid_;
+pear.plugin.FooterStatus.prototype.getClassId = function() {
+  return 'FooterStatus';
 };
 
-pear.plugin.FooterStatus.prototype.show = function(grid){
-  this.grid_ = grid;
-  var parentElem = grid.getElement();
-  this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
-  if ( this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer')){
-
-  }else{
-    this.footer_ = goog.dom.createDom('div', 'pear-grid-footer');
-    goog.dom.insertSiblingAfter(this.footer_,parentElem);
-  }
-  this.render(this.footer_);
+pear.plugin.FooterStatus.prototype.init = function(){
+  var grid = this.getGrid();
+  this.createFooterStatus()
 }
-
-/**
- * @override
- */
-pear.plugin.FooterStatus.prototype.createDom = function() {
-  this.element_ = goog.dom.createDom('div', 'pear-grid-footer-status');
-};
 
 pear.plugin.FooterStatus.prototype.disposeInternal = function() {
   this.grid_ = null;
@@ -70,24 +35,32 @@ pear.plugin.FooterStatus.prototype.disposeInternal = function() {
  * @override
  *
  */
-pear.plugin.FooterStatus.prototype.enterDocument = function() {
-  pear.plugin.FooterStatus.superClass_.enterDocument.call(this);
-  
+pear.plugin.FooterStatus.prototype.createFooterStatus = function() {
+
+  var grid = this.getGrid();
+  var parentElem = grid.getElement();
+  this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
+  if ( this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer')){
+
+  }else{
+    this.footer_ = goog.dom.createDom('div', 'pear-grid-footer');
+    goog.dom.insertSiblingAfter(this.footer_,parentElem);
+  }
+
   this.footerStatus_ = new goog.ui.Control(
         goog.dom.createDom('div'),
         pear.plugin.FooterStatusRenderer.getInstance());
   
-  this.footerStatus_.render(this.getElement());
+  this.footerStatus_.render(this.footer_);
   this.updateMsg_();
   
-  //goog.events.listen(this.grid_,pear.ui.Grid.EventType.AFTER_PAGING,this.updateMsg_,false,this);
-  goog.events.listen(this.grid_.getDataView(),pear.data.DataView.EventType.PAGE_INDEX_CHANGED,this.updateMsg_,false,this);
-  goog.events.listen(this.grid_.getDataView(),pear.data.DataView.EventType.PAGE_SIZE_CHANGED,this.updateMsg_,false,this);
-  goog.events.listen(this.grid_.getDataView(),pear.data.DataView.EventType.ROWCOUNT_CHANGED,this.updateMsg_,false,this);
+  goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_INDEX_CHANGED,this.updateMsg_,false,this);
+  goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_SIZE_CHANGED,this.updateMsg_,false,this);
+  goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.ROWCOUNT_CHANGED,this.updateMsg_,false,this);
 };
 
 pear.plugin.FooterStatus.prototype.updateMsg_ = function(){
-  var grid = this.grid_;
+  var grid = this.getGrid();
   var startIndex = 1;
   var rowCount = grid.getRowCount();
   var endIndex = grid.getDataView().getRowViews().length;
@@ -104,6 +77,7 @@ pear.plugin.FooterStatus.prototype.updateMsg_ = function(){
 
 
 
+goog.provide('pear.plugin.FooterStatusRenderer');
 
 goog.require('goog.ui.Component');
 goog.require('goog.ui.ControlRenderer');

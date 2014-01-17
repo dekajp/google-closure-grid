@@ -8,7 +8,7 @@
 
   
   <link rel="stylesheet" href="../src/css/grid.css" />
-  
+  <link rel="stylesheet" href="../src/css/plugin/footerstatusplugin.css" />
  
  <style>
   body {
@@ -25,6 +25,7 @@
     goog.require('goog.debug.LogManager');
     goog.require('goog.dom.forms');
     goog.require('pear.ui.Grid');
+    goog.require('pear.plugin.FooterStatus');
     
   </script>
 
@@ -38,6 +39,18 @@
       margin:0px 2px 0px 2px;
       border-radius:3px;
     }
+   .pear-grid-footer{
+      background: rgb(230, 230, 230);
+      border-width: 0px 1px 1px 1px;
+      border-style: solid;
+      border-color:gray;
+      -moz-box-sizing: border-box;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
+      position: relative;
+     /* overflow:hidden; */
+     height: 25px;
+    }
   </style>
 </head>
 <body>
@@ -46,23 +59,13 @@
     <legend>Data / Debug</legend>
     <div id="">
       <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  /> </div>
-      <div class="config-item"> Nos Of Rows : 
-          <select id ="id_rows">
-             <option value="10">10</option>
-             <option value="1000">1000</option>
-             <option value="10000">10,000</option>
-             <option value="50000">50,000</option>
-             <option selected value="100000">100,000</option>
-             <option value="500000">500,000</option>
-           </select> 
-        </div>
-    </div>
   </fieldset>
  
   <fieldset class="goog-debug-panel">
     <legend>Action</legend>
     <div id="">
-    <input class="config-item" type="button" id="id_reload" value="Reload"  />
+    <input class="config-item" type="button" id="id_reload" value="load"  />
+    <input class="config-item" type="button" id="id_changeds" value="change datasource"  />
   </fieldset>
   <br>
   <!-- This div will have a Sample Component added to its contents. -->
@@ -105,6 +108,7 @@
   };
 
   var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
+  var item2 = ['changed-0','changed-1','changed-2','changed-3','changed-4','changed-5','changed-6','changed-7','changed-8','changed-9'];
   var unitprice = [1.01,2.25,3.45,4.97,5.0,6.0,7.0,8.2,9.5,10];
 
   var grid;
@@ -154,10 +158,9 @@
       grid.dispose();
     }
     var data = [];
-    var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
     var temp;
     var start = new Date(2013,12,31);
-    for (var i = 0; i < parseInt(limit,10); i++) {
+    for (var i = 0; i < 10000; i++) {
       data[i] = {
         orderno:  i +1
       };
@@ -185,16 +188,43 @@
     grid.setColumns(columns);
     grid.setDataSource(data);
 
+    grid.registerPlugin( new pear.plugin.FooterStatus());
+
     grid.render(goog.dom.getElement('target1'));
     var end =  +new Date();  
     var diff = end - start;
-    console.log('Load Time : '+diff+'ms');
-    
+    //console.log('Load Time : '+diff+'ms');
     goog.events.listen(grid, GRID_EVENTS, logEvent);
     goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
   };
 
+  var changeDataSource = function(){
+    var data = [];
+    var temp;
+    var start = new Date(2013,12,31);
+    for (var i = 0; i < 50; i++) {
+      data[i] = {
+        orderno:  i +1
+      };
+      temp = Math.round(Math.random() * 9);
+     
+      data[i].item = item2[temp];
+      data[i].unitprice = unitprice[temp];
+      data[i].quantity = Math.round(Math.random() * 10000);
+      data[i].total = data[i].unitprice * data[i].quantity;
+      data[i].processed= (i % 5 === 0);
+      data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
+    }
+
+    grid.setDataSource(data);
+    grid.refresh();
+  };
+
+
+
+
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
+  goog.events.listen(goog.dom.getElement('id_changeds'), goog.events.EventType.CLICK, changeDataSource);
   
  </script>
 

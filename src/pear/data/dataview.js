@@ -14,7 +14,7 @@ pear.data.DataView = function(datacolumns,datarows) {
   pear.data.DataModel.call(this,datacolumns,datarows);
 
   if (datacolumns && datarows){
-    this.init_();
+    this.setRowViews(datarows);
   }
 };
 goog.inherits(pear.data.DataView, pear.data.DataModel);
@@ -81,21 +81,11 @@ pear.data.DataView.prototype.disposeInternal = function() {
 };
 
 
-pear.data.DataView.prototype.setDataRows = function(dr) {
-  pear.data.DataView.superClass_.setDataRows.call(this,dr);
-  this.init_();
+pear.data.DataView.prototype.setDataRows = function(data) {
+  pear.data.DataView.superClass_.setDataRows.call(this,data);
+  this.setRowViews(data);
 };
 
-pear.data.DataView.prototype.init_ = function() {
-  this.initLocalCachedataRowViews_();
-};
-
-
-pear.data.DataView.prototype.initLocalCachedataRowViews_ = function() {
-  // TODO - Cache
-  this.dataRowViews_ = this.getDataRows().slice(0);
-  this.updateRowsIdx();
-};
 
 
 
@@ -252,9 +242,14 @@ pear.data.DataView.prototype.getPagedRowsViews_ = function() {
 pear.data.DataView.prototype.setRowViews = function(rowviews) {
   this.dataRowViews_= rowviews;
   this.updateRowsIdx();
+  this.dispatchRowCountChange();
+};
+
+pear.data.DataView.prototype.dispatchRowCountChange = function (){
   var evt = new pear.data.DataViewEvent ( pear.data.DataView.EventType.ROWCOUNT_CHANGED, this );
   this.dispatchEvent(evt);
 };
+
 
 pear.data.DataView.prototype.getRowCount = function() {
   return this.getDataRows().length;

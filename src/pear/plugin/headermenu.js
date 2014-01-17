@@ -2,29 +2,16 @@ goog.provide('pear.plugin.HeaderMenu');
 
 goog.require('goog.ui.Component');
 goog.require('goog.events.Event');
-goog.require('pear.ui.Plugable');
 goog.require('goog.positioning.MenuAnchoredPosition');
 goog.require('goog.ui.FlatButtonRenderer');
 
 
 
-/**
- * Pager - Pager Navigation and Pager Dropdown Plugin
- *
- * @constructor
- * @extends {goog.ui.Component}
- * @param {pear.ui.Grid} grid
- * @param {goog.ui.ContainerRenderer=} opt_renderer Renderer used to render or
- *     decorate the container; defaults to {@link goog.ui.ContainerRenderer}.
- * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
- *     interaction.
- */
 pear.plugin.HeaderMenu = function(grid,opt_renderer,opt_domHelper) {
   goog.ui.Component.call(this,opt_renderer || pear.ui.RowRenderer.getInstance(),
                           opt_domHelper);
 };
 goog.inherits(pear.plugin.HeaderMenu, goog.ui.Component);
-pear.ui.Plugable.addImplementation(pear.plugin.HeaderMenu);
 
 /**
  * 
