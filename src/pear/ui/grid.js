@@ -129,11 +129,12 @@ pear.ui.Grid.prototype.Configuration_ = {
 pear.ui.Grid.EventType = {
   BEFORE_HEADER_CELL_CLICK: 'before-header-cell-click',
   AFTER_HEADER_CELL_CLICK: 'after-header-cell-click',
-  SORT: 'onsort',
-  PAGE_CHANGED: 'onpaging',
+  SORT: 'on-sort',
+  PAGE_CHANGED: 'on-paging',
   HEADER_CELL_MENU_CLICK: 'headercell-menu-click',
   DATACELL_BEFORE_CLICK: 'datacell-before-click',
-  DATACELL_AFTER_CLICK: 'datacell-after-click'
+  DATACELL_AFTER_CLICK: 'datacell-after-click',
+  HEADERCELL_RENDERED: 'on-headercell-rendered'
 };
 
 /**
@@ -669,6 +670,11 @@ pear.ui.Grid.prototype.createHeaderCells_ = function() {
     headerCell.setModel(column);
     headerCell.setCellIndex(index);
     this.headerRow_.addCell(headerCell, true);
+
+    var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.HEADERCELL_RENDERED,
+      this,headerCell);
+    this.dispatchEvent(evt);
+    
   }, this);
 };
 
@@ -966,6 +972,7 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
       this,headerCell);
   this.dispatchEvent(evt);
 
+  // On Sort
   if ( this.getConfiguration().AllowSorting ){
     if (prevSortedCell && prevSortedCell !== headerCell){
       prevSortedCell.resetSortDirection();
@@ -973,6 +980,7 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
     
     this.setSortColumnId(headerCell.getColumnId());
     headerCell.toggleSortDirection();
+
     evt = new pear.ui.Grid.GridSortCellEvent(pear.ui.Grid.EventType.SORT,
         this,headerCell);
     this.dispatchEvent(evt);

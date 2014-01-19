@@ -104,7 +104,7 @@
   display: inline-block;
   float: left;
   outline:none;
-  left:100%;
+  /*left:100%;*/
   background: rgb(230, 230, 230);
   height: 100%;
 }

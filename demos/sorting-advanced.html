@@ -49,9 +49,7 @@
           <select id ="id_rows">
              <option value="10">10</option>
              <option selected value="1000">1000</option>
-             <option value="50000">50,000</option>
-             <option value="100000">100,000</option>
-             <option value="500000">500,000</option>
+             <option value="50000">10,000</option>
            </select> 
         </div>
     </div>
@@ -110,11 +108,19 @@
 
 
 
+  var prevSortColumn = null;
 
   SortedDataView.prototype.handleSort = function (ge){
     var headerCell = ge.sortCell;
     var grid = ge.target;
+    var sortDirection =ge.sortDirection;
+    setSortIndicators(prevSortColumn);
+
     var sortedData = this.sort_(headerCell,headerCell.getColumnId(),ge.sortDirection);
+
+    setSortIndicators(headerCell,sortDirection);
+    prevSortColumn = headerCell;
+
     this.setRowViews(sortedData);
     grid.refresh();
   };
@@ -265,11 +271,14 @@
     grid.setWidth(800);
     grid.setHeight(400);
     grid.setDataView( new SortedDataView(columns,data))
-    //grid.setColumns(columns);
-    //grid.setDataSource(data);
+    
+    goog.events.listen(grid, pear.ui.Grid.EventType.HEADERCELL_RENDERED, createSortIndicators);
 
+    goog.events.listen(grid, EVENTS2, logEvent);
+    goog.events.listen(grid.getDataView(), EVENTS3, logEvent);
 
     grid.render(goog.dom.getElement('target1'));
+
     var end =  +new Date();  
     var diff = end - start;
     //console.log('Load Time : '+diff+'ms');
@@ -281,6 +290,37 @@
 
   };
 
+  var setSortIndicators = function (headerCell,sortDirection){
+    if (!headerCell) return;
+    
+    var sortNode = goog.dom.getElementByClass('pear-grid-cell-header-sort',headerCell.getContentIndicatorElement());
+    var elAsc = goog.dom.getElementByClass('fa-arrow-circle-down',sortNode);
+    var elDesc = goog.dom.getElementByClass('fa-arrow-circle-up',sortNode);
+    goog.style.showElement(elAsc,false);
+    goog.style.showElement(elDesc,false);
+
+    if (sortDirection === pear.ui.Grid.SortDirection.ASC){
+      goog.style.showElement(elAsc,true);
+    }else if (sortDirection === pear.ui.Grid.SortDirection.DESC){
+      goog.style.showElement(elDesc,true);
+    }
+  };
+
+  var createSortIndicators = function(ge){
+    var grid = ge.target;
+    var headerCell = ge.cell;
+    var contentIndicatorElem = headerCell.getContentIndicatorElement();
+
+    sortIndicator = goog.dom.createDom('div',
+                                            'pear-grid-cell-header-sort'
+                                          );
+    goog.dom.appendChild(contentIndicatorElem, sortIndicator);
+
+    sortNode = goog.dom.createDom('div',{class : 'fa fa-arrow-circle-down' ,style:'display:none' });
+    goog.dom.appendChild(sortIndicator,sortNode);
+    sortNode = goog.dom.createDom('div',{class : 'fa fa-arrow-circle-up' ,style:'display:none' });
+    goog.dom.appendChild(sortIndicator,sortNode);
+  };
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
 
  </script>

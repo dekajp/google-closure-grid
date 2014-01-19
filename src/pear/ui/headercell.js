@@ -94,14 +94,16 @@ pear.ui.HeaderCell.prototype.getColumnId = function() {
   return this.getCellData()["id"];
 };
 
+pear.ui.HeaderCell.prototype.getContentIndicatorElement = function(){
+  return this.contentIndicator_;
+}
 /**
  * Configures the component after its DOM has been rendered, and sets up event
  * handling.  Overrides {@link goog.ui.Component#enterDocument}.
  * @override
  */
 pear.ui.HeaderCell.prototype.enterDocument = function() {
-  pear.ui.HeaderCell.superClass_.
-      enterDocument.call(this);
+  pear.ui.HeaderCell.superClass_.enterDocument.call(this);
   this.splitHeaderCell_();
   this.registerEvent_();
 };
@@ -121,6 +123,7 @@ pear.ui.HeaderCell.prototype.registerEvent_ = function(){
 
 /**
  * @private
+ * Header cell is divided into 3 content , indicators and sliding menu
  */
 pear.ui.HeaderCell.prototype.splitHeaderCell_ = function(){
   var grid = this.getGrid();
@@ -132,21 +135,13 @@ pear.ui.HeaderCell.prototype.splitHeaderCell_ = function(){
                                         );
   goog.dom.appendChild(this.getElement(),this.contentCell_);
   
-  this.syncContentCellOnResize_();
+  //this.syncContentCellOnResize_();
 
-  if (grid.getConfiguration().AllowSorting || 
-      grid.getConfiguration().AllowColumnHeaderMenu ){
-    this.contentIndicator_ = goog.dom.createDom('div',
-                                        'pear-grid-cell-header-indicators'
-                                        );
-    goog.dom.appendChild(this.getElement(),this.contentIndicator_);
-    goog.style.setWidth(this.contentIndicator_,32);
-  }
-  
-  if (grid.getConfiguration().AllowSorting){
-    this.createHeaderCellSortIndicator_();
-  }
+  // Indicators
+  this.createHeaderCellIndicatorPlaceHolder_();
+
   if (grid.getConfiguration().AllowColumnHeaderMenu){
+    // Header Menu
     this.createHeaderCellMenu_();
   }
   if (grid.getConfiguration().AllowColumnResize){
@@ -154,14 +149,15 @@ pear.ui.HeaderCell.prototype.splitHeaderCell_ = function(){
   }
 };
 
-pear.ui.HeaderCell.prototype.createHeaderCellSortIndicator_ = function(){
+pear.ui.HeaderCell.prototype.createHeaderCellIndicatorPlaceHolder_ = function(){
   // Header Menu Control
-  this.sortIndicator_ = goog.dom.createDom('div',
-                                            'pear-grid-cell-header-sort'
-                                          );
-  goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
+  this.contentIndicator_ = goog.dom.createDom('div',
+                                        'pear-grid-cell-header-indicators'
+                                        );
+  goog.dom.appendChild(this.getElement(),this.contentIndicator_);
   
 };
+
 
 pear.ui.HeaderCell.prototype.createHeaderCellMenu_ = function(){
   // Header Menu Control
@@ -171,7 +167,7 @@ pear.ui.HeaderCell.prototype.createHeaderCellMenu_ = function(){
                                             'fa fa-caret-square-o-down'
                                           )
                                         );
-  goog.dom.appendChild(this.contentIndicator_,this.headerMenu_);
+  goog.dom.appendChild(this.getElement(),this.headerMenu_);
   
   this.getHandler().
         listen(this.headerMenu_, goog.events.EventType.CLICK,
@@ -209,7 +205,7 @@ pear.ui.HeaderCell.prototype.syncContentCellOnResize_ = function(){
 };
 
 pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
-  var marginleft = 0;
+  /*var marginleft = 0;
   var left = 0;
   
   
@@ -236,7 +232,7 @@ pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
   
   marginleft = marginleft * -1;
   this.handleMenuSlide_(this.contentIndicator_,[marginleft]);
-  //goog.style.setStyle(this.contentIndicator_, 'margin-left', marginleft+'px');
+  */
 };
 
 pear.ui.HeaderCell.prototype.handleMenuSlide_ = function(el,value) {
@@ -336,33 +332,19 @@ pear.ui.HeaderCell.prototype.handleResizeEnd_ = function(be){
  */
 pear.ui.HeaderCell.prototype.resetSortDirection = function(be){
   this.setsortDirection(null);
-  goog.dom.removeChildren(this.sortIndicator_);
-  this.syncContentIndicatorLocation_();
 };
 
 /**
  * @public
  */
 pear.ui.HeaderCell.prototype.toggleSortDirection = function(){
-  var sortNode;
-  goog.dom.removeChildren(this.sortIndicator_);
   if (this.getSortDirection() === pear.ui.Grid.SortDirection.ASC){
     this.setsortDirection(pear.ui.Grid.SortDirection.DESC);
-    sortNode = goog.dom.createDom('div',
-                                  'fa fa-arrow-circle-down'
-                                  );
+   
   }else if (this.getSortDirection() === pear.ui.Grid.SortDirection.DESC){
     this.setsortDirection(pear.ui.Grid.SortDirection.ASC);
-    sortNode = goog.dom.createDom('div',
-                                  'fa fa-arrow-circle-up'
-                                  );
   }else{
     this.setsortDirection(pear.ui.Grid.SortDirection.DESC);
-    sortNode = goog.dom.createDom('div',
-                                  'fa fa-arrow-circle-down'
-                                  );
-  }
-  goog.dom.appendChild(this.sortIndicator_,sortNode);  
-  this.syncContentIndicatorLocation_();                                      
+  }                         
 };
 
