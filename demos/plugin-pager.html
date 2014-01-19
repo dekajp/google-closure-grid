@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Closure Grid - pear.ui.Grid</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
+
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menu.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuitem.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuseparator.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menubutton.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css" />
+  
+  <link rel="stylesheet" href="../src/css/grid.css" />
+  <link rel="stylesheet" href="../src/css/plugin/pagerplugin.css" />
+  <link rel="stylesheet" href="../src/css/plugin/footerstatusplugin.css" />
+
+
+ <style>
+  body {
+  background-color: white;
+  font: normal 10pt Arial, sans-serif;
+  }
+
+ </style>
+  <script src="../lib/closure-library/closure/goog/base.js"></script>
+  <script src="../src/bin/release/pear.grid.js"></script>
+  <!--<script src="../src/pear/peardeps.js"></script>-->
+  <script>
+    goog.require('goog.debug.DivConsole');
+    goog.require('goog.debug.LogManager');
+    goog.require('goog.dom.forms');
+    goog.require('pear.ui.Grid');
+    goog.require('pear.plugin.Pager');
+    
+  </script>
+
+  <style>
+    .config-item{
+      display: inline-block;
+      padding:2px 3px 2px 8px;
+      border-color: gray;
+      border-width: 0px 0px 0px 0px;
+      border-style: solid;
+      margin:0px 2px 0px 2px;
+      border-radius:3px;
+    }
+   .pear-grid-footer{
+      background: rgb(230, 230, 230);
+      border-width: 0px 1px 1px 1px;
+      border-style: solid;
+      border-color:gray;
+      -moz-box-sizing: border-box;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
+      position: relative;
+     /* overflow:hidden; */
+     height: 25px;
+    }
+  </style>
+</head>
+<body>
+  
+  <fieldset class="goog-debug-panel">
+    <legend>Data / Debug</legend>
+    <div id="">
+      <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  /> </div>
+  </fieldset>
+ 
+  <fieldset class="goog-debug-panel">
+    <legend>Action</legend>
+    <div id="">
+    <input class="config-item" type="button" id="id_reload" value="load"  />
+  </fieldset>
+  <br>
+  <!-- This div will have a Sample Component added to its contents. -->
+  <div id="target1" style="width:800px;height:500px">
+  </div>
+  <fieldset class="goog-debug-panel">
+    <legend>Event Log</legend>
+    <div id="log"></div>
+  </fieldset>
+  <div id="perf"></div>
+</body>
+
+ <script>
+
+    var timer = goog.now();
+
+    // Set up a logger.
+    goog.debug.LogManager.getRoot().setLevel(goog.log.Level.ALL);
+    var logger = goog.log.getLogger('demo');
+    var logconsole = new goog.debug.DivConsole(goog.dom.getElement('log'));
+    logconsole.setCapturing(true);
+
+    var GRID_EVENTS = goog.object.getValues(pear.ui.Grid.EventType);
+    var DATAVIEW_EVENTS = goog.object.getValues(pear.data.DataView.EventType);
+    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ') +' , '+DATAVIEW_EVENTS.join(', ') + '.');
+
+    function logEvent(e) {
+      var component = e.target;
+     // var caption = (typeof component.getCaption == 'function') ?
+     //     component.getCaption() : component.getId();
+      logger.info(' dispatched: ' + e.type);
+      if (isChecked('id_consoledir')){
+        console.dir(e);
+      }
+    }
+
+  function isChecked(id,name){
+    var elem = goog.dom.getElement(id);
+    return  elem.checked;
+  };
+
+  var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
+  var item2 = ['changed-0','changed-1','changed-2','changed-3','changed-4','changed-5','changed-6','changed-7','changed-8','changed-9'];
+  var unitprice = [1.01,2.25,3.45,4.97,5.0,6.0,7.0,8.2,9.5,10];
+
+  var grid;
+  var columns = [
+    { 
+      id: "orderno",
+      headerText: "Order No",
+      width:75,
+      datatype:pear.data.DataModel.DataType.NUMBER
+    },
+    {
+      id: "item",
+      headerText: "Item",
+      width:75,
+      datatype:pear.data.DataModel.DataType.TEXT
+    },
+    {
+      id: "unitprice",
+      headerText: "Unit Price",
+      width:75,
+      datatype:pear.data.DataModel.DataType.NUMBER
+    },
+    {
+      id: "quantity", 
+      headerText: "Quantity",
+      datatype:pear.data.DataModel.DataType.NUMBER
+    },
+    {
+      id: "total",
+      headerText: "Total",
+      datatype:pear.data.DataModel.DataType.NUMBER
+    },
+    {
+      id: "created",
+      headerText: "Created On",
+      datatype:pear.data.DataModel.DataType.DATETIME,
+     },
+    {
+      id: "processed",
+      headerText: "Processed",
+      datatype:pear.data.DataModel.DataType.BOOLEAN
+    }
+  ];
+
+  var load = function () {
+    if (grid){
+      grid.dispose();
+    }
+    var data = [];
+    var temp;
+    var start = new Date(2013,12,31);
+    for (var i = 0; i < 10025; i++) {
+      data[i] = {
+        orderno:  i +1
+      };
+      temp = Math.round(Math.random() * 9);
+     
+      data[i].item = item[temp];
+      data[i].unitprice = unitprice[temp];
+      data[i].quantity = Math.round(Math.random() * 10000);
+      data[i].total = data[i].unitprice * data[i].quantity;
+      data[i].processed= (i % 5 === 0);
+      data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
+    }
+
+    var start = +new Date();  // log start timestamp
+
+
+    grid = new pear.ui.Grid();
+    var config = {
+      AllowColumnResize:true,
+      AllowPaging:true,
+      PageSize:50
+    };
+    config = grid.setConfiguration(config);
+
+    grid.setWidth(800);
+    grid.setHeight(400);
+    grid.setColumns(columns);
+    grid.setDataSource(data);
+
+    grid.registerPlugin( new pear.plugin.Pager());
+
+    grid.render(goog.dom.getElement('target1'));
+    var end =  +new Date();  
+    var diff = end - start;
+    //console.log('Load Time : '+diff+'ms');
+    goog.events.listen(grid, GRID_EVENTS, logEvent);
+    goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
+  };
+
+
+  goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
+  
+ </script>
+
+</html>

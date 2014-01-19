@@ -53,7 +53,7 @@ goog.require('pear.data.DataView');
 goog.require('pear.ui.Plugin');
 
 goog.require('pear.plugin.FooterStatus');
-
+goog.require('pear.plugin.Pager');
 
 
 
@@ -130,8 +130,7 @@ pear.ui.Grid.EventType = {
   BEFORE_HEADER_CELL_CLICK: 'before-header-cell-click',
   AFTER_HEADER_CELL_CLICK: 'after-header-cell-click',
   SORT: 'onsort',
-  BEFORE_PAGING: 'before-paging',
-  AFTER_PAGING: 'after-paging',
+  PAGE_CHANGED: 'onpaging',
   HEADER_CELL_MENU_CLICK: 'headercell-menu-click',
   DATACELL_BEFORE_CLICK: 'datacell-before-click',
   DATACELL_AFTER_CLICK: 'datacell-after-click'
@@ -271,43 +270,6 @@ pear.ui.Grid.prototype.getPluginByClassId = function(classId) {
 };
 
 
-/**
- * Registers the plugin with the grid.
- * @param {pear.ui.Plugin} plugin The plugin to register.
- */
-pear.ui.Grid.prototype.registerPlugin = function(plugin) {
-  var classId = plugin.getClassId();
-  if (this.plugins_[classId]) {
-    goog.log.error(this.logger,
-        'Cannot register the same class of plugin twice.');
-  }
-  this.plugins_[classId] = plugin;
-
-  plugin.registerGrid(this);
-
-  // By default we enable all plugins for fields that are currently loaded.
-  if (this.isRendered()) {
-    plugin.enable(this);
-    plugin.init();
-  }
-};
-
-
-/**
- * Unregisters the plugin with this field.
- * @param {pear.ui.Grid} plugin The plugin to unregister.
- */
-pear.ui.Grid.prototype.unregisterPlugin = function(plugin) {
-  var classId = plugin.getClassId();
-  if (!this.plugins_[classId]) {
-    goog.log.error(this.logger,
-        'Cannot unregister a plugin that isn\'t registered.');
-  }
-  delete this.plugins_[classId];
-
-  plugin.unregisterFieldObject(this);
-};
-
 
 /**
  * @return {number}
@@ -441,22 +403,39 @@ pear.ui.Grid.prototype.setSortColumnId = function(id) {
 };
 
 pear.ui.Grid.prototype.setPageIndex = function (index){
-   var evt = new goog.events.Event(pear.ui.Grid.EventType.BEFORE_PAGING,
-      this);
-  this.dispatchEvent(evt);
-
-  this.currentPageIndex_ = index;
   this.getDataView().setPageIndex(index);
+  this.currentPageIndex_ = this.getDataView().getPageIndex();
 
-  var evt = new goog.events.Event(pear.ui.Grid.EventType.AFTER_PAGING,
+  this.refresh();
+  var evt = new goog.events.Event(pear.ui.Grid.EventType.PAGE_CHANGED,
       this);
   this.dispatchEvent(evt);
-  this.refresh();
-}
+};
 
 pear.ui.Grid.prototype.getPageIndex = function (){
   return this.currentPageIndex_ ;
-}
+};
+
+pear.ui.Grid.prototype.gotoNextPage = function (){
+  this.setPageIndex(this.currentPageIndex_ + 1);
+  return this.currentPageIndex_ ;
+};
+
+pear.ui.Grid.prototype.gotoPreviousPage = function (){
+  this.setPageIndex(this.currentPageIndex_ - 1);
+  return this.currentPageIndex_ ;
+};
+
+pear.ui.Grid.prototype.gotoFirstPage = function (){
+  this.setPageIndex(0);
+  return this.currentPageIndex_ ;
+};
+
+pear.ui.Grid.prototype.gotoLastPage = function (){
+  this.setPageIndex(parseInt(this.getRowCount()/this.getPageSize()));
+  return this.currentPageIndex_ ;
+};
+
 
 /**
  * Header Cell on which Sort is applied
@@ -481,6 +460,9 @@ pear.ui.Grid.prototype.setDataSource = function(data) {
   var dv = this.getDataView();
   dv.setDataRows(data);
   dv.setGrid(this);
+  if ( this.getConfiguration().AllowPaging){
+    dv.setPageSize(this.getConfiguration().PageSize);
+  }
 };
 
 
@@ -490,6 +472,44 @@ pear.ui.Grid.prototype.setConfiguration = function(config){
     this.Configuration_[key]=value;
   },this);
   return this.Configuration_;
+};
+
+
+/**
+ * Registers the plugin with the grid.
+ * @param {pear.ui.Plugin} plugin The plugin to register.
+ */
+pear.ui.Grid.prototype.registerPlugin = function(plugin) {
+  var classId = plugin.getClassId();
+  if (this.plugins_[classId]) {
+    goog.log.error(this.logger,
+        'Cannot register the same class of plugin twice.');
+  }
+  this.plugins_[classId] = plugin;
+
+  plugin.registerGrid(this);
+
+  // By default we enable all plugins for fields that are currently loaded.
+  if (this.isRendered()) {
+    plugin.enable(this);
+    plugin.init();
+  }
+};
+
+
+/**
+ * Unregisters the plugin with this field.
+ * @param {pear.ui.Grid} plugin The plugin to unregister.
+ */
+pear.ui.Grid.prototype.unregisterPlugin = function(plugin) {
+  var classId = plugin.getClassId();
+  if (!this.plugins_[classId]) {
+    goog.log.error(this.logger,
+        'Cannot unregister a plugin that isn\'t registered.');
+  }
+  delete this.plugins_[classId];
+
+  plugin.unregisterFieldObject(this);
 };
 
 
@@ -599,6 +619,7 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
     this.getDataView().setPageSize(this.Configuration_.PageSize);
   }
   this.prepareDataRows_();
+  this.setCanvasHeight_();
   //this.renderfooterRow_();
   this.syncWidth_();
   this.draw_();
@@ -684,11 +705,10 @@ pear.ui.Grid.prototype.setCanvasHeight_ = function(){
   var height = 0;
   var pagesize = this.getDataView().getPageSize();
   if (this.Configuration_.AllowPaging){
-    height =  pagesize * this.Configuration_.RowHeight;
+    height =  (this.getDataRows().length * this.Configuration_.RowHeight);
   }else{
     height =  this.getRowCount() * this.Configuration_.RowHeight;
   }
-  
   goog.style.setHeight(this.bodyCanvas_.getElement(),height);
 }
 
@@ -797,7 +817,8 @@ pear.ui.Grid.prototype.refreshRenderRows_ = function() {
   endIndex = ( endIndex > rowCount )? rowCount : endIndex;
 
   var i = 0;
-  for (i = startIndex; i < endIndex; i++) {
+  var datarows = this.getDataRows();
+  for (i = startIndex; (i < endIndex && i< datarows.length); i++) {
     if (!this.renderedDataRowsCache_[i]) {
       this.renderedDataRows_[i] = this.getDataRows()[i];
     }
@@ -832,8 +853,8 @@ pear.ui.Grid.prototype.draw_ = function (){
 pear.ui.Grid.prototype.refresh = function (){
   this.renderedDataRowsCache_= [];
   this.renderedDataRows_ = [];
-  this.setCanvasHeight_();
   this.prepareDataRows_();
+  this.setCanvasHeight_();
   this.refreshRenderRows_();
   this.bodyCanvasRender_(true);
 };

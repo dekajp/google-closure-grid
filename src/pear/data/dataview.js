@@ -83,6 +83,7 @@ pear.data.DataView.prototype.disposeInternal = function() {
 
 pear.data.DataView.prototype.setDataRows = function(data) {
   pear.data.DataView.superClass_.setDataRows.call(this,data);
+  this.pageIndex_=0;
   this.setRowViews(data);
 };
 
@@ -99,19 +100,28 @@ pear.data.DataView.prototype.setGrid = function(grid) {
 };
 
 pear.data.DataView.prototype.setPageIndex = function(pageIndex) {
-  this.pageIndex_ = pageIndex;
+  var index = ( this.pageSize_ && this.pageSize_ > 0 ) ? 
+                  ( pageIndex ? pageIndex : 0 ) : 0;
+  var rowcount = this.getDataRowViewCount();
+  var pagesize = this.getPageSize();
+
+  this.pageIndex_ = index;
+
+  if ( this.pageIndex_ < 0){
+    this.pageIndex_ = 0;
+  }
+  index++;
+  if ( index * pagesize >= rowcount ){
+    this.pageIndex_ = Math.ceil(rowcount/pagesize)-1;
+  }
+
   var evt = new pear.data.DataViewEvent ( pear.data.DataView.EventType.PAGE_INDEX_CHANGED, this );
   this.dispatchEvent(evt);
 };
 
 pear.data.DataView.prototype.getPageIndex = function() {
-  var index = ( this.pageSize_ && this.pageSize_ > 0 ) ? 
-                  ( this.pageIndex_ ? this.pageIndex_ : 0 ) : 0;
-  var rowcount = this.getDataRowViewCount();
-  var pagesize = this.getPageSize();
-
-  index = (index * pagesize ) < rowcount ? index : 0;
-  return index;
+  this.pageIndex_ = this.pageIndex_ || 0;
+  return this.pageIndex_;
 };
 
 pear.data.DataView.prototype.setPageSize = function(pageSize) {
