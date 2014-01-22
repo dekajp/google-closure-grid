@@ -19,10 +19,13 @@ pear.ui.Cell = function(opt_renderer, opt_domHelper) {
       opt_domHelper);
 
 
+  this.setSupportedState(goog.ui.Component.State.DISABLED, false);
+  this.setSupportedState(goog.ui.Component.State.HOVER, true);
+  this.setSupportedState(goog.ui.Component.State.ACTIVE, true);
   this.setSupportedState(goog.ui.Component.State.SELECTED, false);
-  //this.setSupportedState(goog.ui.Component.State.ACTIVE, false);
   this.setSupportedState(goog.ui.Component.State.CHECKED, false);
   this.setSupportedState(goog.ui.Component.State.FOCUSED, false);
+  this.setSupportedState(goog.ui.Component.State.OPENED, false);
 
   this.setAllowTextSelection(true);
 

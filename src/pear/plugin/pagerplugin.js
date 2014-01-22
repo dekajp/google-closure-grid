@@ -45,15 +45,15 @@ pear.plugin.Pager.prototype.createPager_ = function() {
 };
 
 pear.plugin.Pager.prototype.disposeInternal = function() {
-  if (this.grid_.getConfiguration().AllowPaging){
-    this.pagerComboBox_.dispose();
-    this.pagerComboBox_=null;
-  }
-  if (this.footer_){
-     this.footer_.remove();
-    this.footer_ = null;
-  }
-  this.grid_= null;
+  this.pagerComboBox_.dispose();
+  this.pagerComboBox_=null;
+  this.footer_.remove();
+  this.footer_=null;
+  goog.array.forEach(this.navControl_,function(nav){
+    nav.dispose();
+  });
+  this.footerStatus_.dispose();
+
   pear.plugin.Pager.superClass_.disposeInternal.call(this);
 };
 

@@ -54,8 +54,8 @@ goog.require('pear.ui.Plugin');
 
 goog.require('pear.plugin.FooterStatus');
 goog.require('pear.plugin.Pager');
-
-
+goog.require('pear.plugin.HeaderMenu');
+goog.require('pear.plugin.FilterMenu');
 
 /**
  * Grid.
@@ -131,7 +131,6 @@ pear.ui.Grid.EventType = {
   AFTER_HEADER_CELL_CLICK: 'after-header-cell-click',
   SORT: 'on-sort',
   PAGE_CHANGED: 'on-paging',
-  HEADER_CELL_MENU_CLICK: 'headercell-menu-click',
   DATACELL_BEFORE_CLICK: 'datacell-before-click',
   DATACELL_AFTER_CLICK: 'datacell-after-click',
   HEADERCELL_RENDERED: 'on-headercell-rendered'

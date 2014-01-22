@@ -31,7 +31,7 @@ goog.inherits(pear.ui.HeaderCell, pear.ui.Cell);
  * @private
  * @type {goog.ui.Control}
  */
-pear.ui.HeaderCell.prototype.headerMenu_ = null;
+pear.ui.HeaderCell.prototype.headerMenuContainer_ = null;
 
 
 /**
@@ -46,6 +46,7 @@ pear.ui.HeaderCell.prototype.disposeInternal = function() {
     this.resizable_.dispose();
     this.resizable_= null;
   }
+  this.headerMenuContainer_=null
   this.sortDirection_ = null;
   pear.ui.HeaderCell.superClass_.disposeInternal.call(this);
 };
@@ -67,10 +68,14 @@ pear.ui.HeaderCell.prototype.setsortDirection = function(value) {
 }
 
 
-pear.ui.HeaderCell.prototype.getMenuElement = function() {
-  return this.headerMenu_;
+pear.ui.HeaderCell.prototype.getMenuControl = function() {
+  return this.headerMenuContainer_;
 };
 
+
+pear.ui.HeaderCell.prototype.setMenuState = function(open) {
+  this.keepSlideMenuOpen_=open;
+};
 
 /**
  * Returns the text caption or DOM structure displayed in the component.
@@ -161,28 +166,9 @@ pear.ui.HeaderCell.prototype.createHeaderCellIndicatorPlaceHolder_ = function(){
 
 pear.ui.HeaderCell.prototype.createHeaderCellMenu_ = function(){
   // Header Menu Control
-  this.headerMenu_ = goog.dom.createDom('div',
-                                        'pear-grid-cell-header-slidemenu',
-                                          goog.dom.createDom('div',
-                                            'fa fa-caret-square-o-down'
-                                          )
-                                        );
-  goog.dom.appendChild(this.getElement(),this.headerMenu_);
-  
-  this.getHandler().
-        listen(this.headerMenu_, goog.events.EventType.CLICK,
-          this.handleOptionClick_,false,this);
-
-  // Handle mouse events on behalf of controls in the container.
-  this.getHandler().
-      listen(this.headerMenu_, [
-        goog.events.EventType.MOUSEDOWN,
-        goog.events.EventType.MOUSEUP,
-        goog.events.EventType.MOUSEOVER,
-        goog.events.EventType.MOUSEOUT,
-        goog.events.EventType.CONTEXTMENU
-      ], this.handleChildMouseEvents_);
-  
+  this.headerMenuContainer_ = new goog.ui.Control(null,pear.ui.HeaderCellMenuRenderer.getInstance());
+  this.headerMenuContainer_.setSupportedState(goog.ui.Component.State.ALL, false);
+  this.headerMenuContainer_.render(this.getElement());
 };
 
 pear.ui.HeaderCell.prototype.createResizeHandle_ = function(){
@@ -204,35 +190,23 @@ pear.ui.HeaderCell.prototype.syncContentCellOnResize_ = function(){
   goog.style.setWidth(this.contentCell_,bound.width);
 };
 
-pear.ui.HeaderCell.prototype.syncContentIndicatorLocation_ = function(){
-  /*var marginleft = 0;
-  var left = 0;
-  
-  
+pear.ui.HeaderCell.prototype.getHeaderMenuContainerWidth = function(){
+  // TODO
+  var bounds = goog.style.getBounds(this.headerMenuContainer_.getElement());
+  return bounds.width;
+};
 
-  if (this.getSortDirection() && 
-      this.headerMenu_ && 
-      goog.style.isElementShown(this.headerMenu_)){
-    goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
-    marginleft = marginleft + 16;
-    goog.dom.appendChild(this.contentIndicator_,this.headerMenu_);
-    marginleft = marginleft + 16;
-  }else if (this.getSortDirection()){
-    goog.dom.appendChild(this.contentIndicator_, this.sortIndicator_);
-    marginleft = marginleft + 16;
-    goog.dom.removeNode(this.headerMenu_);
-  }else if (this.headerMenu_ && goog.style.isElementShown(this.headerMenu_)){
-    goog.dom.appendChild(this.contentIndicator_,this.headerMenu_);
-    marginleft = marginleft + 16;
-    goog.dom.removeNode(this.sortIndicator_);
+pear.ui.HeaderCell.prototype.slideMenuOpen = function(display){
+  var marginleft = 0;
+  var left = 0;
+  var width = this.getHeaderMenuContainerWidth();
+  if (this.headerMenuContainer_ && display ){
+    marginleft = marginleft + width;
   }else{
-    goog.dom.removeNode(this.sortIndicator_);
-    goog.dom.removeNode(this.headerMenu_);
+    marginleft = marginleft + 0;
   }
-  
   marginleft = marginleft * -1;
-  this.handleMenuSlide_(this.contentIndicator_,[marginleft]);
-  */
+  this.handleMenuSlide_(this.headerMenuContainer_.getElement(),[marginleft]);
 };
 
 pear.ui.HeaderCell.prototype.handleMenuSlide_ = function(el,value) {
@@ -278,10 +252,7 @@ pear.ui.HeaderCell.prototype.handleActive_ = function(ge){
  */
 pear.ui.HeaderCell.prototype.handleEnter_ = function(){
   if (this.getGrid().getConfiguration().AllowColumnHeaderMenu){
-    goog.style.setStyle(this.headerMenu_,"display","inline-block");
-  }
-  if (this.contentIndicator_){
-    this.syncContentIndicatorLocation_();
+    this.slideMenuOpen(true);
   }
 };
 
@@ -289,23 +260,20 @@ pear.ui.HeaderCell.prototype.handleEnter_ = function(){
  * @private
  */
 pear.ui.HeaderCell.prototype.handleLeave_ = function(){
-  if (this.getGrid().getConfiguration().AllowColumnHeaderMenu){
-    goog.style.setStyle(this.headerMenu_,'display','none');
-  }
-  if (this.contentIndicator_){
-    this.syncContentIndicatorLocation_();
+  if (this.getGrid().getConfiguration().AllowColumnHeaderMenu && !this.keepSlideMenuOpen_ ){
+    this.slideMenuOpen(false);
   }
 };
 
 /**
  * @private
  */
-pear.ui.HeaderCell.prototype.handleOptionClick_ = function(be){
-  be.stopPropagation();
-  var clickEvent = new goog.events.Event(pear.ui.Cell.EventType.OPTION_CLICK,
-      this);
-  this.dispatchEvent(clickEvent);
-};
+//pear.ui.HeaderCell.prototype.handleOptionClick_ = function(be){
+//  be.stopPropagation();
+//  var clickEvent = new goog.events.Event(pear.ui.Cell.EventType.OPTION_CLICK,
+//      this);
+ // this.dispatchEvent(clickEvent);
+//};
 
 /**
  * @private
@@ -347,4 +315,58 @@ pear.ui.HeaderCell.prototype.toggleSortDirection = function(){
     this.setsortDirection(pear.ui.Grid.SortDirection.DESC);
   }                         
 };
+
+
+goog.provide('pear.ui.HeaderCellMenuButton');
+goog.require('goog.ui.MenuButton');
+
+pear.ui.HeaderCellMenuButton = function(
+    content, opt_menu, opt_renderer, opt_domHelper) {
+  goog.ui.MenuButton.call(this, content, opt_menu, opt_renderer ||
+      pear.ui.HeaderCellMenuButtonRenderer.getInstance(), opt_domHelper);
+};
+goog.inherits(pear.ui.HeaderCellMenuButton, goog.ui.MenuButton);
+
+
+
+
+
+goog.provide('pear.ui.HeaderCellMenuButtonRenderer');
+
+goog.require('goog.ui.MenuButtonRenderer');
+
+
+
+/**
+ * Toolbar-specific renderer for {@link goog.ui.MenuButton}s, based on {@link
+ * goog.ui.MenuButtonRenderer}.
+ * @constructor
+ * @extends {goog.ui.MenuButtonRenderer}
+ */
+pear.ui.HeaderCellMenuButtonRenderer = function() {
+  goog.ui.MenuButtonRenderer.call(this);
+};
+goog.inherits(pear.ui.HeaderCellMenuButtonRenderer, goog.ui.MenuButtonRenderer);
+goog.addSingletonGetter(pear.ui.HeaderCellMenuButtonRenderer);
+
+
+/**
+ * Default CSS class to be applied to the root element of menu buttons rendered
+ * by this renderer.
+ * @type {string}
+ */
+pear.ui.HeaderCellMenuButtonRenderer.CSS_CLASS =
+    goog.getCssName('pear-grid-cell-header-slidemenu-menubutton');
+
+
+/**
+ * Returns the CSS class to be applied to the root element of menu buttons
+ * rendered using this renderer.
+ * @return {string} Renderer-specific CSS class.
+ * @override
+ */
+pear.ui.HeaderCellMenuButtonRenderer.prototype.getCssClass = function() {
+  return pear.ui.HeaderCellMenuButtonRenderer.CSS_CLASS;
+};
+
 
