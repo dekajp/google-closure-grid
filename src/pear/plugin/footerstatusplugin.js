@@ -54,25 +54,17 @@ pear.plugin.FooterStatus.prototype.createFooterStatus = function() {
   this.footerStatus_.render(this.footer_);
   this.updateMsg_();
   
-  goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_INDEX_CHANGED,this.updateMsg_,false,this);
-  goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_SIZE_CHANGED,this.updateMsg_,false,this);
-  goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.ROWCOUNT_CHANGED,this.updateMsg_,false,this);
+  // goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_INDEX_CHANGED,this.updateMsg_,false,this);
+  // goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_SIZE_CHANGED,this.updateMsg_,false,this);
+  goog.events.listen(grid,pear.ui.Grid.EventType.DATAROWS_CHANGED,this.updateMsg_,false,this);
 };
 
 pear.plugin.FooterStatus.prototype.updateMsg_ = function(){
   var grid = this.getGrid();
   var startIndex = 1;
   var rowCount = grid.getRowCount();
-  var endIndex = grid.getDataView().getRowViews().length;
-  var configuration = grid.getConfiguration();
-  var currentPageIndex = grid.getCurrentPageIndex();
-
-  if (configuration.AllowPaging){
-    startIndex = ( currentPageIndex  )* configuration.PageSize;
-    endIndex = (startIndex + configuration.PageSize) > rowCount  ? rowCount : (startIndex + configuration.PageSize);
-  }
   startIndex = startIndex ? startIndex : 1;
-  this.footerStatus_.setContent("["+startIndex+" - "+endIndex+"]");
+  this.footerStatus_.setContent("["+startIndex+" - "+rowCount+"]");
 };
 
 

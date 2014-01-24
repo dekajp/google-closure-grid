@@ -122,39 +122,39 @@
       id: "orderno",
       headerText: "Order No",
       width:75,
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "item",
       headerText: "Item",
       width:75,
-      datatype:pear.data.DataModel.DataType.TEXT
+      datatype:pear.data.DataTable.DataType.TEXT
     },
     {
       id: "unitprice",
       headerText: "Unit Price",
       width:75,
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "quantity", 
       headerText: "Quantity",
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "total",
       headerText: "Total",
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "created",
       headerText: "Created On",
-      datatype:pear.data.DataModel.DataType.DATETIME,
+      datatype:pear.data.DataTable.DataType.DATETIME,
      },
     {
       id: "processed",
       headerText: "Processed",
-      datatype:pear.data.DataModel.DataType.BOOLEAN
+      datatype:pear.data.DataTable.DataType.BOOLEAN
     }
   ];
 
@@ -191,7 +191,7 @@
     grid.setWidth(800);
     grid.setHeight(400);
     grid.setColumns(columns);
-    grid.setDataSource(data);
+    grid.setDataRows(data);
 
     grid.registerPlugin( new pear.plugin.FooterStatus());
 
@@ -200,7 +200,7 @@
     var diff = end - start;
     //console.log('Load Time : '+diff+'ms');
     goog.events.listen(grid, GRID_EVENTS, logEvent);
-    goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
+
   };
 
   var changeDataSource = function(){
@@ -221,7 +221,7 @@
       data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
     }
 
-    grid.setDataSource(data);
+    grid.setDataRows(data);
     grid.refresh();
   };
 

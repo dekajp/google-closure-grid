@@ -1,4 +1,4 @@
-goog.provide('pear.data.DataModel');
+goog.provide('pear.data.DataTable');
 
 goog.require('goog.events.EventTarget');
 
@@ -12,16 +12,16 @@ goog.require('goog.events.EventTarget');
  * @param {number} height
  * @extends {goog.Disposable}
  */
-pear.data.DataModel = function(datacolumns, datarows) {
+pear.data.DataTable = function(datacolumns, datarows) {
   goog.events.EventTarget.call(this);
 
   this.dataColumns_ = datacolumns || [];
   this.dataRows_ = datarows || [];
 };
-goog.inherits(pear.data.DataModel, goog.events.EventTarget);
+goog.inherits(pear.data.DataTable, goog.events.EventTarget);
 
 
-pear.data.DataModel.DataType ={
+pear.data.DataTable.DataType ={
   NUMBER : 'number',
   TEXT: 'text',
   BOOLEAN: 'boolean',
@@ -31,41 +31,41 @@ pear.data.DataModel.DataType ={
  * @private
  * @type {Array}
  */
-pear.data.DataModel.prototype.dataColumns_ = [];
+pear.data.DataTable.prototype.dataColumns_ = [];
 
 
 /**
  * @private
  * @type {Array}
  */
-pear.data.DataModel.prototype.dataRows_ = [];
+pear.data.DataTable.prototype.dataRows_ = [];
 
 
 
 /**
  * @return {Array}
  */
-pear.data.DataModel.prototype.getDataColumns = function() {
+pear.data.DataTable.prototype.getDataColumns = function() {
   return this.dataColumns_;
 };
 
-pear.data.DataModel.prototype.setDataColumns = function(dc) {
+pear.data.DataTable.prototype.setDataColumns = function(dc) {
   this.dataColumns_ = dc;
 };
 /**
  * @return {Array}
  */
-pear.data.DataModel.prototype.getDataRows = function() {
+pear.data.DataTable.prototype.getDataRows = function() {
   return this.dataRows_;
 };
 
-pear.data.DataModel.prototype.setDataRows = function(dr) {
-  this.dataRows_ = dr;
+pear.data.DataTable.prototype.setDataRows = function(rows) {
+  this.dataRows_ = rows;
 };
 
-pear.data.DataModel.prototype.disposeInternal = function() {
+pear.data.DataTable.prototype.disposeInternal = function() {
   this.dataColumns_ = null;
   this.dataRows_ = null; 
 
-  pear.data.DataModel.superClass_.disposeInternal.call(this);
+  pear.data.DataTable.superClass_.disposeInternal.call(this);
 };

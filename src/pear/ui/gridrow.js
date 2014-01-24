@@ -1,6 +1,6 @@
-goog.provide('pear.ui.DataRow');
+goog.provide('pear.ui.GridRow');
 
-goog.require('pear.ui.DataRowRenderer');
+goog.require('pear.ui.GridRowRenderer');
 goog.require('pear.ui.Row');
 
 
@@ -19,13 +19,13 @@ goog.require('pear.ui.Row');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.DataRow = function(grid,height, opt_orientation, opt_renderer, opt_domHelper) {
+pear.ui.GridRow = function(grid,height, opt_orientation, opt_renderer, opt_domHelper) {
 
   pear.ui.Row.call(this, grid,height, goog.ui.Container.Orientation.HORIZONTAL,
-                        pear.ui.DataRowRenderer.getInstance(),
+                        pear.ui.GridRowRenderer.getInstance(),
                         opt_domHelper);
 };
-goog.inherits(pear.ui.DataRow, pear.ui.Row);
+goog.inherits(pear.ui.GridRow, pear.ui.Row);
 
 
 /**
@@ -33,13 +33,13 @@ goog.inherits(pear.ui.DataRow, pear.ui.Row);
  * @type {number}
  * @private
  */
-pear.ui.DataRow.prototype.top_ = 0;
+pear.ui.GridRow.prototype.top_ = 0;
 
 
 /**
   @return {number}
 */
-pear.ui.DataRow.prototype.getLocationTop = function() {
+pear.ui.GridRow.prototype.getLocationTop = function() {
   return this.top_;
 };
 
@@ -47,19 +47,19 @@ pear.ui.DataRow.prototype.getLocationTop = function() {
 /**
   @param {number} top
 */
-pear.ui.DataRow.prototype.setLocationTop = function(top) {
+pear.ui.GridRow.prototype.setLocationTop = function(top) {
   this.top_ = top;
 };
 
 
-pear.ui.DataRow.prototype.disposeInternal = function() {
-  pear.ui.DataRow.superClass_.disposeInternal.call(this);
+pear.ui.GridRow.prototype.disposeInternal = function() {
+  pear.ui.GridRow.superClass_.disposeInternal.call(this);
 };
 
 /**
   @override
 */
-pear.ui.DataRow.prototype.enterDocument = function() {
+pear.ui.GridRow.prototype.enterDocument = function() {
   pear.ui.Row.superClass_.enterDocument.call(this);
   var elem = this.getElement();
 
@@ -77,7 +77,7 @@ pear.ui.DataRow.prototype.enterDocument = function() {
   @private
   @param {goog.events.BrowserEvent} be
 */
-pear.ui.DataRow.prototype.handleMouseOver_ = function(be) {
+pear.ui.GridRow.prototype.handleMouseOver_ = function(be) {
   var elem = this.getElement();
   goog.dom.classes.add(elem,'pear-grid-row-over');
   if (this.getRowPosition()%2 >0){
@@ -89,7 +89,7 @@ pear.ui.DataRow.prototype.handleMouseOver_ = function(be) {
   @private
   @param {goog.events.BrowserEvent} be
 */
-pear.ui.DataRow.prototype.handleMouseOut_ = function(be) {
+pear.ui.GridRow.prototype.handleMouseOut_ = function(be) {
   var elem = this.getElement();
   goog.dom.classes.remove(elem,'pear-grid-row-over');
   if (this.getRowPosition()%2 >0){

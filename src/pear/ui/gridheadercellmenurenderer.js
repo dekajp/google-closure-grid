@@ -1,4 +1,4 @@
-goog.provide('pear.ui.HeaderCellMenuRenderer');
+goog.provide('pear.ui.GridHeaderCellMenuRenderer');
 
 goog.require('pear.ui.CellRenderer');
 
@@ -8,11 +8,11 @@ goog.require('pear.ui.CellRenderer');
  * @constructor
  * @extends {pear.ui.CellRenderer}
  */
-pear.ui.HeaderCellMenuRenderer = function() {
+pear.ui.GridHeaderCellMenuRenderer = function() {
   pear.ui.CellRenderer.call(this);
 };
-goog.inherits(pear.ui.HeaderCellMenuRenderer, pear.ui.CellRenderer);
-goog.addSingletonGetter(pear.ui.HeaderCellMenuRenderer);
+goog.inherits(pear.ui.GridHeaderCellMenuRenderer, pear.ui.CellRenderer);
+goog.addSingletonGetter(pear.ui.GridHeaderCellMenuRenderer);
 
 
 /**
@@ -20,7 +20,7 @@ goog.addSingletonGetter(pear.ui.HeaderCellMenuRenderer);
  * by this renderer.
  * @type {string}
  */
-pear.ui.HeaderCellMenuRenderer.CSS_CLASS =
+pear.ui.GridHeaderCellMenuRenderer.CSS_CLASS =
     goog.getCssName('pear-grid-cell-header-slidemenu');
 
 
@@ -31,6 +31,6 @@ pear.ui.HeaderCellMenuRenderer.CSS_CLASS =
  * renderer classes are expected to share the same CSS class name.
  * @return {string} Renderer-specific CSS class name.
  */
-pear.ui.HeaderCellMenuRenderer.prototype.getCssClass = function() {
-  return pear.ui.HeaderCellMenuRenderer.CSS_CLASS;
+pear.ui.GridHeaderCellMenuRenderer.prototype.getCssClass = function() {
+  return pear.ui.GridHeaderCellMenuRenderer.CSS_CLASS;
 };

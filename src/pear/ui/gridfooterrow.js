@@ -1,6 +1,6 @@
-goog.provide('pear.ui.FooterRow');
+goog.provide('pear.ui.GridFooterRow');
 
-goog.require('pear.ui.FooterRowRenderer');
+goog.require('pear.ui.GridFooterRowRenderer');
 goog.require('pear.ui.Row');
 
 
@@ -19,36 +19,36 @@ goog.require('pear.ui.Row');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.FooterRow = function(grid,height, opt_orientation, opt_renderer, opt_domHelper) {
+pear.ui.GridFooterRow = function(grid,height, opt_orientation, opt_renderer, opt_domHelper) {
 
   pear.ui.Row.call(this, grid,height, goog.ui.Container.Orientation.HORIZONTAL,
-      pear.ui.FooterRowRenderer.getInstance(),
+      pear.ui.GridFooterRowRenderer.getInstance(),
       opt_domHelper);
    this.setFocusable(false);
 };
-goog.inherits(pear.ui.FooterRow, pear.ui.Row);
+goog.inherits(pear.ui.GridFooterRow, pear.ui.Row);
 
-pear.ui.FooterRow.prototype.pager_ = null;
+pear.ui.GridFooterRow.prototype.pager_ = null;
 
-pear.ui.FooterRow.prototype.getPager = function(){
+pear.ui.GridFooterRow.prototype.getPager = function(){
   return this.pager_;
 };
 
 
-pear.ui.FooterRow.prototype.disposeInternal = function() {
+pear.ui.GridFooterRow.prototype.disposeInternal = function() {
   if (this.pager_){
     this.pager_.dispose();
     this.pager_=null;
   }
-  pear.ui.FooterRow.superClass_.disposeInternal.call(this);
+  pear.ui.GridFooterRow.superClass_.disposeInternal.call(this);
 };
 
 /**
  * @override
  *
  */
-pear.ui.FooterRow.prototype.enterDocument = function() {
-  pear.ui.FooterRow.superClass_.enterDocument.call(this);
+pear.ui.GridFooterRow.prototype.enterDocument = function() {
+  pear.ui.GridFooterRow.superClass_.enterDocument.call(this);
   var config = this.getGrid().getConfiguration();
   this.setHeight(5);
   var elem = this.getElement();

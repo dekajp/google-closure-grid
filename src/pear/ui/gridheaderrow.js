@@ -1,6 +1,6 @@
-goog.provide('pear.ui.HeaderRow');
+goog.provide('pear.ui.GridHeaderRow');
 
-goog.require('pear.ui.HeaderRowRenderer');
+goog.require('pear.ui.GridHeaderRowRenderer');
 goog.require('pear.ui.Row');
 goog.require('goog.ui.SplitBehavior');
 goog.require('goog.ui.MenuButton');
@@ -21,13 +21,13 @@ goog.require('goog.ui.Menu');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.HeaderRow = function(grid,height, opt_orientation, opt_renderer, opt_domHelper) {
+pear.ui.GridHeaderRow = function(grid,height, opt_orientation, opt_renderer, opt_domHelper) {
 
   pear.ui.Row.call(this, grid,height, goog.ui.Container.Orientation.HORIZONTAL,
-      pear.ui.HeaderRowRenderer.getInstance(),
+      pear.ui.GridHeaderRowRenderer.getInstance(),
       opt_domHelper);
 };
-goog.inherits(pear.ui.HeaderRow, pear.ui.Row);
+goog.inherits(pear.ui.GridHeaderRow, pear.ui.Row);
 
 /**
   @public
@@ -35,8 +35,8 @@ goog.inherits(pear.ui.HeaderRow, pear.ui.Row);
   @param {boolean=} opt_render Whether the new child should be rendered
       immediately after being added (defaults to false).
 */
-pear.ui.HeaderRow.prototype.addCell = function(cell, opt_render) {
-  pear.ui.HeaderRow.superClass_.addCell.call(this, cell, true);
+pear.ui.GridHeaderRow.prototype.addCell = function(cell, opt_render) {
+  pear.ui.GridHeaderRow.superClass_.addCell.call(this, cell, true);
 };
 
 /**
@@ -56,8 +56,8 @@ pear.ui.Row.prototype.getHeaderCellById = function(id) {
 };
 
 
-pear.ui.HeaderRow.prototype.disposeInternal = function() {
-  pear.ui.HeaderRow.superClass_.disposeInternal.call(this);
+pear.ui.GridHeaderRow.prototype.disposeInternal = function() {
+  pear.ui.GridHeaderRow.superClass_.disposeInternal.call(this);
 };
 
 
@@ -66,8 +66,8 @@ pear.ui.HeaderRow.prototype.disposeInternal = function() {
  * handling.  Overrides {@link goog.ui.Component#enterDocument}.
  * @override
  */
-pear.ui.HeaderRow.prototype.enterDocument = function() {
-  pear.ui.HeaderRow.superClass_.enterDocument.call(this);
+pear.ui.GridHeaderRow.prototype.enterDocument = function() {
+  pear.ui.GridHeaderRow.superClass_.enterDocument.call(this);
 };
 
 

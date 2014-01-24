@@ -1,4 +1,4 @@
-goog.provide('pear.ui.FooterRowRenderer');
+goog.provide('pear.ui.GridHeaderRowRenderer');
 
 goog.require('pear.ui.RowRenderer');
 
@@ -8,11 +8,11 @@ goog.require('pear.ui.RowRenderer');
   @constructor
   @extends {pear.ui.RowRenderer}
 */
-pear.ui.FooterRowRenderer = function() {
+pear.ui.GridHeaderRowRenderer = function() {
   pear.ui.RowRenderer.call(this);
 };
-goog.inherits(pear.ui.FooterRowRenderer, pear.ui.RowRenderer);
-goog.addSingletonGetter(pear.ui.FooterRowRenderer);
+goog.inherits(pear.ui.GridHeaderRowRenderer, pear.ui.RowRenderer);
+goog.addSingletonGetter(pear.ui.GridHeaderRowRenderer);
 
 
 /**
@@ -20,8 +20,8 @@ goog.addSingletonGetter(pear.ui.FooterRowRenderer);
  * by this renderer.
  * @type {string}
  */
-pear.ui.FooterRowRenderer.CSS_CLASS =
-    goog.getCssName('pear-grid-row-footer');
+pear.ui.GridHeaderRowRenderer.CSS_CLASS =
+    goog.getCssName('pear-grid-row-header');
 
 
 /**
@@ -30,7 +30,7 @@ pear.ui.FooterRowRenderer.CSS_CLASS =
  * @return {string} Renderer-specific CSS class.
  * @override
  */
-pear.ui.FooterRowRenderer.prototype.getCssClass = function() {
-  return pear.ui.FooterRowRenderer.CSS_CLASS;
+pear.ui.GridHeaderRowRenderer.prototype.getCssClass = function() {
+  return pear.ui.GridHeaderRowRenderer.CSS_CLASS;
 };
 

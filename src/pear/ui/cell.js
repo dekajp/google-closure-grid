@@ -130,8 +130,7 @@ pear.ui.Cell.prototype.getCellIndex = function() {
 
 pear.ui.Cell.prototype.getColumnObject = function() {
   var grid = this.getGrid();
-  var dv = grid.getDataView();
-  var columns = dv.getDataColumns();
+  var columns = grid.getColumns();
   return columns[this.getCellIndex()];
 };
 

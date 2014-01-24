@@ -9,6 +9,8 @@ goog.require('goog.ui.ComboBox');
 
 pear.plugin.Pager = function(grid,opt_renderer,opt_domHelper) {
   pear.ui.Plugin.call(this);
+  // Combobox setvalue fire change event - so to avoid infinite loop
+  this.trigger_ = false;
 };
 goog.inherits(pear.plugin.Pager, pear.ui.Plugin);
 
@@ -19,6 +21,20 @@ pear.plugin.Pager.prototype.getClassId = function() {
 pear.plugin.Pager.prototype.init = function(){
   var grid = this.getGrid();
   this.createPager_();
+
+  goog.events.listen(grid,pear.ui.Grid.EventType.DATAROWS_CHANGED,function (ge){
+    this.handleRowCountChange_(ge);
+    this.updateMsg_(ge);
+  },false,this);
+  
+  goog.events.listen(grid,pear.ui.Grid.EventType.PAGE_INDEX_CHANGED, function (ge){
+    this.trigger_ = false;
+    this.updateMsg_(ge);
+    this.updatePagerDropdown_(this.getGrid().getCurrentPageIndex());
+    this.trigger_= true;
+  },false,this);
+
+  this.trigger_ = true;
 }
 
 pear.plugin.Pager.prototype.getElement = function(){
@@ -38,9 +54,7 @@ pear.plugin.Pager.prototype.createPager_ = function() {
   this.createPagerNavControls_();
   this.createPagerDropDown_();
 
-  this.changePageIndex_(this.getPageIndex());
-  goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.ROWCOUNT_CHANGED,this.handleRowCountChange_,false,this);
-  goog.events.listen(grid,pear.ui.Grid.EventType.PAGE_CHANGED,this.handlePageIndexChange_,false,this);
+  this.updatePagerDropdown_(this.getPageIndex());
   
 };
 
@@ -80,7 +94,7 @@ pear.plugin.Pager.prototype.createFooter_ = function(){
   this.footerStatus_.render(this.footer_);
   this.updateMsg_();
   
-  goog.events.listen(grid,pear.ui.Grid.EventType.PAGE_CHANGED,this.updateMsg_,false,this);
+
 }
 
 
@@ -135,6 +149,7 @@ pear.plugin.Pager.prototype.createPagerNavControls_ = function() {
 
 pear.plugin.Pager.prototype.handleAction_ = function (ge){
   var grid = this.getGrid();
+  var index = this.getPageIndex();
   if (ge.target === this.navControl_[0]){
     grid.gotoPreviousPage();
   }else if (ge.target === this.navControl_[1]){
@@ -143,7 +158,7 @@ pear.plugin.Pager.prototype.handleAction_ = function (ge){
   ge.stopPropagation();
 };
 
-pear.plugin.Pager.prototype.changePageIndex_ = function (index){
+pear.plugin.Pager.prototype.updatePagerDropdown_ = function (index){
   // TODO : check for boundary 
   index = ( index < 0 ) ? 0 : index;
   index =  index <= this.pagerComboBox_.getItemCount()-1 ? index : (this.pagerComboBox_.getItemCount() - 1);
@@ -153,7 +168,9 @@ pear.plugin.Pager.prototype.changePageIndex_ = function (index){
 
 pear.plugin.Pager.prototype.handleChange_ = function (ge){
   var grid = this.getGrid();
-  grid.setPageIndex(parseInt(this.pagerComboBox_.getValue())-1);
+  if (this.trigger_){
+    grid.setPageIndex(parseInt(this.pagerComboBox_.getValue())-1);
+  }
 };
 
 pear.plugin.Pager.prototype.handlePageIndexChange_ = function (ge){
@@ -183,18 +200,21 @@ pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge){
 
 pear.plugin.Pager.prototype.updateMsg_ = function(){
   var grid = this.getGrid();
-  var startIndex = 1;
+  var startRowIndex = 1;
   var rowCount = grid.getRowCount();
-  var endIndex = grid.getDataView().getRowViews().length;
   var configuration = grid.getConfiguration();
   var currentPageIndex = grid.getCurrentPageIndex();
+  var endRowIndex = currentPageIndex * grid.getPageSize();
 
   if (configuration.AllowPaging){
-    startIndex = ( currentPageIndex  )* configuration.PageSize;
-    endIndex = (startIndex + configuration.PageSize) > rowCount  ? rowCount : (startIndex + configuration.PageSize);
+    startRowIndex = ( currentPageIndex  )* configuration.PageSize;
+    endRowIndex = (startRowIndex + configuration.PageSize) > rowCount  ? rowCount : (startRowIndex + configuration.PageSize);
   }
-  startIndex = startIndex ? startIndex : 1;
-  this.footerStatus_.setContent("["+startIndex+" - "+endIndex+"]");
+    startRowIndex = (rowCount >0 )? 
+                      (startRowIndex ? startRowIndex : 1 ) :
+                      0 ;
+    endRowIndex = endRowIndex ? endRowIndex : rowCount;
+    this.footerStatus_.setContent("["+startRowIndex+" - "+endRowIndex+"] of " +rowCount+'');
 };
 
 

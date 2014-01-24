@@ -127,7 +127,7 @@
     setSortIndicators(headerCell,sortDirection);
     prevSortColumn = headerCell;
 
-    this.setRowViews(sortedData);
+    this.setDataRowViews(sortedData);
     grid.refresh();
   };
 
@@ -204,39 +204,39 @@
       id: "orderno",
       headerText: "Order No",
       width:75,
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "item",
       headerText: "Item",
       width:75,
-      datatype:pear.data.DataModel.DataType.TEXT
+      datatype:pear.data.DataTable.DataType.TEXT
     },
     {
       id: "unitprice",
       headerText: "Unit Price",
       width:75,
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "quantity", 
       headerText: "Quantity",
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "total",
       headerText: "Total",
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "created",
       headerText: "Created On",
-      datatype:pear.data.DataModel.DataType.DATETIME,
+      datatype:pear.data.DataTable.DataType.DATETIME,
      },
     {
       id: "processed",
       headerText: "Processed",
-      datatype:pear.data.DataModel.DataType.BOOLEAN
+      datatype:pear.data.DataTable.DataType.BOOLEAN
     }
   ];
 

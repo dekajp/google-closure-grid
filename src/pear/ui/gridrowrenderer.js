@@ -1,4 +1,4 @@
-goog.provide('pear.ui.DataRowRenderer');
+goog.provide('pear.ui.GridRowRenderer');
 
 goog.require('pear.ui.RowRenderer');
 
@@ -8,11 +8,11 @@ goog.require('pear.ui.RowRenderer');
   @constructor
   @extends {pear.ui.RowRenderer}
 */
-pear.ui.DataRowRenderer = function() {
+pear.ui.GridRowRenderer = function() {
   pear.ui.RowRenderer.call(this);
 };
-goog.inherits(pear.ui.DataRowRenderer, pear.ui.RowRenderer);
-goog.addSingletonGetter(pear.ui.DataRowRenderer);
+goog.inherits(pear.ui.GridRowRenderer, pear.ui.RowRenderer);
+goog.addSingletonGetter(pear.ui.GridRowRenderer);
 
 
 /**
@@ -20,7 +20,7 @@ goog.addSingletonGetter(pear.ui.DataRowRenderer);
  * by this renderer.
  * @type {string}
  */
-pear.ui.DataRowRenderer.CSS_CLASS =
+pear.ui.GridRowRenderer.CSS_CLASS =
     goog.getCssName('pear-grid-row-data');
 
 
@@ -30,8 +30,8 @@ pear.ui.DataRowRenderer.CSS_CLASS =
  * @return {string} Renderer-specific CSS class.
  * @override
  */
-pear.ui.DataRowRenderer.prototype.getCssClass = function() {
-  return pear.ui.DataRowRenderer.CSS_CLASS;
+pear.ui.GridRowRenderer.prototype.getCssClass = function() {
+  return pear.ui.GridRowRenderer.CSS_CLASS;
 };
 
 
@@ -44,7 +44,7 @@ pear.ui.DataRowRenderer.prototype.getCssClass = function() {
  * @return {Array.<string>} Array of CSS class names applicable to the control.
  * @protected
  */
-pear.ui.DataRowRenderer.prototype.getClassNames = function(container) {
+pear.ui.GridRowRenderer.prototype.getClassNames = function(container) {
   var baseClass = this.getCssClass();
 
   var isHorizontal =

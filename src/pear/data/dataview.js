@@ -1,6 +1,6 @@
 goog.provide('pear.data.DataView');
 
-goog.require('pear.data.DataModel');
+goog.require('pear.data.DataTable');
 goog.require('pear.data.RowView');
 goog.require('goog.events.EventTarget');
 
@@ -11,13 +11,13 @@ goog.require('goog.events.EventTarget');
  * @extends {goog.Disposable}
  */
 pear.data.DataView = function(datacolumns,datarows) {
-  pear.data.DataModel.call(this,datacolumns,datarows);
+  pear.data.DataTable.call(this,datacolumns,datarows);
 
   if (datacolumns && datarows){
-    this.setRowViews(datarows);
+    this.setDataRowViews(datarows);
   }
 };
-goog.inherits(pear.data.DataView, pear.data.DataModel);
+goog.inherits(pear.data.DataView, pear.data.DataTable);
 
 
 /**
@@ -33,7 +33,7 @@ pear.data.DataView.FilterType = {
 
 
 pear.data.DataView.EventType = {
-  ROWCOUNT_CHANGED: 'rowcount-changed',
+  ROW_CHANGED: 'row-changed',
   PAGE_INDEX_CHANGED: 'page-index-changed',
   PAGE_SIZE_CHANGED: 'page-size-changed'
 };
@@ -84,7 +84,7 @@ pear.data.DataView.prototype.disposeInternal = function() {
 pear.data.DataView.prototype.setDataRows = function(data) {
   pear.data.DataView.superClass_.setDataRows.call(this,data);
   this.pageIndex_=0;
-  this.setRowViews(data);
+  this.setDataRowViews(data);
 };
 
 
@@ -144,10 +144,10 @@ pear.data.DataView.prototype.getPageSize = function() {
  *   expression:
  *  }
  */
-pear.data.DataView.prototype.addColumnFilter = function(columnId,filter) {
-  var columns = this.getColumns();
+pear.data.DataView.prototype.addColumnFilter = function(dataColumn,filter) {
+  var columns = this.getDataColumns();
   goog.array.forEach(columns,function(column,index){
-    if (column.id === columnId){
+    if (column.id === dataColumn.id){
       column.filter = column.filter || [] ;
       // TODO - Multiple Filter support not yet complete
       column.filter = [];
@@ -156,31 +156,42 @@ pear.data.DataView.prototype.addColumnFilter = function(columnId,filter) {
   },this);
 };
 
-pear.data.DataView.prototype.clearColumnFilter = function(columnMapId) {
-  var columns = this.getColumns();
+pear.data.DataView.prototype.getColumnFilter = function(dataColumn) {
+  var columns = this.getDataColumns();
+  var text = '';
   goog.array.forEach(columns,function(column,index){
-    if (column.id === columnMapId){
+    if (column.id === dataColumn.id){
+      if (column.filter){
+        text = column.filter[0] || '';
+      }
+    }
+  },this);
+  return text;
+};
+pear.data.DataView.prototype.clearColumnFilter = function(dataColumn) {
+  var columns = this.getDataColumns();
+  goog.array.forEach(columns,function(column,index){
+    if (column.id === dataColumn.id){
       column.filter = null;
     }
   },this);
-  this.initLocalCachedataRowViews_();
 };
 
 
 pear.data.DataView.prototype.applyFilter = function() {
-  var filteredRows = this.dataRowViews_.filter(this.filterFn_,this);
+  var filteredRows = this.getDataRows().filter(this.filterFn_,this);
   console.dir(filteredRows);
-  this.setRowViews(filteredRows);
+  this.setDataRowViews(filteredRows);
 };
 
 pear.data.DataView.prototype.filterFn_ = function(row) {
-  var columns = this.getColumns();
-  var rowdata = row.getRowData();
+  var columns = this.getDataColumns();
   var ret = true;
   goog.array.forEach(columns,function(column){
     if (column.filter && column.filter.length > 0){
       goog.array.forEach(column.filter,function(filter){
-        if (rowdata[column.id] == filter.expression){
+        var str = new String(row[column.id]);
+        if (str.indexOf(filter) >=0) {
           ret = ret && true;
         }else{
           ret = ret && false;
@@ -232,10 +243,8 @@ pear.data.DataView.prototype.getRowViewByRowId = function(rowId) {
 /**
  * @return {Array.<pear.data.RowModel>}
  */
-pear.data.DataView.prototype.getRowViews = function() {
-  var rows =  (this.grid_.Configuration_.AllowPaging) ? this.getPagedRowsViews_() : this.dataRowViews_;
-  return rows;
-  
+pear.data.DataView.prototype.getDataRowViews = function() {
+  return this.dataRowViews_;
 };
 
 pear.data.DataView.prototype.getPagedRowsViews_ = function() {
@@ -249,14 +258,14 @@ pear.data.DataView.prototype.getPagedRowsViews_ = function() {
 
 };
 
-pear.data.DataView.prototype.setRowViews = function(rowviews) {
+pear.data.DataView.prototype.setDataRowViews = function(rowviews) {
   this.dataRowViews_= rowviews;
   this.updateRowsIdx();
-  this.dispatchRowCountChange();
+  this.dispatchRowChange();
 };
 
-pear.data.DataView.prototype.dispatchRowCountChange = function (){
-  var evt = new pear.data.DataViewEvent ( pear.data.DataView.EventType.ROWCOUNT_CHANGED, this );
+pear.data.DataView.prototype.dispatchRowChange = function (){
+  var evt = new pear.data.DataViewEvent ( pear.data.DataView.EventType.ROW_CHANGED, this );
   this.dispatchEvent(evt);
 };
 

@@ -1,7 +1,7 @@
-goog.provide('pear.ui.DataCell');
+goog.provide('pear.ui.GridCell');
 
 goog.require('pear.ui.Cell');
-goog.require('pear.ui.DataCellRenderer');
+goog.require('pear.ui.GridCellRenderer');
 
 
 
@@ -15,11 +15,11 @@ goog.require('pear.ui.DataCellRenderer');
  * @constructor
  * @extends {pear.ui.Cell}
  */
-pear.ui.DataCell = function(opt_domHelper, opt_renderer) {
-  pear.ui.Cell.call(this, pear.ui.DataCellRenderer.getInstance(),
+pear.ui.GridCell = function(opt_domHelper, opt_renderer) {
+  pear.ui.Cell.call(this, pear.ui.GridCellRenderer.getInstance(),
       opt_domHelper);
 };
-goog.inherits(pear.ui.DataCell, pear.ui.Cell);
+goog.inherits(pear.ui.GridCell, pear.ui.Cell);
 
 
 
@@ -28,7 +28,7 @@ goog.inherits(pear.ui.DataCell, pear.ui.Cell);
  * @return {goog.ui.ControlContent} Text caption or DOM structure
  *     comprising the component's contents.
  */
-pear.ui.DataCell.prototype.getContent = function() {
+pear.ui.GridCell.prototype.getContent = function() {
   var columnObject = this.getColumnObject();
   if (columnObject.formatter){
     return String(columnObject.formatter(this.getModel()));
@@ -37,6 +37,6 @@ pear.ui.DataCell.prototype.getContent = function() {
 };
 
 
-pear.ui.DataCell.prototype.disposeInternal = function() {
-  pear.ui.DataCell.superClass_.disposeInternal.call(this);
+pear.ui.GridCell.prototype.disposeInternal = function() {
+  pear.ui.GridCell.superClass_.disposeInternal.call(this);
 };

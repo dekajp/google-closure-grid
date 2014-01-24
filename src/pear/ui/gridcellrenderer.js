@@ -1,4 +1,4 @@
-goog.provide('pear.ui.HeaderCellRenderer');
+goog.provide('pear.ui.GridCellRenderer');
 
 goog.require('pear.ui.CellRenderer');
 
@@ -7,12 +7,12 @@ goog.require('pear.ui.CellRenderer');
 /**
  * @constructor
  * @extends {pear.ui.CellRenderer}
- */
-pear.ui.HeaderCellRenderer = function() {
+*/
+pear.ui.GridCellRenderer = function() {
   pear.ui.CellRenderer.call(this);
 };
-goog.inherits(pear.ui.HeaderCellRenderer, pear.ui.CellRenderer);
-goog.addSingletonGetter(pear.ui.HeaderCellRenderer);
+goog.inherits(pear.ui.GridCellRenderer, pear.ui.CellRenderer);
+goog.addSingletonGetter(pear.ui.GridCellRenderer);
 
 
 /**
@@ -20,8 +20,8 @@ goog.addSingletonGetter(pear.ui.HeaderCellRenderer);
  * by this renderer.
  * @type {string}
  */
-pear.ui.HeaderCellRenderer.CSS_CLASS =
-    goog.getCssName('pear-grid-cell-header');
+pear.ui.GridCellRenderer.CSS_CLASS =
+    goog.getCssName('pear-grid-cell-data');
 
 
 /**
@@ -31,6 +31,7 @@ pear.ui.HeaderCellRenderer.CSS_CLASS =
  * renderer classes are expected to share the same CSS class name.
  * @return {string} Renderer-specific CSS class name.
  */
-pear.ui.HeaderCellRenderer.prototype.getCssClass = function() {
-  return pear.ui.HeaderCellRenderer.CSS_CLASS;
+pear.ui.GridCellRenderer.prototype.getCssClass = function() {
+  return pear.ui.GridCellRenderer.CSS_CLASS;
 };
+

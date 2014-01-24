@@ -10,10 +10,13 @@
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuseparator.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menubutton.css">
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/toolbar.css">
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css" />
   
   <link rel="stylesheet" href="../src/css/grid.css" />
   <link rel="stylesheet" href="../src/css/plugin/headercellmenuplugin.css" />
- 
+   <link rel="stylesheet" href="../src/css/plugin/pagerplugin.css" />
+  <link rel="stylesheet" href="../src/css/plugin/footerstatusplugin.css" />
+
  <style>
   body {
   background-color: white;
@@ -47,9 +50,10 @@
 </head>
 <body>
    <fieldset class="goog-debug-panel">
-    <legend>Plugin - Header Menu</legend>
+    <legend>Plugin - Filters on Column</legend>
     <div id="">
-      <li>Creating Menu Items for Header</li>
+      <li>Basic Filter plugin - does a String.indexOf search for each column</li>
+      <li>Paging is enabled and Pager Plugin reacts to Filter</li>
     </div>
   </fieldset>
 
@@ -95,7 +99,8 @@
 
     var GRID_EVENTS = goog.object.getValues(pear.ui.Grid.EventType);
     var DATAVIEW_EVENTS = goog.object.getValues(pear.data.DataView.EventType);
-    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ') +' , '+DATAVIEW_EVENTS.join(', ') + '.');
+    var FILTERPLUGIN_EVENTS = goog.object.getValues(pear.plugin.FilterMenu.EventType);
+    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ') +' , '+DATAVIEW_EVENTS.join(', ') + ', '+FILTERPLUGIN_EVENTS.join(', ')+'.');
 
     function logEvent(e) {
       var component = e.target;
@@ -121,39 +126,39 @@
       id: "orderno",
       headerText: "Order No",
       width:75,
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "item",
       headerText: "Item",
       width:75,
-      datatype:pear.data.DataModel.DataType.TEXT
+      datatype:pear.data.DataTable.DataType.TEXT
     },
     {
       id: "unitprice",
       headerText: "Unit Price",
       width:75,
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "quantity", 
       headerText: "Quantity",
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "total",
       headerText: "Total",
-      datatype:pear.data.DataModel.DataType.NUMBER
+      datatype:pear.data.DataTable.DataType.NUMBER
     },
     {
       id: "created",
       headerText: "Created On",
-      datatype:pear.data.DataModel.DataType.DATETIME,
+      datatype:pear.data.DataTable.DataType.DATETIME,
      },
     {
       id: "processed",
       headerText: "Processed",
-      datatype:pear.data.DataModel.DataType.BOOLEAN
+      datatype:pear.data.DataTable.DataType.BOOLEAN
     }
   ];
 
@@ -183,18 +188,22 @@
 
 
     grid = new pear.ui.Grid();
+    dv = new pear.data.DataView(columns,data);
     var config = {
       AllowColumnResize: true,
-      AllowColumnHeaderMenu: true
+      AllowColumnHeaderMenu: true,
+      AllowPaging:true,
+      PageSize:50
     };
     config = grid.setConfiguration(config);
 
     grid.setWidth(800);
     grid.setHeight(400);
-    grid.setColumns(columns);
-    grid.setDataSource(data);
+    grid.setDataView(dv);
 
-     grid.registerPlugin( new pear.plugin.FilterMenu());
+    var filterPlugin = new pear.plugin.FilterMenu();
+    grid.registerPlugin( filterPlugin);
+    grid.registerPlugin( new pear.plugin.Pager());
 
     grid.render(goog.dom.getElement('target1'));
 
@@ -205,10 +214,43 @@
     
     goog.events.listen(grid, GRID_EVENTS, logEvent);
     goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
+    goog.events.listen(filterPlugin, FILTERPLUGIN_EVENTS, logEvent);
+
+    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.APPLY_FILTER, applyFilter);
+    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.CLEAR_FILTER, clearFilter);
+    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.ROW_CHANGED, updateGrid);
+
+
   };
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
   
+
+  var applyFilter = function (ge){
+    var grid = ge.target;
+    var headercell = ge.cell;
+    var filterText = ge.filterText;
+    var dv = grid.getDataView();
+
+    dv.addColumnFilter(headercell.getCellData(),filterText);
+    dv.applyFilter();
+  };
+
+   var clearFilter = function (ge){
+    var grid = ge.target;
+    var headercell = ge.cell;
+    var filterText = ge.filterText;
+    var dv = grid.getDataView();
+
+    dv.clearColumnFilter(headercell.getCellData());
+    dv.applyFilter();
+  };
+
+  var updateGrid = function (ge){
+    grid.setDataRows(dv.getDataRowViews());
+    grid.setPageIndex(0);
+    grid.refresh();
+  }
  </script>
 
 </html>
