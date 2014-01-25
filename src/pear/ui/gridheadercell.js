@@ -193,14 +193,17 @@ pear.ui.GridHeaderCell.prototype.adjustContentCellWidth = function(){
 pear.ui.GridHeaderCell.prototype.syncContentCellOnResize_ = function(){
   var bound = goog.style.getBounds(this.getElement());
   var boundIndicator = goog.style.getBounds(this.getContentIndicatorElement());
-  var boundSlideMenu = goog.style.getBounds(this.headerMenuContainer_.getElement());
-  var lessWidth ;
-  var marginBox = goog.style.getMarginBox(this.headerMenuContainer_.getElement());
-  if ( marginBox.left < 0 ){
-    lessWidth = boundIndicator.width + boundSlideMenu.width;
-  }else{
-    lessWidth = boundIndicator.width;
+  var boundSlideMenu ;
+  var lessWidth = 0;
+  if (grid.getConfiguration().AllowColumnHeaderMenu) {
+    var boundSlideMenu = goog.style.getBounds(this.headerMenuContainer_.getElement());
+    var marginBox = goog.style.getMarginBox(this.headerMenuContainer_.getElement());
+    if ( marginBox.left < 0 ){
+      lessWidth = boundSlideMenu.width;
+    }
   }
+  
+  lessWidth = lessWidth + boundIndicator.width;
   goog.style.setWidth(this.contentCell_,bound.width - lessWidth);
 };
 
