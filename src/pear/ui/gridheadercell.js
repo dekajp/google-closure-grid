@@ -228,7 +228,6 @@ pear.ui.GridHeaderCell.prototype.slideMenuOpen = function(display){
 };
 
 pear.ui.GridHeaderCell.prototype.handleMenuSlide_ = function(el,value) {
-  
   var anim = new pear.fx.dom.HeaderMenuSlide (el, [0], value, 300);
   goog.events.listen(anim, goog.fx.Animation.EventType.ANIMATE,this.syncContentCellOnResize_,false,this);
   anim.play();

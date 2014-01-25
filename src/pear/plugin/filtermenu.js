@@ -164,7 +164,7 @@ pear.plugin.FilterMenu.prototype.
                           showFilterUI_ = function(ge){
 
   // Reset   
-  if (this.headerCell_) {                     
+  if (this.headerCell_ && this.headerCell_ !== ge.currentTarget.getHeaderCell()) {                     
     this.headerCell_.setMenuState(false);
     this.headerCell_.slideMenuOpen(false);
   }

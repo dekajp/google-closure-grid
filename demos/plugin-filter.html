@@ -300,9 +300,14 @@ var setFilterIndicators = function (headerCell,showFilterIndicator){
     var icon ;
     var contentIndicatorElem = headerCell.getContentIndicatorElement();
     if (showFilterIndicator){
-      icon = goog.dom.createDom('i','fa fa-filter');
-      goog.dom.appendChild(contentIndicatorElem,icon);
+      if (goog.dom.getElementByClass('fa-filter',contentIndicatorElem)){
+        // icon exists
+      }else{
+        icon = goog.dom.createDom('i','fa fa-filter');
+        goog.dom.appendChild(contentIndicatorElem,icon);
+      }
     }else{
+      // if other indicators present - then be specific
       goog.dom.removeChildren(contentIndicatorElem);
     }
   };
