@@ -83,7 +83,6 @@ pear.ui.Row.prototype.enterDocument = function() {
 pear.ui.Row.prototype.handleScroll_ = function(be) {
 
   var cell = this.getChild(be.target.id);
-  console.dir(cell);
   be.stopPropagation();
   be.preventDefault();
 };
@@ -96,7 +95,6 @@ pear.ui.Row.prototype.handleScroll_ = function(be) {
 pear.ui.Row.prototype.handleClickEvent_ = function(be) {
 
   var cell = this.getChild(be.target.id);
-  console.dir(cell);
   if (cell){
     cell.setSelected(true);
   }

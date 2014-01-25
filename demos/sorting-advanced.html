@@ -310,6 +310,8 @@
     }else if (sortDirection === pear.ui.Grid.SortDirection.DESC){
       goog.style.showElement(elDesc,true);
     }
+    
+    headerCell.adjustContentCellWidth();
   };
 
   var createSortIndicators = function(ge){

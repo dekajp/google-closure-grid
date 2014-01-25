@@ -107,8 +107,8 @@
   /*left:100%;*/
   background: rgb(230, 230, 230);
   height: 100%;
-  padding-left: 3px;
-  padding-right: 3px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .pear-grid-cell-header-hover .pear-grid-cell-header-indicators{
@@ -128,8 +128,8 @@
   display: inline-block;
   float: left;
   outline:none;
-  padding-left:2px;
-  padding-right:2px;
+  padding-left:5px;
+  padding-right:5px;
   left:100%;
   position: absolute;
   cursor:pointer;

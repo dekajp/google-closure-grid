@@ -5,7 +5,7 @@ goog.require('pear.ui.GridHeaderCellRenderer');
 goog.require('pear.ui.GridHeaderCellContentRenderer');
 goog.require('pear.ui.GridHeaderCellMenuRenderer');
 goog.require('pear.ui.Resizable');
-goog.require('pear.fx.dom.Slide');
+goog.require('pear.fx.dom.HeaderMenuSlide');
 
 
 
@@ -152,6 +152,8 @@ pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function(){
   if (grid.getConfiguration().AllowColumnResize){
     this.createResizeHandle_();
   }
+
+  this.syncContentCellOnResize_();
 };
 
 pear.ui.GridHeaderCell.prototype.createHeaderCellIndicatorPlaceHolder_ = function(){
@@ -184,10 +186,22 @@ pear.ui.GridHeaderCell.prototype.createResizeHandle_ = function(){
           this.handleResizeEnd_,false,this);
 };
 
+pear.ui.GridHeaderCell.prototype.adjustContentCellWidth = function(){
+  this.syncContentCellOnResize_();
+};
 
 pear.ui.GridHeaderCell.prototype.syncContentCellOnResize_ = function(){
-  var bound = goog.style.getContentBoxSize(this.getElement());
-  goog.style.setWidth(this.contentCell_,bound.width);
+  var bound = goog.style.getBounds(this.getElement());
+  var boundIndicator = goog.style.getBounds(this.getContentIndicatorElement());
+  var boundSlideMenu = goog.style.getBounds(this.headerMenuContainer_.getElement());
+  var lessWidth ;
+  var marginBox = goog.style.getMarginBox(this.headerMenuContainer_.getElement());
+  if ( marginBox.left < 0 ){
+    lessWidth = boundIndicator.width + boundSlideMenu.width;
+  }else{
+    lessWidth = boundIndicator.width;
+  }
+  goog.style.setWidth(this.contentCell_,bound.width - lessWidth);
 };
 
 pear.ui.GridHeaderCell.prototype.getHeaderMenuContainerWidth = function(){
@@ -207,13 +221,13 @@ pear.ui.GridHeaderCell.prototype.slideMenuOpen = function(display){
   }
   marginleft = marginleft * -1;
   this.handleMenuSlide_(this.headerMenuContainer_.getElement(),[marginleft]);
+  this.syncContentCellOnResize_();
 };
 
 pear.ui.GridHeaderCell.prototype.handleMenuSlide_ = function(el,value) {
   
-  var anim = new pear.fx.dom.Slide (el, [0], value, 300);
-  //goog.events.listen(anim, goog.fx.Transition.EventType.BEGIN,disableButtons);
-  //goog.events.listen(anim, goog.fx.Transition.EventType.END, enableButtons);
+  var anim = new pear.fx.dom.HeaderMenuSlide (el, [0], value, 300);
+  goog.events.listen(anim, goog.fx.Animation.EventType.ANIMATE,this.syncContentCellOnResize_,false,this);
   anim.play();
 }
 

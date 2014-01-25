@@ -1,5 +1,5 @@
 
-goog.provide('pear.fx.dom.Slide');
+goog.provide('pear.fx.dom.HeaderMenuSlide');
 
 goog.require('goog.fx.dom.PredefinedEffect');
 
@@ -17,14 +17,14 @@ goog.require('goog.fx.dom.PredefinedEffect');
  * @extends {goog.fx.dom.PredefinedEffect}
  * @constructor
  */
-pear.fx.dom.Slide = function(element, start, end, time, opt_acc) {
+pear.fx.dom.HeaderMenuSlide = function(element, start, end, time, opt_acc) {
   goog.fx.dom.PredefinedEffect.apply(this, arguments);
 };
-goog.inherits(pear.fx.dom.Slide, goog.fx.dom.PredefinedEffect);
+goog.inherits(pear.fx.dom.HeaderMenuSlide, goog.fx.dom.PredefinedEffect);
 
 
 /** @override */
-pear.fx.dom.Slide.prototype.updateStyle = function() {
+pear.fx.dom.HeaderMenuSlide.prototype.updateStyle = function() {
   
   var marginX = (this.isRightPositioningForRtlEnabled() &&
       this.isRightToLeft()) ? 'marginRight' : 'marginLeft';
