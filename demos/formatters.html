@@ -117,12 +117,12 @@
     return fmt.format(val);
   };
 
-  function NumberFormatter(val){
+  function numberFormatter(val){
     var fmt = new goog.i18n.NumberFormat (goog.i18n.NumberFormat.Format.DECIMAL);
     return fmt.format(val);
   };
 
-  function DateFormatter(val){
+  function dateFormatter(val){
     var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
     return fmt.format(val);
   };
@@ -156,7 +156,7 @@
       id: "quantity", 
       headerText: "Quantity",
       datatype:pear.data.DataTable.DataType.NUMBER,
-      formatter:NumberFormatter
+      formatter:numberFormatter
     },
     {
       id: "total",
@@ -168,7 +168,7 @@
       id: "created",
       headerText: "Created On",
       datatype:pear.data.DataTable.DataType.DATETIME,
-      formatter:DateFormatter
+      formatter:dateFormatter
      },
     {
       id: "processed",

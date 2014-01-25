@@ -33,6 +33,8 @@
     goog.require('goog.dom.forms');
     goog.require('pear.ui.Grid');
     goog.require('pear.plugin.FilterMenu');
+    goog.require('goog.i18n.NumberFormat')
+    goog.require('goog.i18n.DateTimeFormat')
     
   </script>
 
@@ -112,15 +114,19 @@
       }
     }
 
+  function dateFormatter(val){
+    var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
+    return fmt.format(val);
+  };
   function isChecked(id,name){
     var elem = goog.dom.getElement(id);
     return  elem.checked;
   };
 
-  var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
-  var unitprice = [1.01,2.25,3.45,4.97,5.0,6.0,7.0,8.2,9.5,10];
+  var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
+  var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
 
-  var grid;
+  var grid,dv;
   var columns = [
     { 
       id: "orderno",
@@ -154,6 +160,7 @@
       id: "created",
       headerText: "Created On",
       datatype:pear.data.DataTable.DataType.DATETIME,
+      formatter:dateFormatter
      },
     {
       id: "processed",
@@ -178,7 +185,7 @@
      
       data[i].item = item[temp];
       data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 10000);
+      data[i].quantity = Math.round(Math.random() * 100);
       data[i].total = data[i].unitprice * data[i].quantity;
       data[i].processed= (i % 5 === 0);
       data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
@@ -216,9 +223,9 @@
     goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
     goog.events.listen(filterPlugin, FILTERPLUGIN_EVENTS, logEvent);
 
-    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.APPLY_FILTER, applyFilter);
-    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.CLEAR_FILTER, clearFilter);
-    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.ROW_CHANGED, updateGrid);
+    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.APPLY_FILTER, handleApplyFilter);
+    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.CLEAR_FILTER, handleClearFilter);
+    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.ROWVIEWS_CHANGED, handleRowViewsChanged);
 
 
   };
@@ -226,31 +233,80 @@
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
   
 
-  var applyFilter = function (ge){
+  var handleApplyFilter = function (ge){
     var grid = ge.target;
     var headercell = ge.cell;
     var filterText = ge.filterText;
     var dv = grid.getDataView();
 
     dv.addColumnFilter(headercell.getCellData(),filterText);
-    dv.applyFilter();
+
+    var filteredRows = dv.getDataRows().filter(filterfn,this);
+    console.dir(filteredRows);
+    dv.setDataRowViews(filteredRows);
+
+    setFilterIndicators(headercell,true);
   };
 
-   var clearFilter = function (ge){
+   var handleClearFilter = function (ge){
     var grid = ge.target;
     var headercell = ge.cell;
     var filterText = ge.filterText;
     var dv = grid.getDataView();
 
     dv.clearColumnFilter(headercell.getCellData());
-    dv.applyFilter();
+    var filteredRows = dv.getDataRows().filter(filterfn,this);
+    console.dir(filteredRows);
+    dv.setDataRowViews(filteredRows);
+
+    setFilterIndicators(headercell,false);
   };
 
-  var updateGrid = function (ge){
+  var handleRowViewsChanged = function (ge){
     grid.setDataRows(dv.getDataRowViews());
     grid.setPageIndex(0);
     grid.refresh();
   }
+
+
+
+
+ var filterfn = function(row) {
+  var columns = dv.getDataColumns();
+  var match = true;
+  goog.array.forEach(columns,function(column){
+    if (column.filter && column.filter.length > 0){
+      var str;
+      if (column.formatter){
+        str = String(column.formatter(row[column.id]));
+      }else{
+        str = String(row[column.id]);
+      }
+        
+      if (str.toLowerCase().indexOf(column.filter) >=0) {
+        match = match && true;
+      }else{
+        match = match && false;
+      }
+    }else{
+
+    }
+  },this);
+  return match;
+};
+
+var setFilterIndicators = function (headerCell,showFilterIndicator){
+    if (!headerCell) return;
+    var icon ;
+    var contentIndicatorElem = headerCell.getContentIndicatorElement();
+    if (showFilterIndicator){
+      icon = goog.dom.createDom('i','fa fa-filter');
+      goog.dom.appendChild(contentIndicatorElem,icon);
+    }else{
+      goog.dom.removeChildren(contentIndicatorElem);
+    }
+  };
+
  </script>
 
 </html>

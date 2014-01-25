@@ -110,8 +110,8 @@
     return  elem.checked;
   };
 
-  var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
-  var unitprice = [1.01,2.25,3.45,4.97,5.0,6.0,7.0,8.2,9.5,10];
+  var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
+  var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
 
   var grid;
   var columns = [
@@ -162,7 +162,6 @@
     var data = [];
     var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
     var temp;
-    var start = new Date(2013,12,31);
     for (var i = 0; i < parseInt(limit,10); i++) {
       data[i] = {
         orderno:  i +1
@@ -171,10 +170,10 @@
      
       data[i].item = item[temp];
       data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 10000);
+      data[i].quantity = Math.round(Math.random() * 100);
       data[i].total = data[i].unitprice * data[i].quantity;
       data[i].processed= (i % 5 === 0);
-      data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
+      data[i].created = '11/21/2013';
     }
 
     var start = +new Date();  // log start timestamp

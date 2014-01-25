@@ -33,9 +33,7 @@ pear.data.DataView.FilterType = {
 
 
 pear.data.DataView.EventType = {
-  ROW_CHANGED: 'row-changed',
-  PAGE_INDEX_CHANGED: 'page-index-changed',
-  PAGE_SIZE_CHANGED: 'page-size-changed'
+  ROWVIEWS_CHANGED: 'row-views-changed'
 };
 
 
@@ -97,6 +95,10 @@ pear.data.DataView.prototype.setDataRows = function(data) {
  */
 pear.data.DataView.prototype.setGrid = function(grid) {
   this.grid_ = grid;
+};
+
+pear.data.DataView.prototype.getGrid = function(){
+  return this.grid_;
 };
 
 pear.data.DataView.prototype.setPageIndex = function(pageIndex) {
@@ -178,32 +180,6 @@ pear.data.DataView.prototype.clearColumnFilter = function(dataColumn) {
 };
 
 
-pear.data.DataView.prototype.applyFilter = function() {
-  var filteredRows = this.getDataRows().filter(this.filterFn_,this);
-  console.dir(filteredRows);
-  this.setDataRowViews(filteredRows);
-};
-
-pear.data.DataView.prototype.filterFn_ = function(row) {
-  var columns = this.getDataColumns();
-  var ret = true;
-  goog.array.forEach(columns,function(column){
-    if (column.filter && column.filter.length > 0){
-      goog.array.forEach(column.filter,function(filter){
-        var str = new String(row[column.id]);
-        if (str.indexOf(filter) >=0) {
-          ret = ret && true;
-        }else{
-          ret = ret && false;
-        }
-      },this);
-    }else{
-
-    }
-  },this);
-  return ret;
-};
-
 
 
 
@@ -229,9 +205,6 @@ pear.data.DataView.prototype.getRowViewByRowId = function(rowId) {
 };
 
 
-
-
-
 /**
  * @param {Object} row
  */
@@ -255,7 +228,6 @@ pear.data.DataView.prototype.getPagedRowsViews_ = function() {
   var rows = this.dataRowViews_.slice( start,end );
 
   return rows; 
-
 };
 
 pear.data.DataView.prototype.setDataRowViews = function(rowviews) {
@@ -265,7 +237,7 @@ pear.data.DataView.prototype.setDataRowViews = function(rowviews) {
 };
 
 pear.data.DataView.prototype.dispatchRowChange = function (){
-  var evt = new pear.data.DataViewEvent ( pear.data.DataView.EventType.ROW_CHANGED, this );
+  var evt = new pear.data.DataViewEvent ( pear.data.DataView.EventType.ROWVIEWS_CHANGED, this );
   this.dispatchEvent(evt);
 };
 

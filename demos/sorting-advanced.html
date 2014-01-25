@@ -25,6 +25,8 @@
     goog.require('goog.debug.LogManager');
     goog.require('goog.dom.forms');
     goog.require('pear.ui.Grid');
+    goog.require('goog.i18n.NumberFormat')
+    goog.require('goog.i18n.DateTimeFormat')
     
   </script>
 
@@ -112,8 +114,6 @@
   };
   goog.inherits(SortedDataView, pear.data.DataView);
 
-
-
   var prevSortColumn = null;
 
   SortedDataView.prototype.handleSort = function (ge){
@@ -128,7 +128,6 @@
     prevSortColumn = headerCell;
 
     this.setDataRowViews(sortedData);
-    grid.refresh();
   };
 
   SortedDataView.prototype.sort_ = function(sortCell,sortField,sortDirection) {
@@ -195,8 +194,8 @@
 
 
 
-  var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
-  var unitprice = [1.01,2.25,3.45,4.97,5.0,6.0,7.0,8.2,9.5,10];
+  var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
+  var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
 
   var grid;
   var columns = [
@@ -232,6 +231,7 @@
       id: "created",
       headerText: "Created On",
       datatype:pear.data.DataTable.DataType.DATETIME,
+      formatter:dateFormatter
      },
     {
       id: "processed",
@@ -256,7 +256,7 @@
      
       data[i].item = item[temp];
       data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 10000);
+      data[i].quantity = Math.round(Math.random() * 100);
       data[i].total = data[i].unitprice * data[i].quantity;
       data[i].processed= (i % 5 === 0);
       data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
@@ -293,7 +293,7 @@
     goog.events.listen(grid.getDataView(), EVENTS3, logEvent);
 
     goog.events.listen(grid, pear.ui.Grid.EventType.SORT, grid.getDataView().handleSort ,false ,grid.getDataView());
-
+    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.ROWVIEWS_CHANGED, handleRowViewsChanged);
   };
 
   var setSortIndicators = function (headerCell,sortDirection){
@@ -327,6 +327,21 @@
     sortNode = goog.dom.createDom('div',{class : 'fa fa-arrow-circle-up' ,style:'display:none' });
     goog.dom.appendChild(sortIndicator,sortNode);
   };
+
+
+  function dateFormatter(val){
+    var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
+    return fmt.format(val);
+  };
+
+  var handleRowViewsChanged = function (ge){
+    var dv = ge.target;
+    var grid = dv.getGrid();
+    grid.setDataRows(dv.getDataRowViews());
+    grid.refresh();
+  }
+
+
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
 
  </script>
