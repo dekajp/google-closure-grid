@@ -1,2 +1,3 @@
 *.log
 *release*
+bin/build/*.py
