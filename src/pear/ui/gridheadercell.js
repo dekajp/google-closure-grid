@@ -227,6 +227,38 @@ pear.ui.GridHeaderCell.prototype.slideMenuOpen = function(display){
   this.syncContentCellOnResize_();
 };
 
+
+
+/**
+ * @override
+ */
+pear.ui.GridHeaderCell.prototype.setPosition_ = function() {
+  var left, top;
+  left = 0;
+  top = 0;
+  left = 0
+  top = 0;
+  var i =0;
+  ////for (;i<this.getCellIndex();i++ ){
+  //  left = left + this.getRow().getCellWidth(i);
+  //}
+
+  goog.style.setPosition(this.getElement(), left, top);
+};
+
+/**
+ * @override
+ *
+ */
+pear.ui.GridHeaderCell.prototype.setSize_ = function() {
+  var width, height;
+  width = this.getCellWidthOffset_();
+  height = this.getCellHeightOffset_();
+  goog.style.setHeight(this.getElement(), height);
+  goog.style.setWidth(this.getElement(), width);
+};
+
+
 pear.ui.GridHeaderCell.prototype.handleMenuSlide_ = function(el,value) {
   var anim = new pear.fx.dom.HeaderMenuSlide (el, [0], value, 300);
   goog.events.listen(anim, goog.fx.Animation.EventType.ANIMATE,this.syncContentCellOnResize_,false,this);

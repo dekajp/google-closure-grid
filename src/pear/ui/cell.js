@@ -165,6 +165,13 @@ pear.ui.Cell.prototype.getCellWidth = function() {
   return this.columnWidth_;
 };
 
+pear.ui.Cell.prototype.getCellRenderedWidth = function() {
+  var width = this.getCellWidth();
+  var paddingBox = goog.style.getPaddingBox(this.getElement());
+  var borderBox = goog.style.getBorderBox(this.getElement());
+  return (width + paddingBox.left + paddingBox.right + borderBox.left +
+      borderBox.right);
+};
 
 /**
  * @private
@@ -181,6 +188,7 @@ pear.ui.Cell.prototype.getCellHeight_ = function() {
  */
 pear.ui.Cell.prototype.getCellWidthOffset_ = function() {
   var width = this.getCellWidth();
+  return width;
   var paddingBox = goog.style.getPaddingBox(this.getElement());
   var borderBox = goog.style.getBorderBox(this.getElement());
 
@@ -198,8 +206,9 @@ pear.ui.Cell.prototype.getCellHeightOffset_ = function() {
   var paddingBox = goog.style.getPaddingBox(this.getElement());
   var borderBox = goog.style.getBorderBox(this.getElement());
 
-  return (height - paddingBox.top - paddingBox.bottom - borderBox.top -
+  var h = (height - paddingBox.top - paddingBox.bottom - borderBox.top -
       borderBox.bottom);
+  return h;
 };
 
 
@@ -214,7 +223,7 @@ pear.ui.Cell.prototype.setPosition_ = function() {
   top = 0;
   var i =0;
   for (;i<this.getCellIndex();i++ ){
-    left = left + this.getRow().getCellWidth(i);
+    left = left + this.getRow().getCellRenderedWidth(i);
   }
 
   goog.style.setPosition(this.getElement(), left, top);
@@ -229,8 +238,9 @@ pear.ui.Cell.prototype.setSize_ = function() {
   var width, height;
   width = this.getCellWidthOffset_();
   height = this.getCellHeightOffset_();
-
-  goog.style.setSize(this.getElement(), width, height);
+  //goog.style.setSize(this.getElement(), width, height);
+  goog.style.setWidth(this.getElement(), width);
+  goog.style.setHeight(this.getElement(), height);
 };
 
 

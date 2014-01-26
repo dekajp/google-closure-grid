@@ -30,5 +30,4 @@ pear.fx.dom.HeaderMenuSlide.prototype.updateStyle = function() {
       this.isRightToLeft()) ? 'marginRight' : 'marginLeft';
   var y = this.coords[0];
   this.element.style[marginX] = y + 'px';
- 
 };

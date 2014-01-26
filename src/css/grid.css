@@ -22,7 +22,7 @@
 }
 
 .pear-grid-row-header{
-  padding:0px 2px 0px 2px;
+  padding:0px 0px 0px 0px;
 }
 .pear-grid-row-header, .pear-grid-row-footer,
 .pear-grid-body{
@@ -79,7 +79,7 @@
 
 .pear-grid-cell-header{
   display: inline-block;
-  position: absolute;
+  position: relative;
   padding-left: 4px;
   padding-right: 4px;
 }

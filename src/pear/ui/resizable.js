@@ -167,12 +167,26 @@ pear.ui.Resizable.prototype.handleDragStart_ = function(e) {
   });
 };
 
+pear.ui.Resizable.prototype.getComputedPosition_ = function( el ) {
+  var positionStyle = goog.style.getComputedPosition(el);
+  return positionStyle;
+}
+
 pear.ui.Resizable.prototype.getPosition_ = function( el ) {
-  var coord = goog.style.getPosition(el);  
+  var coord ;
+  var positionStyle = this.getComputedPosition_(el);
+  //if (positionStyle === 'absolute'){
+    coord = goog.style.getPosition(this.element_);
+ // }else if (positionStyle === 'relative'){
+  //  coord = goog.style.getRelativePosition(this.element_);
+  //}
   return coord;
 }
 pear.ui.Resizable.prototype.getSize_ = function( el ) {
-  var size = goog.style.getSize(el);  
+  //var size = goog.style.getSize(el);  
+  // Expensive - clousre getSize returns the border box size and setHeight actually set the 
+  // style attribute height
+  var size = goog.style.getContentBoxSize(el);
   return size;
 }
 
@@ -185,6 +199,7 @@ pear.ui.Resizable.prototype.handleDrag_ = function(e) {
   var size = this.getSize_(this.element_);
   var coord = this.getPosition_(this.element_);
   
+
  // this.debug('DRAG', dragger);
 
   if (position & 194){ /* RIGHT, TOP_RIGHT, BOTTOM_RIGHT */
@@ -204,6 +219,7 @@ pear.ui.Resizable.prototype.handleDrag_ = function(e) {
 //    size.height = this.elementSize_.height - dragger.deltaY + this.handlerOffsetCoord_.y;   
 //    coord.y = this.elementCoord_.y + dragger.deltaY - this.handlerOffsetCoord_.y;    
 //  }
+ 
  
   // Now size the containers.
   this.resize_(el, size, coord, position);
@@ -250,8 +266,10 @@ pear.ui.Resizable.prototype.resize_ = function(element, size, coord, position) {
   });
   
 
-  // TODO: Add a goog.math.Size.max call for below.
-  goog.style.setBorderBoxSize(element, newSize);
+  // TODO: this needs to be fixed 
+  //goog.style.setBorderBoxSize(element, newSize);
+  goog.style.setWidth(element,newSize.width);
+  goog.style.setHeight(element,newSize.height);
 
   // 2px are causing issue - i think it's margin , certainly it's not border
   //http://msdn.microsoft.com/en-us/library/hh781509(v=vs.85).aspx
@@ -259,8 +277,9 @@ pear.ui.Resizable.prototype.resize_ = function(element, size, coord, position) {
   coord.x = coord.x - marginbox.left;
   coord.y = coord.y - marginbox.top;
 
-  goog.style.setPosition(element,coord);
-
+  if (this.getComputedPosition_(element) ==='absolute'){
+    goog.style.setPosition(element,coord);
+  }
 };
 
 

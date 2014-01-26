@@ -209,6 +209,12 @@ pear.ui.Row.prototype.getCellWidth = function(index) {
   return child.getCellWidth();
 };
 
+pear.ui.Row.prototype.getCellRenderedWidth = function(index) {
+  var child = this.getChildAt(index);
+  return child.getCellRenderedWidth();
+};
+
+
 /**
   @public
 

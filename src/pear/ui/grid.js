@@ -57,7 +57,7 @@ goog.require('pear.plugin.FooterStatus');
 goog.require('pear.plugin.Pager');
 goog.require('pear.plugin.HeaderMenu');
 goog.require('pear.plugin.FilterMenu');
-
+goog.require('pear.plugin.ColumnPicker');
 /**
  * Grid.
  *
@@ -929,6 +929,7 @@ pear.ui.Grid.prototype.refresh = function (){
 };
 
 pear.ui.Grid.prototype.setColumnResize = function (index,width){
+  console.log(width);
   var cell = this.headerRow_.getChildAt(index);
   var coldata = grid.getColumns();
   var diff = width - coldata[index]["width"] ;
@@ -940,7 +941,6 @@ pear.ui.Grid.prototype.setColumnResize = function (index,width){
       c.draw();
     }
   },this);
-
   this.syncWidth_();
 };
 
