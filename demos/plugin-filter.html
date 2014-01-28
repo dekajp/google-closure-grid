@@ -277,13 +277,14 @@
   goog.array.forEach(columns,function(column){
     if (column.filter && column.filter.length > 0){
       var str;
+      var filter = String(column.filter);
       if (column.formatter){
         str = String(column.formatter(row[column.id]));
       }else{
         str = String(row[column.id]);
       }
         
-      if (str.toLowerCase().indexOf(column.filter) >=0) {
+      if (str.toLowerCase().indexOf(filter.toLowerCase()) >=0) {
         match = match && true;
       }else{
         match = match && false;
