@@ -187,7 +187,7 @@
     grid.setColumns(columns);
     grid.setDataRows(data);
 
-    goog.events.listen(grid, pear.ui.Grid.EventType.HEADERCELL_RENDERED, createSortIndicators);
+    goog.events.listen(grid, pear.ui.Grid.EventType.AFTER_HEADERCELL_RENDER, createSortIndicators);
 
     goog.events.listen(grid, EVENTS2, logEvent);
 

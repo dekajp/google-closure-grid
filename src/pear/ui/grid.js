@@ -135,7 +135,8 @@ pear.ui.Grid.EventType = {
   PAGE_SIZE_CHANGED: 'on-page-size-change',
   DATACELL_BEFORE_CLICK: 'datacell-before-click',
   DATACELL_AFTER_CLICK: 'datacell-after-click',
-  HEADERCELL_RENDERED: 'on-headercell-rendered',
+  HEADERCELLS_RENDERED: 'headercells-rendered',
+  AFTER_HEADERCELL_RENDER:'after-headercell-render',
   DATAROWS_CHANGED:'on-datarows-changed',
   COLUMNS_CHANGED:'on-columns-changed'
 };
@@ -434,7 +435,7 @@ pear.ui.Grid.prototype.setColumns = function(datacolumns) {
  */
 pear.ui.Grid.prototype.setDataRows = function(data) {
   this.dataTable_.setDataRows(goog.array.clone(data));
-  
+
   var evt = new goog.events.Event(pear.ui.Grid.EventType.DATAROWS_CHANGED,
       this);
   this.dispatchEvent(evt);
@@ -791,12 +792,13 @@ pear.ui.Grid.prototype.createHeaderCells_ = function() {
     headerCell.setModel(column);
     headerCell.setCellIndex(index);
     this.headerRow_.addCell(headerCell, true);
-
-    var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.HEADERCELL_RENDERED,
+    var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.AFTER_HEADERCELL_RENDER,
       this,headerCell);
     this.dispatchEvent(evt);
-    
   }, this);
+
+  var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.HEADERCELLS_RENDERED,this);
+  this.dispatchEvent(evt);
 };
 
 /**
@@ -978,6 +980,13 @@ pear.ui.Grid.prototype.bodyCanvasRender_ = function(opt_redraw) {
 pear.ui.Grid.prototype.draw_ = function (){
   this.refreshRenderRows_();
   this.bodyCanvasRender_();
+};
+
+
+
+pear.ui.Grid.prototype.refreshHeader = function (){
+  this.headerRow_.removeChildren(true);
+  this.createHeaderCells_();
 };
 
 pear.ui.Grid.prototype.refresh = function (){

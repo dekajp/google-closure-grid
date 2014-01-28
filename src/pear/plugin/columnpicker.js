@@ -1,7 +1,10 @@
 goog.provide('pear.plugin.ColumnPicker');
 
 goog.require('pear.ui.Plugin');
+goog.require('goog.fx.DragDropGroup');
+goog.require('goog.fx.DragDrop');
 goog.require('goog.fx.DragListGroup');
+
 
 
 
@@ -19,6 +22,8 @@ pear.plugin.ColumnPicker.prototype.getClassId = function() {
 pear.plugin.ColumnPicker.prototype.init = function(){
   var grid = this.getGrid();
   this.makeColumnsDraggable();
+
+  goog.events.listen(grid,pear.ui.Grid.EventType.HEADERCELLS_RENDERED,this.makeColumnsDraggable,false,this);
 }
 
 pear.plugin.ColumnPicker.prototype.disposeInternal = function() {
@@ -33,25 +38,37 @@ pear.plugin.ColumnPicker.prototype.makeColumnsDraggable = function() {
 
   var grid = this.getGrid();
   var headerRow = grid.getHeaderRow();
+  
+  /*var dlg = new goog.fx.DragDropGroup();
   headerRow.forEachChild (function (headercell){
+    dlg.addItem(headercell.getElement(), headercell.getElement().firstChild.nodeValue);
   });
-
- 
-  var dlg = new goog.fx.DragListGroup();
-  dlg.setDragItemHoverClass('cursor_move');
-  dlg.setDraggerElClass('cursor_move opacity_40');
-
-  dlg.addDragList(headerRow.getElement(),goog.fx.DragListDirection.RIGHT);
-  dlg.setNoUpdateWhileDragging(true);
-  dlg.setIsCurrDragItemAlwaysDisplayed();
+  
+  headerRow.forEachChild (function (headercell){
+    dlg.addTarget(new goog.fx.DragDrop (headercell.getElement()));
+  });
+  dlg.setDragClass('drag-class');
+  //dlg.setSourceClass('source-class');
+  dlg.setTargetClass('target-class');
   dlg.init();
 
-  goog.events.listen(dlg,goog.fx.DragListGroup.EventType.DRAGEND ,this.handleDragEvent_,false,this);
-  goog.events.listen(dlg,goog.fx.DragListGroup.EventType.DRAGMOVE ,this.handleDragMove_,false,this);
+  goog.events.listen(dlg,goog.fx.AbstractDragDrop.EventType.DRAGEND ,this.handleDragEvent_,false,this);
+  goog.events.listen(dlg,goog.fx.AbstractDragDrop.EventType.DRAG ,this.handleDragMove_,false,this);
+  */
+
+   var dlg = new goog.fx.DragListGroup();
+   dlg.setDragItemHoverClass('cursor_move');
+   dlg.setDraggerElClass('cursor_move opacity_40');
+
+   dlg.addDragList(headerRow.getElement(),goog.fx.DragListDirection.RIGHT);
+   dlg.init();
+
+   goog.events.listen(dlg,goog.fx.DragListGroup.EventType.DRAGEND ,this.handleDragEvent_,false,this);
+   goog.events.listen(dlg,goog.fx.DragListGroup.EventType.DRAGMOVE ,this.handleDragMove_,false,this);
 };
 
 pear.plugin.ColumnPicker.prototype.handleDragMove_ = function(ge) {
-  console.dir(ge);
+  
 };
 
 pear.plugin.ColumnPicker.prototype.handleDragEvent_ = function(ge) {
@@ -66,7 +83,9 @@ pear.plugin.ColumnPicker.prototype.handleDragEvent_ = function(ge) {
   },this);
 
   grid.setColumns(newColumns);
-  grid.refresh()
+  grid.refreshHeader();
+  grid.refresh();
+
 };
 
 

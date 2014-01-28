@@ -114,12 +114,10 @@ pear.ui.Resizable.prototype.addResizableHandler_ = function(position, classNames
   this.handleDraggers_[position] = dragger;
   this.handlers_[position] = handle;
 
-  // Supress MouseMove,MouseOver Events on these Handles
+  // Supress MouseMove,MouseOver  Events on these Handles
   
   this.getHandler().
-      listen(handle, goog.events.EventType.MOUSEMOVE,
-          this.handleEvents_).
-      listen(handle, goog.events.EventType.MOUSEOVER,
+      listen(handle, goog.events.EventType.MOUSEDOWN,
           this.handleEvents_);
 };
 

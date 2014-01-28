@@ -4,7 +4,7 @@ goog.addDependency('../../../../src/pear/data/datatable.js', ['pear.data.DataTab
 goog.addDependency('../../../../src/pear/data/dataview.js', ['pear.data.DataView'], ['goog.events.EventTarget', 'pear.data.DataTable', 'pear.data.RowView']);
 goog.addDependency('../../../../src/pear/data/rowview.js', ['pear.data.RowView'], ['goog.Disposable', 'goog.ui.IdGenerator']);
 goog.addDependency('../../../../src/pear/fx/dom/headermenuslide.js', ['pear.fx.dom.HeaderMenuSlide'], ['goog.fx.dom.PredefinedEffect']);
-goog.addDependency('../../../../src/pear/plugin/columnpicker.js', ['pear.plugin.ColumnPicker', 'pear.plugin.ColumnPickerRenderer'], ['goog.fx.DragListGroup', 'goog.ui.Component', 'goog.ui.ControlRenderer', 'pear.ui.Plugin']);
+goog.addDependency('../../../../src/pear/plugin/columnpicker.js', ['pear.plugin.ColumnPicker', 'pear.plugin.ColumnPickerRenderer'], ['goog.fx.DragDrop', 'goog.fx.DragDropGroup', 'goog.fx.DragListGroup', 'goog.ui.Component', 'goog.ui.ControlRenderer', 'pear.ui.Plugin']);
 goog.addDependency('../../../../src/pear/plugin/filtermenu.js', ['pear.plugin.FilterMenu', 'pear.plugin.FilterMenuButton', 'pear.plugin.FilterMenuEvent'], ['goog.events.Event', 'goog.positioning.AbsolutePosition', 'goog.ui.Control', 'goog.ui.FlatButtonRenderer', 'pear.ui.Plugin']);
 goog.addDependency('../../../../src/pear/plugin/footerstatusplugin.js', ['pear.plugin.FooterStatus', 'pear.plugin.FooterStatusRenderer'], ['goog.ui.Component', 'goog.ui.ControlRenderer', 'pear.ui.Plugin']);
 goog.addDependency('../../../../src/pear/plugin/headermenu.js', ['pear.plugin.HeaderMenu', 'pear.plugin.HeaderMenuButton'], ['goog.events.Event', 'goog.positioning.MenuAnchoredPosition', 'goog.ui.Menu', 'goog.ui.MenuButton', 'goog.ui.ToolbarMenuButton', 'pear.ui.Plugin']);

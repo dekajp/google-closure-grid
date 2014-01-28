@@ -51,10 +51,13 @@
       -moz-user-select: none;
     }
 
-    .opacity_40 {
+    .drag-class {
       opacity: 0.4;
       -moz-opacity: 0.4;
       filter: alpha(opacity=40);
+      z-index: 5000;
+      padding:3px;
+      border: gray 1px solid;
     }
 
     .drag_hover_class {
@@ -65,9 +68,9 @@
 </head>
 <body>
    <fieldset class="goog-debug-panel">
-    <legend>Footer Plugin</legend>
+    <legend>Column Move/Resize Plugin</legend>
     <div id="">
-      <li> Just a Footer message of Total Rows , On change of datasource the plugin updates row count </li>
+      <li> Move Column and Resize Column  </li>
     </div>
   </fieldset>
   <fieldset class="goog-debug-panel">
@@ -80,7 +83,6 @@
     <legend>Action</legend>
     <div id="">
     <input class="config-item" type="button" id="id_reload" value="load"  />
-    <input class="config-item" type="button" id="id_changeds" value="change datasource"  />
   </fieldset>
   <br>
   <!-- This div will have a Sample Component added to its contents. -->
@@ -213,33 +215,7 @@
 
   };
 
-  var changeDataSource = function(){
-    var data = [];
-    var temp;
-    var start = new Date(2013,12,31);
-    for (var i = 0; i < 50; i++) {
-      data[i] = {
-        orderno:  i +1
-      };
-      temp = Math.round(Math.random() * 9);
-     
-      data[i].item = item2[temp];
-      data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 10000);
-      data[i].total = data[i].unitprice * data[i].quantity;
-      data[i].processed= (i % 5 === 0);
-      data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
-    }
-
-    grid.setDataRows(data);
-    grid.refresh();
-  };
-
-
-
-
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
-  goog.events.listen(goog.dom.getElement('id_changeds'), goog.events.EventType.CLICK, changeDataSource);
   
  </script>
 
