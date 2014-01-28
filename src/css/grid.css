@@ -99,7 +99,6 @@
   float:left;
 }
 .pear-grid-cell-header-indicators{
-  position: absolute;
   display: -moz-inline-box;
   display: inline-block;
   float: left;

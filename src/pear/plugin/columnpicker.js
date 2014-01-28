@@ -43,13 +43,30 @@ pear.plugin.ColumnPicker.prototype.makeColumnsDraggable = function() {
 
   dlg.addDragList(headerRow.getElement(),goog.fx.DragListDirection.RIGHT);
   dlg.setNoUpdateWhileDragging(true);
+  dlg.setIsCurrDragItemAlwaysDisplayed();
   dlg.init();
 
-  goog.events.listen(dlg, goog.object.getValues(goog.fx.DragListGroup.EventType) ,this.handleDragEvent_,false,this);
+  goog.events.listen(dlg,goog.fx.DragListGroup.EventType.DRAGEND ,this.handleDragEvent_,false,this);
+  goog.events.listen(dlg,goog.fx.DragListGroup.EventType.DRAGMOVE ,this.handleDragMove_,false,this);
+};
+
+pear.plugin.ColumnPicker.prototype.handleDragMove_ = function(ge) {
+  console.dir(ge);
 };
 
 pear.plugin.ColumnPicker.prototype.handleDragEvent_ = function(ge) {
-  
+  var grid = this.getGrid();
+  var headerRow = grid.getHeaderRow();
+  var columns = grid.getColumns_();
+  var newColumns = [];
+  var columnsNodes = goog.dom.getChildren(headerRow.getElement());
+  goog.array.forEach(columnsNodes,function(node,index){
+    var id = node.getAttribute('id');
+    newColumns[index] = headerRow.getChild(id).getCellData();
+  },this);
+
+  grid.setColumns(newColumns);
+  grid.refresh()
 };
 
 

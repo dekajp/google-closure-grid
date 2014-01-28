@@ -136,7 +136,8 @@ pear.ui.Grid.EventType = {
   DATACELL_BEFORE_CLICK: 'datacell-before-click',
   DATACELL_AFTER_CLICK: 'datacell-after-click',
   HEADERCELL_RENDERED: 'on-headercell-rendered',
-  DATAROWS_CHANGED:'on-datarows-changed'
+  DATAROWS_CHANGED:'on-datarows-changed',
+  COLUMNS_CHANGED:'on-columns-changed'
 };
 
 /**
@@ -200,13 +201,7 @@ pear.ui.Grid.prototype.getConfiguration = function() {
   return this.Configuration_;
 };
 
-/**
- * @return {*}
- */
-pear.ui.Grid.prototype.getColumns = function() {
-  var cols = this.getDataSourceTable_().getDataColumns();
-  return cols;
-};
+
 
 
 /**
@@ -325,7 +320,7 @@ pear.ui.Grid.prototype.setHeight = function(height) {
  * @return {number}
  */
 pear.ui.Grid.prototype.getColumnWidth = function(index) {
-  var coldata = this.getColumns();
+  var coldata = this.getColumns_();
   coldata[index]["width"] = coldata[index]["width"] || 
                             this.Configuration_.ColumnWidth;
   return coldata[index]["width"];
@@ -334,8 +329,8 @@ pear.ui.Grid.prototype.getColumnWidth = function(index) {
 /**
  * @return {number}
  */
-pear.ui.Grid.prototype.setColumnWidth = function(index,width,opt_render) {
-  var coldata = this.getColumns();
+pear.ui.Grid.prototype.applyColumnWidth_ = function(index,width,opt_render) {
+  var coldata = this.getColumns_();
   coldata[index]["width"] = width || this.Configuration_.ColumnWidth;
   var headerCell = this.headerRow_.getChildAt(index);
   if (opt_render && headerCell){
@@ -343,6 +338,26 @@ pear.ui.Grid.prototype.setColumnWidth = function(index,width,opt_render) {
     headerCell.draw();
   }
 };
+
+pear.ui.Grid.prototype.setColumnWidth = function (index,width){
+  var coldata = this.getColumns_();
+  var diff = width - coldata[index]["width"] ;
+  this.applyColumnWidth_(index,coldata[index]["width"] + diff,true);
+ 
+ /*
+  goog.array.forEach(coldata,function(data,pos){
+    if (pos>index){
+      var c = this.headerRow_.getChildAt(pos);
+      c.draw();
+    }
+  },this);
+*/
+
+  this.updateWidthOfHeaderRow_();
+  this.syncWidth_();
+};
+
+
 
 /**
  *
@@ -374,19 +389,43 @@ pear.ui.Grid.prototype.setDataView = function(dv) {
   this.setDataRows(dv.getDataRowViews());
 };
 
-pear.ui.Grid.prototype.getDataSourceTable_ = function() {
-  return  this.dataTable_;
+//pear.ui.Grid.prototype.getDataSourceTable_ = function() {
+//  return  this.dataTable_;
+//};
+
+//pear.ui.Grid.prototype.setDataSourceTable_ = function(datatable) {
+//  this.dataTable_ = datatable;
+//};
+
+/**
+ * @return {*}
+ */
+pear.ui.Grid.prototype.getColumns = function() {
+  var datacolumns = this.dataTable_.getDataColumns();
+  var columns = [];
+  goog.array.forEach(datacolumns,function (c){
+    clone = goog.object.clone(c);
+    columns.push(clone);
+  });
+  return columns;
 };
 
-pear.ui.Grid.prototype.setDataSourceTable_ = function(datatable) {
-  this.dataTable_ = datatable;
+pear.ui.Grid.prototype.getColumns_ = function() {
+  var cols = this.dataTable_.getDataColumns();
+  return cols;
 };
+
 
 pear.ui.Grid.prototype.setColumns = function(datacolumns) {
-  //var dv = this.getDataView();
-  //dv.setDataColumns(datacolumns);
-  //dv.setGrid(this);
-  this.dataTable_.setDataColumns(datacolumns.slice(0));
+  var columns = [];
+  goog.array.forEach(datacolumns,function (c){
+    clone = goog.object.clone(c);
+    columns.push(clone);
+  });
+  this.dataTable_.setDataColumns(columns);
+  var evt = new goog.events.Event(pear.ui.Grid.EventType.COLUMNS_CHANGED,
+      this);
+  this.dispatchEvent(evt);
 };
 
 /**
@@ -394,25 +433,30 @@ pear.ui.Grid.prototype.setColumns = function(datacolumns) {
  * @param {pear.data.DataView} dv DataView.
  */
 pear.ui.Grid.prototype.setDataRows = function(data) {
-  this.dataTable_.setDataRows(data.slice(0));
+  this.dataTable_.setDataRows(goog.array.clone(data));
+  
   var evt = new goog.events.Event(pear.ui.Grid.EventType.DATAROWS_CHANGED,
       this);
   this.dispatchEvent(evt);
 };
 
 pear.ui.Grid.prototype.getDataRows = function(data) {
+  return goog.array.clone(this.dataTable_.getDataRows());
+};
+
+pear.ui.Grid.prototype.getDataRows_ = function(data) {
   return this.dataTable_.getDataRows();
 };
 
-pear.ui.Grid.prototype.getDataRows_ = function() {
-  var rows =  (this.getConfiguration().AllowPaging) ? this.getPagedDataRows_() : this.getDataRows();
+pear.ui.Grid.prototype.getDataRowsGrid_ = function() {
+  var rows =  (this.getConfiguration().AllowPaging) ? this.getPagedDataRows_() : this.getDataRows_();
   return rows;
 };
 
 pear.ui.Grid.prototype.getPagedDataRows_ = function() {
   var pgIdx = this.getPageIndex();
   var pgSize = this.getPageSize();
-  var dataRows = this.getDataRows();
+  var dataRows = this.getDataRows_();
   var start = (pgIdx * pgSize) > dataRows.length ? dataRows.length : (pgIdx * pgSize);
   var end  = (start + pgSize) > dataRows.length ? dataRows.length : (start + pgSize);
   var rows = dataRows.slice( start,end );
@@ -426,7 +470,7 @@ pear.ui.Grid.prototype.getPagedDataRows_ = function() {
  * @return {number} 
  */
 pear.ui.Grid.prototype.getRowCount = function() {
-  return this.getDataSourceTable_().getDataRows().length;
+  return this.dataTable_.getDataRows().length;
 };
 
 /**
@@ -657,6 +701,13 @@ pear.ui.Grid.prototype.disposeInternal = function() {
 
   this.dataTable_.dispose();
   this.dataTable_=null;
+  delete(this.dataTable_ );
+  /**
+   * Map of class id to registered plugin.
+   * @type {Object}
+   * @private
+   */
+  this.plugins_ = {};
 
   this.width_ = null;
   this.height_ = null;
@@ -665,6 +716,11 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   this.previousScrollTop_ = null;
   this.bodyScrollTriggerDirection_ = null;
   this.previousScrollLeft_ = null;
+
+  delete(this.previousScrollTop_);
+  delete(this.renderedGridRows_);
+  delete(this.renderedGridRowsCache_);
+  delete(this.scrollbarWidth_);
 
   pear.ui.Grid.superClass_.disposeInternal.call(this);
 };
@@ -686,6 +742,7 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
   this.prepareGridRows_();
   this.setCanvasHeight_();
   //this.renderfooterRow_();
+  this.updateWidthOfHeaderRow_();
   this.syncWidth_();
   this.draw_();
 };
@@ -727,7 +784,7 @@ pear.ui.Grid.prototype.createHeader_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.createHeaderCells_ = function() {
-  var columns = this.getColumns();
+  var columns = this.getColumns_();
   goog.array.forEach(columns, function(column,index) {
     // create header cells here
     var headerCell = new pear.ui.GridHeaderCell();
@@ -782,29 +839,33 @@ pear.ui.Grid.prototype.setCanvasHeight_ = function(){
   goog.style.setHeight(this.bodyCanvas_.getElement(),height);
 }
 
+pear.ui.Grid.prototype.updateWidthOfHeaderRow_ = function(){
+  var rowWidth = 0;
+  this.headerRow_.forEachChild(function (headerCell){
+    rowWidth = rowWidth + goog.style.getSize(headerCell.getElement()).width;
+  });
+  goog.style.setWidth(this.headerRow_.getElement(),rowWidth);
+};
 
 pear.ui.Grid.prototype.syncWidth_ = function(){
-  var headerWidth = this.headerRow_.getWidth();
-  //width = width + 10;
-  var bounds = goog.style.getBounds(this.getElement());
-  width = ( headerWidth > bounds.width )? headerWidth :bounds.width;
+  var headerWidth = goog.style.getSize(this.headerRow_.getElement()).width ;
+  var bounds = goog.style.getSize(this.getElement());
+  width = ( headerWidth > bounds.width )? headerWidth : bounds.width;
   // Take care of scrollbar width
   goog.style.setWidth(this.headerRow_.getElement(),width+this.getScrollbarWidth());
-  //goog.style.setWidth(this.body_.getElement(), width);
   var canvasWidth = (headerWidth < width) ? width-this.getScrollbarWidth() : width;
   goog.style.setWidth(this.bodyCanvas_.getElement(), canvasWidth);
-  //goog.style.setWidth(this.footerRow_.getElement(), width);
-}
+};
 
 
-pear.ui.Grid.prototype.syncHeaderRow_ = function(){
+pear.ui.Grid.prototype.syncScrollOnHeaderRow_ = function(){
   this.header_.getElement().scrollLeft = this.body_.getElement().scrollLeft;
-}
+};
 /**
  * @private
  */
 pear.ui.Grid.prototype.prepareGridRows_ = function() {
-  var rows = this.getDataRows_();
+  var rows = this.getDataRowsGrid_();
   var pagesize = this.getPageSize();
   
   this.setGridRows_([]);
@@ -830,7 +891,7 @@ pear.ui.Grid.prototype.prepareGridRows_ = function() {
  */
 pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
   var model = row.getRowView();
-  var columns = this.getColumns()
+  var columns = this.getColumns_()
   if (row.getChildCount() >0 ){
     row.removeChildren(true);
   }
@@ -928,21 +989,6 @@ pear.ui.Grid.prototype.refresh = function (){
   this.bodyCanvasRender_(true);
 };
 
-pear.ui.Grid.prototype.setColumnResize = function (index,width){
-  console.log(width);
-  var cell = this.headerRow_.getChildAt(index);
-  var coldata = grid.getColumns();
-  var diff = width - coldata[index]["width"] ;
-  this.setColumnWidth(index,coldata[index]["width"] + diff,true);
-
-  goog.array.forEach(coldata,function(data,pos){
-    if (pos>index){
-      var c = this.headerRow_.getChildAt(pos);
-      c.draw();
-    }
-  },this);
-  this.syncWidth_();
-};
 
 
 /**
@@ -1011,7 +1057,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll_ = function(e) {
   if ( this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.LEFT || 
       this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.RIGHT
   ){
-    this.syncHeaderRow_();
+    this.syncScrollOnHeaderRow_();
   }
 
   this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.NONE;
