@@ -1,6 +1,9 @@
 *.log
 *release*
 *.py
+peardeps.js
+
+
 
 # OS generated files #
 ######################

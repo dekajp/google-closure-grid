@@ -19,10 +19,16 @@
       ]},
       {name: 'Formatters', url: 'formatters.html'},
       {name: 'Plugins', childNodes: [
-        {name: 'Footer', url: 'plugin-footer.html'},
-        {name: 'Pager', url: 'plugin-pager.html'},
-        {name: 'Header Plugin', url: 'plugin-headermenu.html'},
-        {name: 'Column Filter Plugin', url: 'plugin-filter.html'},
+        {name: 'Paging', childNodes: [
+          {name: 'Footer', url: 'plugin-footer.html'},
+          {name: 'Pager', url: 'plugin-pager.html'},
+          ]
+        },
+        {name: 'Filter', childNodes: [
+          {name: 'Column Filter Plugin', url: 'plugin-filter.html'}
+          ]
+        },
+        {name: 'Column Menu', url: 'plugin-headermenu.html'},
         {name: 'Column Move/Resize', url: 'plugin-columndragdrop.html'}
       ]}
     ];
