@@ -1,11 +1,13 @@
 goog.provide('pear.ui.GridHeaderRow');
 
-goog.require('pear.ui.GridHeaderRowRenderer');
-goog.require('pear.ui.Row');
-goog.require('goog.ui.SplitBehavior');
+goog.require('goog.ui.Menu');
 goog.require('goog.ui.MenuButton');
 goog.require('goog.ui.MenuItem');
-goog.require('goog.ui.Menu');
+goog.require('goog.ui.SplitBehavior');
+goog.require('pear.ui.GridHeaderRowRenderer');
+goog.require('pear.ui.Row');
+
+
 
 /**
  * HeaderRow
@@ -21,13 +23,14 @@ goog.require('goog.ui.Menu');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.GridHeaderRow = function(grid,height, opt_orientation, opt_renderer, opt_domHelper) {
+pear.ui.GridHeaderRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
 
-  pear.ui.Row.call(this, grid,height, goog.ui.Container.Orientation.HORIZONTAL,
+  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL,
       pear.ui.GridHeaderRowRenderer.getInstance(),
       opt_domHelper);
 };
 goog.inherits(pear.ui.GridHeaderRow, pear.ui.Row);
+
 
 /**
   @public
@@ -39,6 +42,7 @@ pear.ui.GridHeaderRow.prototype.addCell = function(cell, opt_render) {
   pear.ui.GridHeaderRow.superClass_.addCell.call(this, cell, true);
 };
 
+
 /**
   @public
   @param {pear.ui.Cell} cell
@@ -47,11 +51,11 @@ pear.ui.GridHeaderRow.prototype.addCell = function(cell, opt_render) {
 */
 pear.ui.Row.prototype.getHeaderCellById = function(id) {
   var cell;
-  this.forEachChild(function(child){
-    if (!cell && id === child.getColumnId()){
-      cell= child;
+  this.forEachChild(function(child) {
+    if (!cell && id === child.getColumnId()) {
+      cell = child;
     }
-  })
+  });
   return cell;
 };
 

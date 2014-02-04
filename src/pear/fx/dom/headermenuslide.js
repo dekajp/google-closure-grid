@@ -3,6 +3,8 @@ goog.provide('pear.fx.dom.HeaderMenuSlide');
 
 goog.require('goog.fx.dom.PredefinedEffect');
 
+
+
 /**
  * Creates an animation object that will slide an element from A to B.  (This
  * in effect automatically sets up the onanimate event for an Animation object)
@@ -25,7 +27,7 @@ goog.inherits(pear.fx.dom.HeaderMenuSlide, goog.fx.dom.PredefinedEffect);
 
 /** @override */
 pear.fx.dom.HeaderMenuSlide.prototype.updateStyle = function() {
-  
+
   var marginX = (this.isRightPositioningForRtlEnabled() &&
       this.isRightToLeft()) ? 'marginRight' : 'marginLeft';
   var y = this.coords[0];

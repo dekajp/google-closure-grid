@@ -15,15 +15,15 @@ pear.plugin.FooterStatus.prototype.getClassId = function() {
   return 'FooterStatus';
 };
 
-pear.plugin.FooterStatus.prototype.init = function(){
+pear.plugin.FooterStatus.prototype.init = function() {
   var grid = this.getGrid();
-  this.createFooterStatus()
-}
+  this.createFooterStatus();
+};
 
 pear.plugin.FooterStatus.prototype.disposeInternal = function() {
   this.grid_ = null;
   this.footerStatus_.dispose();
-  if (this.footer_){
+  if (this.footer_) {
     this.footer_.remove();
     this.footer_ = null;
   }
@@ -40,31 +40,31 @@ pear.plugin.FooterStatus.prototype.createFooterStatus = function() {
   var grid = this.getGrid();
   var parentElem = grid.getElement();
   this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
-  if ( this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer')){
+  if (this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer')) {
 
-  }else{
+  }else {
     this.footer_ = goog.dom.createDom('div', 'pear-grid-footer');
-    goog.dom.insertSiblingAfter(this.footer_,parentElem);
+    goog.dom.insertSiblingAfter(this.footer_, parentElem);
   }
 
   this.footerStatus_ = new goog.ui.Control(
-        goog.dom.createDom('div'),
-        pear.plugin.FooterStatusRenderer.getInstance());
-  
+      goog.dom.createDom('div'),
+      pear.plugin.FooterStatusRenderer.getInstance());
+
   this.footerStatus_.render(this.footer_);
   this.updateMsg_();
-  
+
   // goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_INDEX_CHANGED,this.updateMsg_,false,this);
   // goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_SIZE_CHANGED,this.updateMsg_,false,this);
-  goog.events.listen(grid,pear.ui.Grid.EventType.DATAROWS_CHANGED,this.updateMsg_,false,this);
+  goog.events.listen(grid, pear.ui.Grid.EventType.DATAROWS_CHANGED, this.updateMsg_, false, this);
 };
 
-pear.plugin.FooterStatus.prototype.updateMsg_ = function(){
+pear.plugin.FooterStatus.prototype.updateMsg_ = function() {
   var grid = this.getGrid();
   var startIndex = 1;
   var rowCount = grid.getRowCount();
   startIndex = startIndex ? startIndex : 1;
-  this.footerStatus_.setContent("["+startIndex+" - "+rowCount+"]");
+  this.footerStatus_.setContent('['+ startIndex + ' - '+ rowCount + ']');
 };
 
 
@@ -73,6 +73,8 @@ goog.provide('pear.plugin.FooterStatusRenderer');
 
 goog.require('goog.ui.Component');
 goog.require('goog.ui.ControlRenderer');
+
+
 
 /**
   @constructor
@@ -90,8 +92,8 @@ goog.addSingletonGetter(pear.plugin.FooterStatusRenderer);
  * by this renderer.
  * @type {string}
  */
-pear.plugin.FooterStatusRenderer.CSS_CLASS = 
-                                  goog.getCssName('pear-grid-footer-status');
+pear.plugin.FooterStatusRenderer.CSS_CLASS =
+    goog.getCssName('pear-grid-footer-status');
 
 
 /**

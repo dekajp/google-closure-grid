@@ -19,11 +19,12 @@ goog.require('pear.ui.Row');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.GridRow = function(grid,height, opt_orientation, opt_renderer, opt_domHelper) {
-
-  pear.ui.Row.call(this, grid,height, goog.ui.Container.Orientation.HORIZONTAL,
+pear.ui.GridRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
+  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL,
                         pear.ui.GridRowRenderer.getInstance(),
                         opt_domHelper);
+
+  this.setFocusable(grid.getConfiguration().AllowRowSelection);
 };
 goog.inherits(pear.ui.GridRow, pear.ui.Row);
 
@@ -53,7 +54,17 @@ pear.ui.GridRow.prototype.setLocationTop = function(top) {
 
 
 pear.ui.GridRow.prototype.disposeInternal = function() {
+  this.setFocusable(false);
   pear.ui.GridRow.superClass_.disposeInternal.call(this);
+};
+
+pear.ui.GridRow.prototype.setHighlight = function(highlight) {
+  if (highlight){
+    goog.dom.classes.add(this.getElement(), 'pear-grid-row-highlight');
+  }else{
+    goog.dom.classes.remove(this.getElement(), 'pear-grid-row-highlight');
+    this.setHighlightedIndex(-1);
+  }
 };
 
 /**
@@ -68,10 +79,17 @@ pear.ui.GridRow.prototype.enterDocument = function() {
   // Handle events dispatched by child controls.
   this.getHandler().
       listen(elem, goog.events.EventType.MOUSEOVER,
-          this.handleMouseOver_,false,this).
+          this.handleMouseOver_, false, this).
       listen(elem, goog.events.EventType.MOUSEOUT,
-          this.handleMouseOut_,false,this);
+          this.handleMouseOut_, false, this);
+
+  // Unlisten Key Handling - All Key Handling will be done at Grid Level
+  var handler = this.getHandler();
+  handler.
+        unlisten(this.getKeyHandler(), goog.events.KeyHandler.EventType.KEY,
+            this.handleKeyEvent);
 };
+
 
 /**
   @private
@@ -79,11 +97,12 @@ pear.ui.GridRow.prototype.enterDocument = function() {
 */
 pear.ui.GridRow.prototype.handleMouseOver_ = function(be) {
   var elem = this.getElement();
-  goog.dom.classes.add(elem,'pear-grid-row-over');
-  if (this.getRowPosition()%2 >0){
-    goog.dom.classes.remove(elem,'pear-grid-row-data-odd');
-  }
+  goog.dom.classes.add(elem, 'pear-grid-row-over');
+  //if (this.getRowPosition() % 2 > 0) {
+  //  goog.dom.classes.remove(elem, 'pear-grid-row-data-odd');
+  //}
 };
+
 
 /**
   @private
@@ -91,10 +110,10 @@ pear.ui.GridRow.prototype.handleMouseOver_ = function(be) {
 */
 pear.ui.GridRow.prototype.handleMouseOut_ = function(be) {
   var elem = this.getElement();
-  goog.dom.classes.remove(elem,'pear-grid-row-over');
-  if (this.getRowPosition()%2 >0){
-    goog.dom.classes.add(elem,'pear-grid-row-data-odd');
-  }
+  goog.dom.classes.remove(elem, 'pear-grid-row-over');
+  //if (this.getRowPosition() % 2 > 0) {
+  //  goog.dom.classes.add(elem, 'pear-grid-row-data-odd');
+  //}
 };
 
 

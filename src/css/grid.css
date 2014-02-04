@@ -41,24 +41,27 @@
 }
 
 .pear-grid-row-data{
-  position: relative;
+  position: absolute;
   outline:none;
 }
 
-
-
 .pear-grid-row-data-horizontal{
-  position: relative;
 }
 
-.pear-grid-row-over .pear-grid-cell-data{
+.pear-grid-row-over .pear-grid-cell{
   background: rgb(230, 230, 230);
 }
-.pear-grid-row-data-odd .pear-grid-cell-data{
+.pear-grid-row-data-odd .pear-grid-cell{
   background: rgb(237, 245, 255);
 }
 
+.pear-grid-row-data-odd.pear-grid-row-over .pear-grid-cell{
+  background: rgb(230, 230, 230);
+}
 
+.pear-grid-row-highlight .pear-grid-cell{
+  background: #E0EEEE;
+}
 
 .pear-grid-cell{
   position: absolute;

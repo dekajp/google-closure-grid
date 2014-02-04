@@ -18,9 +18,11 @@ goog.require('pear.ui.GridCellRenderer');
 pear.ui.GridCell = function(opt_domHelper, opt_renderer) {
   pear.ui.Cell.call(this, pear.ui.GridCellRenderer.getInstance(),
       opt_domHelper);
+
+  this.setSupportedState(goog.ui.Component.State.HOVER,
+                                    grid.getConfiguration().AllowRowSelection);
 };
 goog.inherits(pear.ui.GridCell, pear.ui.Cell);
-
 
 
 /**
@@ -30,7 +32,7 @@ goog.inherits(pear.ui.GridCell, pear.ui.Cell);
  */
 pear.ui.GridCell.prototype.getContent = function() {
   var columnObject = this.getColumnObject();
-  if (columnObject.formatter){
+  if (columnObject.formatter) {
     return String(columnObject.formatter(this.getModel()));
   }
   return String(this.getModel());
@@ -39,4 +41,20 @@ pear.ui.GridCell.prototype.getContent = function() {
 
 pear.ui.GridCell.prototype.disposeInternal = function() {
   pear.ui.GridCell.superClass_.disposeInternal.call(this);
+};
+
+
+pear.ui.GridCell.prototype.handleMouseOver = function(e) {
+  // no-op
+  // No Cell needs to be highlighted
+};
+pear.ui.GridCell.prototype.handleMouseOut = function(e) {
+  if (!goog.ui.Control.isMouseEventWithinElement_(e, this.getElement()) && this.dispatchEvent(goog.ui.Component.EventType.LEAVE)) {
+    if (this.isAutoState(goog.ui.Component.State.ACTIVE)) {
+      this.setActive(false);
+    }
+    //if (this.isAutoState(goog.ui.Component.State.HOVER)) {
+    //  this.setHighlighted(false);
+    //}
+  }
 };

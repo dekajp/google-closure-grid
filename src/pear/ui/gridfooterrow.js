@@ -19,29 +19,30 @@ goog.require('pear.ui.Row');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.GridFooterRow = function(grid,height, opt_orientation, opt_renderer, opt_domHelper) {
+pear.ui.GridFooterRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
 
-  pear.ui.Row.call(this, grid,height, goog.ui.Container.Orientation.HORIZONTAL,
+  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL,
       pear.ui.GridFooterRowRenderer.getInstance(),
       opt_domHelper);
-   this.setFocusable(false);
+  this.setFocusable(false);
 };
 goog.inherits(pear.ui.GridFooterRow, pear.ui.Row);
 
 pear.ui.GridFooterRow.prototype.pager_ = null;
 
-pear.ui.GridFooterRow.prototype.getPager = function(){
+pear.ui.GridFooterRow.prototype.getPager = function() {
   return this.pager_;
 };
 
 
 pear.ui.GridFooterRow.prototype.disposeInternal = function() {
-  if (this.pager_){
+  if (this.pager_) {
     this.pager_.dispose();
-    this.pager_=null;
+    this.pager_ = null;
   }
   pear.ui.GridFooterRow.superClass_.disposeInternal.call(this);
 };
+
 
 /**
  * @override
@@ -55,6 +56,6 @@ pear.ui.GridFooterRow.prototype.enterDocument = function() {
   this.setPosition_();
   goog.style.setSize(elem, this.getGrid().getWidth(),
       this.getHeight());
-  
+
 };
 

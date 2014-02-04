@@ -1,9 +1,9 @@
 goog.provide('pear.plugin.ColumnPicker');
 
-goog.require('pear.ui.Plugin');
-goog.require('goog.fx.DragDropGroup');
 goog.require('goog.fx.DragDrop');
+goog.require('goog.fx.DragDropGroup');
 goog.require('goog.fx.DragListGroup');
+goog.require('pear.ui.Plugin');
 
 
 
@@ -19,16 +19,16 @@ pear.plugin.ColumnPicker.prototype.getClassId = function() {
   return 'ColumnPicker';
 };
 
-pear.plugin.ColumnPicker.prototype.init = function(){
+pear.plugin.ColumnPicker.prototype.init = function() {
   var grid = this.getGrid();
   this.makeColumnsDraggable();
 
-  goog.events.listen(grid,pear.ui.Grid.EventType.HEADERCELLS_RENDERED,this.makeColumnsDraggable,false,this);
-}
+  goog.events.listen(grid, pear.ui.Grid.EventType.HEADERCELLS_RENDERED, this.makeColumnsDraggable, false, this);
+};
 
 pear.plugin.ColumnPicker.prototype.disposeInternal = function() {
   this.grid_ = null;
-  
+
   pear.plugin.ColumnPicker.superClass_.disposeInternal.call(this);
 };
 
@@ -38,12 +38,12 @@ pear.plugin.ColumnPicker.prototype.makeColumnsDraggable = function() {
 
   var grid = this.getGrid();
   var headerRow = grid.getHeaderRow();
-  
+
   /*var dlg = new goog.fx.DragDropGroup();
   headerRow.forEachChild (function (headercell){
     dlg.addItem(headercell.getElement(), headercell.getElement().firstChild.nodeValue);
   });
-  
+
   headerRow.forEachChild (function (headercell){
     dlg.addTarget(new goog.fx.DragDrop (headercell.getElement()));
   });
@@ -56,19 +56,19 @@ pear.plugin.ColumnPicker.prototype.makeColumnsDraggable = function() {
   goog.events.listen(dlg,goog.fx.AbstractDragDrop.EventType.DRAG ,this.handleDragMove_,false,this);
   */
 
-   var dlg = new goog.fx.DragListGroup();
-   dlg.setDragItemHoverClass('cursor_move');
-   dlg.setDraggerElClass('cursor_move opacity_40');
+  var dlg = new goog.fx.DragListGroup();
+  dlg.setDragItemHoverClass('cursor_move');
+  dlg.setDraggerElClass('cursor_move opacity_40');
 
-   dlg.addDragList(headerRow.getElement(),goog.fx.DragListDirection.RIGHT);
-   dlg.init();
+  dlg.addDragList(headerRow.getElement(), goog.fx.DragListDirection.RIGHT);
+  dlg.init();
 
-   goog.events.listen(dlg,goog.fx.DragListGroup.EventType.DRAGEND ,this.handleDragEvent_,false,this);
-   goog.events.listen(dlg,goog.fx.DragListGroup.EventType.DRAGMOVE ,this.handleDragMove_,false,this);
+  goog.events.listen(dlg, goog.fx.DragListGroup.EventType.DRAGEND, this.handleDragEvent_, false, this);
+  goog.events.listen(dlg, goog.fx.DragListGroup.EventType.DRAGMOVE, this.handleDragMove_, false, this);
 };
 
 pear.plugin.ColumnPicker.prototype.handleDragMove_ = function(ge) {
-  
+
 };
 
 pear.plugin.ColumnPicker.prototype.handleDragEvent_ = function(ge) {
@@ -77,7 +77,7 @@ pear.plugin.ColumnPicker.prototype.handleDragEvent_ = function(ge) {
   var columns = grid.getColumns_();
   var newColumns = [];
   var columnsNodes = goog.dom.getChildren(headerRow.getElement());
-  goog.array.forEach(columnsNodes,function(node,index){
+  goog.array.forEach(columnsNodes, function(node, index) {
     var id = node.getAttribute('id');
     newColumns[index] = headerRow.getChild(id).getCellData();
   },this);
@@ -96,6 +96,8 @@ goog.provide('pear.plugin.ColumnPickerRenderer');
 goog.require('goog.ui.Component');
 goog.require('goog.ui.ControlRenderer');
 
+
+
 /**
   @constructor
   @extends {goog.ui.ControlRenderer}
@@ -112,8 +114,8 @@ goog.addSingletonGetter(pear.plugin.ColumnPickerRenderer);
  * by this renderer.
  * @type {string}
  */
-pear.plugin.ColumnPickerRenderer.CSS_CLASS = 
-                                  goog.getCssName('pear-grid-footer-status');
+pear.plugin.ColumnPickerRenderer.CSS_CLASS =
+    goog.getCssName('pear-grid-footer-status');
 
 
 /**

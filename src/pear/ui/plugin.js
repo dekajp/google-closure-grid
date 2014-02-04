@@ -3,7 +3,6 @@ goog.provide('pear.ui.Plugin');
 
 
 
-
 /**
  * Abstract API for grid plugins.
  * @constructor

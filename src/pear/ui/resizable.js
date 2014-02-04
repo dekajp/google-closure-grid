@@ -3,12 +3,12 @@ goog.provide('pear.ui.Resizable.EventType');
 
 goog.require('goog.fx.Dragger');
 goog.require('goog.fx.Dragger.EventType');
+goog.require('goog.math.Coordinate');
 goog.require('goog.math.Size');
+goog.require('goog.string');
 goog.require('goog.style');
 goog.require('goog.ui.Component');
-goog.require('goog.ui.Component.EventType');   
-goog.require('goog.math.Coordinate');
-goog.require('goog.string');
+goog.require('goog.ui.Component.EventType');
 
 //Code adapted Bottom and Right resizing from - https://groups.google.com/forum/#!topic/closure-library-discuss/p5Xq8_CLxIs
 pear.ui.Resizable = function(element, opt_data, opt_domHelper) {
@@ -22,7 +22,7 @@ pear.ui.Resizable = function(element, opt_data, opt_domHelper) {
   this.maxWidth_ = goog.isNumber(opt_data.maxWidth) ? opt_data.maxWidth : 0;
   this.minHeight_ = goog.isNumber(opt_data.minHeight) ? opt_data.minHeight : 0;
   this.maxHeight_ = goog.isNumber(opt_data.maxHeight) ? opt_data.maxHeight : 0;
- 
+
   this.handles_ = opt_data.handles || pear.ui.Resizable.Position.ALL;
 
   this.handleDraggers_ = {};
@@ -45,7 +45,7 @@ pear.ui.Resizable.Position = {
   RIGHT: 2, //E
   BOTTOM: 4, //S
   LEFT: 8, //W
-  TOP:16,  //N
+  TOP: 16,  //N
   TOP_LEFT: 32, //NW
   TOP_RIGHT: 64, //NE
   BOTTOM_RIGHT: 128, //SE
@@ -53,51 +53,51 @@ pear.ui.Resizable.Position = {
   ALL: 511
 };
 
-pear.ui.Resizable.prototype.getResizehandle = function (position){
-  return this.handlers_[position] ;
+pear.ui.Resizable.prototype.getResizehandle = function(position) {
+  return this.handlers_[position];
 };
 
-pear.ui.Resizable.prototype.setupResizableHandler_ = function (){
+pear.ui.Resizable.prototype.setupResizableHandler_ = function() {
   if (this.handles_ & pear.ui.Resizable.Position.RIGHT) {
     this.addResizableHandler_(pear.ui.Resizable.Position.RIGHT,
-        ['e','handle']);
+        ['e', 'handle']);
   }
   if (this.handles_ & pear.ui.Resizable.Position.BOTTOM) {
     this.addResizableHandler_(pear.ui.Resizable.Position.BOTTOM,
-        ['s','handle']);
+        ['s', 'handle']);
   }
   if (this.handles_ & pear.ui.Resizable.Position.LEFT) {
     this.addResizableHandler_(pear.ui.Resizable.Position.LEFT,
-        ['w','handle']);
+        ['w', 'handle']);
   }
   if (this.handles_ & pear.ui.Resizable.Position.TOP) {
     this.addResizableHandler_(pear.ui.Resizable.Position.TOP,
-        ['n','handle']);
+        ['n', 'handle']);
   }
   if (this.handles_ & pear.ui.Resizable.Position.TOP_LEFT) {
     this.addResizableHandler_(pear.ui.Resizable.Position.TOP_LEFT,
-        ['nw','corner','handle']);
+        ['nw', 'corner', 'handle']);
   }
   if (this.handles_ & pear.ui.Resizable.Position.TOP_RIGHT) {
     this.addResizableHandler_(pear.ui.Resizable.Position.TOP_RIGHT,
-        ['ne','corner','handle']);
+        ['ne', 'corner', 'handle']);
   }
   if (this.handles_ & pear.ui.Resizable.Position.BOTTOM_RIGHT) {
     this.addResizableHandler_(pear.ui.Resizable.Position.BOTTOM_RIGHT,
-        ['se','corner','handle']);
+        ['se', 'corner', 'handle']);
   }
   if (this.handles_ & pear.ui.Resizable.Position.BOTTOM_LEFT) {
     this.addResizableHandler_(pear.ui.Resizable.Position.BOTTOM_LEFT,
-        ['sw','corner','handle']);
+        ['sw', 'corner', 'handle']);
   }
 };
 
 pear.ui.Resizable.prototype.addResizableHandler_ = function(position, classNames) {
   var dom = this.getDomHelper();
   var handle = dom.createDom('div');
-  goog.array.forEach(classNames,function(value){
-    goog.dom.classes.add(handle, this.getCSSClassName()+'-'+value); 
-  },this) ;   
+  goog.array.forEach(classNames, function(value) {
+    goog.dom.classes.add(handle, this.getCSSClassName() + '-' + value);
+  },this);
   this.element_.appendChild(handle);
 
   var dragger = new goog.fx.Dragger(handle);
@@ -115,84 +115,84 @@ pear.ui.Resizable.prototype.addResizableHandler_ = function(position, classNames
   this.handlers_[position] = handle;
 
   // Supress MouseMove,MouseOver  Events on these Handles
-  
+
   this.getHandler().
       listen(handle, goog.events.EventType.MOUSEDOWN,
           this.handleEvents_);
 };
 
-pear.ui.Resizable.prototype.setupMinAndMaxCoord_ = function ( coord, size, position ){  
-  
+pear.ui.Resizable.prototype.setupMinAndMaxCoord_ = function(coord, size, position ) {
+
   this.leftX_ = 0;
   this.rightX_ = 0;
   this.topY_ = 0;
   this.bottomY_ = 0;
 
-  if (position & 64){
-    this.leftX_ =   coord.x;
-    this.rightX_ =  coord.x;
-  }else{
-    this.leftX_ =   coord.x - ( this.maxWidth_ - size.width );
-    this.rightX_ =  coord.x + ( size.width - this.minWidth_ ) ;
+  if (position & 64) {
+    this.leftX_ = coord.x;
+    this.rightX_ = coord.x;
+  }else {
+    this.leftX_ = coord.x - (this.maxWidth_ - size.width);
+    this.rightX_ = coord.x + (size.width - this.minWidth_);
   }
 
-  if ( position & 256 ){
-    this.topY_ = coord.y ;
+  if (position & 256) {
+    this.topY_ = coord.y;
     this.bottomY_ = coord.y;
-  }else{
-    this.topY_ = coord.y - (  this.maxHeight_ - size.height );
-    this.bottomY_ = coord.y + ( size.height - this.minHeight_ ) ;  
+  }else {
+    this.topY_ = coord.y - (this.maxHeight_ - size.height);
+    this.bottomY_ = coord.y + (size.height - this.minHeight_);
   }
-  
+
 };
 
-pear.ui.Resizable.prototype.getCSSClassName = function (){
+pear.ui.Resizable.prototype.getCSSClassName = function() {
   return 'pear-ui-resizable';
 };
 
-pear.ui.Resizable.prototype.getComputedPosition_ = function( el ) {
+pear.ui.Resizable.prototype.getComputedPosition_ = function(el ) {
   var positionStyle = goog.style.getComputedPosition(el);
   return positionStyle;
-}
+};
 
-pear.ui.Resizable.prototype.getPosition_ = function( el ) {
-  var coord ;
+pear.ui.Resizable.prototype.getPosition_ = function(el ) {
+  var coord;
   var positionStyle = this.getComputedPosition_(el);
   //if (positionStyle === 'absolute'){
-    coord = goog.style.getPosition(this.element_);
- // }else if (positionStyle === 'relative'){
+  coord = goog.style.getPosition(this.element_);
+  // }else if (positionStyle === 'relative'){
   //  coord = goog.style.getRelativePosition(this.element_);
   //}
   return coord;
 };
-pear.ui.Resizable.prototype.getSize_ = function( el ) {
-  //var size = goog.style.getSize(el);  
-  // Expensive - clousre getSize returns the border box size and setHeight actually set the 
+pear.ui.Resizable.prototype.getSize_ = function(el ) {
+  //var size = goog.style.getSize(el);
+  // Expensive - clousre getSize returns the border box size and setHeight actually set the
   // style attribute height
   var size = goog.style.getContentBoxSize(el);
   return size;
 };
 
-pear.ui.Resizable.prototype.handleEvents_ = function(e){
+pear.ui.Resizable.prototype.handleEvents_ = function(e) {
   e.stopPropagation();
   e.preventDefault();
 };
 pear.ui.Resizable.prototype.handleDragStart_ = function(e) {
-  
+
   var dragger = e.currentTarget;
   var position = this.getDraggerPosition_(dragger);
   var targetPos = goog.style.getPosition(dragger.target);
-  
+
   var size = this.getSize_(this.element_);
   var coord = this.getPosition_(this.element_);
   var coordBorder = goog.style.getBorderBox(this.element_);
 
-  this.setupMinAndMaxCoord_( coord, size, position );
+  this.setupMinAndMaxCoord_(coord, size, position);
 
-  this.handlerOffsetCoord_ = new goog.math.Coordinate( targetPos.x, targetPos.y );
-  this.elementCoord_ = coord;  
-  this.elementSize_ = new goog.math.Size(size.width , size.height);  
-  
+  this.handlerOffsetCoord_ = new goog.math.Coordinate(targetPos.x, targetPos.y);
+  this.elementCoord_ = coord;
+  this.elementSize_ = new goog.math.Size(size.width, size.height);
+
   e.stopPropagation();
 
   this.dispatchEvent({
@@ -207,32 +207,32 @@ pear.ui.Resizable.prototype.handleDrag_ = function(e) {
   var dragger = e.currentTarget;
   var position = this.getDraggerPosition_(dragger);
 
-  var el = this.element_  ;
+  var el = this.element_;
   var size = this.getSize_(this.element_);
   var coord = this.getPosition_(this.element_);
-  
 
- // this.debug('DRAG', dragger);
 
-  if (position & 194){ /* RIGHT, TOP_RIGHT, BOTTOM_RIGHT */
-    size.width = this.elementSize_.width + dragger.deltaX - this.handlerOffsetCoord_.x;  
+  // this.debug('DRAG', dragger);
+
+  if (position & 194) { /* RIGHT, TOP_RIGHT, BOTTOM_RIGHT */
+    size.width = this.elementSize_.width + dragger.deltaX - this.handlerOffsetCoord_.x;
   }
 
- // if (position & 388){ /* BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT */
- //   size.height = this.elementSize_.height + dragger.deltaY - this.handlerOffsetCoord_.y;  
- // }
+  // if (position & 388){ /* BOTTOM, BOTTOM_LEFT, BOTTOM_RIGHT */
+  //   size.height = this.elementSize_.height + dragger.deltaY - this.handlerOffsetCoord_.y;
+  // }
 
-  if ( position & 296 ){/* LEFT, TOP_LEFT, BOTTOM_LEFT */
+  if (position & 296) {/* LEFT, TOP_LEFT, BOTTOM_LEFT */
     size.width = this.elementSize_.width - dragger.deltaX + this.handlerOffsetCoord_.x;
     coord.x = this.elementCoord_.x + dragger.deltaX - this.handlerOffsetCoord_.x;
   }
- 
-//  if ( position & 112 ){/* TOP, TOP_LEFT, TOP_RIGHT */
-//    size.height = this.elementSize_.height - dragger.deltaY + this.handlerOffsetCoord_.y;   
-//    coord.y = this.elementCoord_.y + dragger.deltaY - this.handlerOffsetCoord_.y;    
-//  }
- 
- 
+
+  //  if ( position & 112 ){/* TOP, TOP_LEFT, TOP_RIGHT */
+  //    size.height = this.elementSize_.height - dragger.deltaY + this.handlerOffsetCoord_.y;
+  //    coord.y = this.elementCoord_.y + dragger.deltaY - this.handlerOffsetCoord_.y;
+  //  }
+
+
   // Now size the containers.
   this.resize_(el, size, coord, position);
 
@@ -257,34 +257,34 @@ pear.ui.Resizable.prototype.handleDragEnd_ = function(e) {
 pear.ui.Resizable.prototype.resize_ = function(element, size, coord, position) {
   var newSize = new goog.math.Size(Math.max(size.width, 0), Math.max(size.height, 0));
   //376 = LEFT, TOP_LEFT, BOTTOM_LEFT, TOP, TOP_RIGHT
-  if (this.minWidth_ > 0) {    
+  if (this.minWidth_ > 0) {
     newSize.width = Math.max(newSize.width, this.minWidth_);
-    coord.x = ( (position & 376) && newSize.width === this.minWidth_ ) ? this.rightX_ : coord.x ;
+    coord.x = ((position & 376) && newSize.width === this.minWidth_) ? this.rightX_ : coord.x;
   }
-  if (this.maxWidth_ > 0){
+  if (this.maxWidth_ > 0) {
     newSize.width = Math.min(newSize.width, this.maxWidth_);
-    coord.x = ( (position & 376) && newSize.width === this.maxWidth_ ) ? this.leftX_ : coord.x ;
+    coord.x = ((position & 376) && newSize.width === this.maxWidth_) ? this.leftX_ : coord.x;
   }
   if (this.minHeight_ > 0) {
     newSize.height = Math.max(newSize.height, this.minHeight_);
-    coord.y = ( (position & 376) && newSize.height === this.minHeight_ ) ? this.bottomY_ : coord.y ;
+    coord.y = ((position & 376) && newSize.height === this.minHeight_) ? this.bottomY_ : coord.y;
   }
   if (this.maxHeight_ > 0) {
     newSize.height = Math.min(newSize.height, this.maxHeight_);
-    coord.y = ( (position & 376) && newSize.height === this.maxHeight_ ) ? this.topY_ : coord.y ;
+    coord.y = ((position & 376) && newSize.height === this.maxHeight_) ? this.topY_ : coord.y;
   }
 
- 
+
   this.dispatchEvent({
     type: pear.ui.Resizable.EventType.RESIZE,
     size: newSize.clone()
   });
-  
 
-  // TODO: this needs to be fixed 
+
+  // TODO: this needs to be fixed
   //goog.style.setBorderBoxSize(element, newSize);
-  goog.style.setWidth(element,newSize.width);
-  goog.style.setHeight(element,newSize.height);
+  goog.style.setWidth(element, newSize.width);
+  goog.style.setHeight(element, newSize.height);
 
   // 2px are causing issue - i think it's margin , certainly it's not border
   //http://msdn.microsoft.com/en-us/library/hh781509(v=vs.85).aspx
@@ -292,8 +292,8 @@ pear.ui.Resizable.prototype.resize_ = function(element, size, coord, position) {
   coord.x = coord.x - marginbox.left;
   coord.y = coord.y - marginbox.top;
 
-  if (this.getComputedPosition_(element) ==='absolute'){
-    goog.style.setPosition(element,coord);
+  if (this.getComputedPosition_(element) === 'absolute') {
+    goog.style.setPosition(element, coord);
   }
 };
 
@@ -350,7 +350,6 @@ pear.ui.Resizable.prototype.setMaxHeight = function(height) {
 pear.ui.Resizable.prototype.getHandle = function(position) {
   return this.handlers_[position];
 };
-
 
 
 /** @inheritDoc */

@@ -41,6 +41,7 @@ pear.ui.Cell.EventType = {
   OPTION_CLICK: 'evt-pear-grid-cell-options-click'
 };
 
+
 /**
  * @type {number}
  * @private
@@ -71,10 +72,11 @@ goog.ui.Component.prototype.grid_ = null;
 
 pear.ui.Cell.prototype.disposeInternal = function() {
   this.grid_ = null;
-  this.row_= null;
+  this.row_ = null;
 
   pear.ui.Cell.superClass_.disposeInternal.call(this);
 };
+
 
 /**
  * Configures the component after its DOM has been rendered, and sets up event
@@ -88,7 +90,7 @@ pear.ui.Cell.prototype.enterDocument = function() {
   pear.ui.Cell.superClass_.
       enterDocument.call(this);
   this.draw();
-  
+
 };
 
 
@@ -104,12 +106,12 @@ pear.ui.Cell.prototype.getRow = function() {
 
 
 /**
- * @return {pear.ui.Grid?} 
+ * @return {pear.ui.Grid?}
  */
 pear.ui.Cell.prototype.getGrid = function() {
   // RowContainer
   this.grid_ = this.grid_ || this.getRow().getGrid();
-  return this.grid_
+  return this.grid_;
 };
 
 
@@ -134,6 +136,7 @@ pear.ui.Cell.prototype.getColumnObject = function() {
   return columns[this.getCellIndex()];
 };
 
+
 /**
  * @return  {number}
  */
@@ -146,9 +149,9 @@ pear.ui.Cell.prototype.getRowPosition = function() {
  * @public
  * @param {number} width
  */
-pear.ui.Cell.prototype.setCellWidth = function(width,opt_render) {
+pear.ui.Cell.prototype.setCellWidth = function(width, opt_render) {
   this.columnWidth_ = width;
-  if (opt_render){
+  if (opt_render) {
     this.draw();
   }
 };
@@ -159,19 +162,20 @@ pear.ui.Cell.prototype.setCellWidth = function(width,opt_render) {
  * @return  {number}
  */
 pear.ui.Cell.prototype.getCellWidth = function() {
-  this.columnWidth_ = this.columnWidth_ || 
-            this.getGrid().getColumnWidth(this.getCellIndex()) ||
-            this.getGrid().getConfiguration().ColumnWidth;
+  this.columnWidth_ = this.columnWidth_ ||
+      this.getGrid().getColumnWidth(this.getCellIndex()) ||
+      this.getGrid().getConfiguration().ColumnWidth;
   return this.columnWidth_;
 };
 
-pear.ui.Cell.prototype.getCellRenderedWidth = function() {
+pear.ui.Cell.prototype.getCellComputedWidth = function() {
   var width = this.getCellWidth();
   var paddingBox = goog.style.getPaddingBox(this.getElement());
   var borderBox = goog.style.getBorderBox(this.getElement());
   return (width + paddingBox.left + paddingBox.right + borderBox.left +
       borderBox.right);
 };
+
 
 /**
  * @private
@@ -219,11 +223,11 @@ pear.ui.Cell.prototype.setPosition_ = function() {
   var left, top;
   left = 0;
   top = 0;
-  left = 0
+  left = 0;
   top = 0;
-  var i =0;
-  for (;i<this.getCellIndex();i++ ){
-    left = left + this.getRow().getCellRenderedWidth(i);
+  var i = 0;
+  for (; i < this.getCellIndex(); i++) {
+    left = left + this.getRow().getCellComputedWidth(i);
   }
 
   goog.style.setPosition(this.getElement(), left, top);

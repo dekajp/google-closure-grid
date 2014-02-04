@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Closure Grid - pear.ui.Grid</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
+
+  
+  <link rel="stylesheet" href="../src/css/grid.css" />
+  
+ 
+ <style>
+  body {
+  background-color: white;
+  font: normal 10pt Arial, sans-serif;
+  }
+
+ </style>
+  <script src="../lib/closure-library/closure/goog/base.js"></script>
+  <script src="../src/bin/release/pear.grid.js"></script>
+  <!--<script src="../src/pear/peardeps.js"></script>-->
+  <script>
+    goog.require('goog.debug.DivConsole');
+    goog.require('goog.debug.LogManager');
+    goog.require('goog.dom.forms');
+    goog.require('pear.ui.Grid');
+    
+  </script>
+
+  <style>
+    .config-item{
+      display: inline-block;
+      padding:2px 3px 2px 8px;
+      border-color: gray;
+      border-width: 0px 0px 0px 0px;
+      border-style: solid;
+      margin:0px 2px 0px 2px;
+      border-radius:3px;
+    }
+  </style>
+</head>
+<body>
+   <fieldset class="goog-debug-panel">
+    <legend>Row Selection</legend>
+    <div id="">
+      <li> Row Selection - with KeyBoard Navigation</li>
+      <li> Navigate to Any row and update/Delete that row</li>
+      <li> Add Row at the end </li>
+      <li> Add/Delete fire DataRow Change event , as count of rows is changed </li>
+    </div>
+  </fieldset>
+
+  <fieldset class="goog-debug-panel">
+    <legend>Data / Debug</legend>
+    <div id="">
+      <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  /> </div>
+      
+    </div>
+  </fieldset>
+ 
+  <fieldset class="goog-debug-panel">
+    <legend>Action</legend>
+    <div id="">
+    <input class="config-item" type="button" id="id_add" value="Add Row"  />
+    <input class="config-item" type="button" id="id_update" value="Update Row"  />
+    <input class="config-item" type="button" id="id_delete" value="Delete Row"  />
+  </fieldset>
+  <br>
+  <!-- This div will have a Sample Component added to its contents. -->
+  <div id="target1" style="width:800px;height:500px">
+  </div>
+  <fieldset class="goog-debug-panel">
+    <legend>Event Log</legend>
+    <div id="log"></div>
+  </fieldset>
+  <div id="perf"></div>
+</body>
+
+ <script>
+
+    var timer = goog.now();
+
+    // Set up a logger.
+    goog.debug.LogManager.getRoot().setLevel(goog.log.Level.ALL);
+    var logger = goog.log.getLogger('demo');
+    var logconsole = new goog.debug.DivConsole(goog.dom.getElement('log'));
+    logconsole.setCapturing(true);
+
+    var GRID_EVENTS = goog.object.getValues(pear.ui.Grid.EventType);
+    //var DATAVIEW_EVENTS = goog.object.getValues(pear.data.DataView.EventType);
+    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ')+ ' .');
+
+    function logEvent(e) {
+      var component = e.target;
+     // var caption = (typeof component.getCaption == 'function') ?
+     //     component.getCaption() : component.getId();
+      logger.info(' dispatched: ' + e.type);
+      if (isChecked('id_consoledir')){
+        console.dir(e);
+      }
+    }
+
+  function isChecked(id,name){
+    var elem = goog.dom.getElement(id);
+    return  elem.checked;
+  };
+
+  var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
+  var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
+
+  var grid;
+  var columns = [
+    { 
+      id: "orderno",
+      headerText: "Order No",
+      width:75,
+      datatype:pear.data.DataTable.DataType.NUMBER
+    },
+    {
+      id: "item",
+      headerText: "Item",
+      width:125,
+      datatype:pear.data.DataTable.DataType.TEXT
+    },
+    {
+      id: "unitprice",
+      headerText: "Unit Price",
+      width:75,
+      datatype:pear.data.DataTable.DataType.NUMBER
+    },
+    {
+      id: "quantity", 
+      headerText: "Quantity",
+      datatype:pear.data.DataTable.DataType.NUMBER,
+      width:75,
+    },
+    {
+      id: "total",
+      headerText: "Total",
+      width:95,
+      datatype:pear.data.DataTable.DataType.NUMBER
+    },
+    {
+      id: "created",
+      headerText: "Created On",
+      width:95,
+      datatype:pear.data.DataTable.DataType.DATETIME
+     },
+    {
+      id: "processed",
+      headerText: "Processed",
+      width:95,
+      datatype:pear.data.DataTable.DataType.BOOLEAN
+    }
+  ];
+
+  var load = function () {
+    if (grid){
+      grid.dispose();
+    }
+    var data = [];
+    var limit = 25
+    var temp;
+    for (var i = 0; i < parseInt(limit,10); i++) {
+      data[i] = {
+        orderno:  i +1
+      };
+      temp = Math.round(Math.random() * 9);
+     
+      data[i].item = item[temp];
+      data[i].unitprice = unitprice[temp];
+      data[i].quantity = Math.round(Math.random() * 100);
+      data[i].total = data[i].unitprice * data[i].quantity;
+      data[i].processed= (i % 5 === 0);
+      data[i].created = '11/21/2013';
+    }
+
+    var start = +new Date();  // log start timestamp
+
+
+    grid = new pear.ui.Grid();
+    var config = {
+      AllowColumnResize:true,
+      AllowRowSelection:true
+    };
+    config = grid.setConfiguration(config);
+
+    grid.setWidth(800);
+    grid.setHeight(400);
+    grid.setColumns(columns);
+    grid.setDataRows(data);
+
+    grid.render(goog.dom.getElement('target1'));
+    var end =  +new Date();  
+    var diff = end - start;
+    console.log('Load Time : '+diff+'ms');
+    
+    goog.events.listen(grid, GRID_EVENTS, logEvent);
+    goog.events.listen(grid, pear.ui.Grid.EventType.GRIDROW_SELECT, selectrowchange);
+  };
+
+  goog.events.listen(goog.dom.getElement('id_add'), goog.events.EventType.CLICK, addRow);
+  goog.events.listen(goog.dom.getElement('id_update'), goog.events.EventType.CLICK, updateRow);
+  goog.events.listen(goog.dom.getElement('id_delete'), goog.events.EventType.CLICK, deleteRow);
+
+  var selectRowIndex = -1;
+  function selectrowchange(ge){
+    selectRowIndex = ge.gridRowIndex;
+  }
+
+  function addRow (ge){
+    var rowcount = grid.getDataRows().length;
+    var data = {};
+      data.orderno =  rowcount+1;
+      data.item = item[0];
+      data.unitprice = unitprice[0];
+      data.quantity = 5;
+      data.total = data.unitprice * data.quantity;
+      data.processed= true;
+      data.created = '11/21/2013';
+    grid.addDataRow(data);
+  };
+
+  function updateRow (){
+    var gridRow = grid.getCurrentHighlightedRow();
+    var datarows = grid.getDataRows();
+    if (gridRow){
+      goog.array.forEach(datarows ,function(value){
+        if (value.orderno === gridRow.getDataRow().orderno){
+          value.item = item[0];
+          value.unitprice = unitprice[0];
+          value.quantity = 5;
+          value.total = value.unitprice * value.quantity;
+          value.processed= true;
+          value.created = '11/21/2013';
+        }
+      });
+    }
+    grid.refresh();
+  };
+  
+
+  function deleteRow (){
+    var gridRow = grid.getCurrentHighlightedRow();
+    if (gridRow){
+      var datarows = grid.getDataRows();
+      goog.array.remove(datarows, gridRow.getDataRow());
+      grid.setDataRows(datarows);
+      grid.refresh();
+    }
+  };
+  
+
+  load();
+
+  
+ </script>
+
+</html>

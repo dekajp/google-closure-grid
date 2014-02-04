@@ -20,7 +20,7 @@ goog.require('pear.ui.RowRenderer');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.Row = function(grid,height,opt_orientation, opt_renderer, opt_domHelper) {
+pear.ui.Row = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
 
   goog.ui.Container.call(this, goog.ui.Container.Orientation.HORIZONTAL,
       opt_renderer || pear.ui.RowRenderer.getInstance(),
@@ -60,7 +60,7 @@ pear.ui.Row.prototype.rowPosition_ = -1;
 
 
 pear.ui.Row.prototype.disposeInternal = function() {
-  this.grid_=null;
+  this.grid_ = null;
   pear.ui.Row.superClass_.disposeInternal.call(this);
 };
 
@@ -95,24 +95,26 @@ pear.ui.Row.prototype.handleScroll_ = function(be) {
 pear.ui.Row.prototype.handleClickEvent_ = function(be) {
 
   var cell = this.getChild(be.target.id);
-  if (cell){
+  if (cell) {
     cell.setSelected(true);
   }
 };
 
+
 /**
   @public
-  @param {pear.data.RowView} model
+  @param  model
 */
-pear.ui.Row.prototype.setRowView = function(model) {
+pear.ui.Row.prototype.setDataRow = function(model) {
   pear.ui.Row.superClass_.setModel.call(this, model);
   model.setRowContainer(this);
 };
 
 
-pear.ui.Row.prototype.getRowView = function(){
+pear.ui.Row.prototype.getDataRow = function() {
   return this.getModel();
 };
+
 
 /**
   @public
@@ -149,12 +151,13 @@ pear.ui.Row.prototype.setHeight = function(height) {
 */
 pear.ui.Row.prototype.getWidth = function() {
   var width = 0;
-  this.forEachChild(function(child){
-    width = width + child.getCellWidth();
-  })
+  this.forEachChild(function(child) {
+    width = width + child.getCellComputedWidth();
+  });
 
   return width;
 };
+
 
 /**
   @public
@@ -200,6 +203,7 @@ pear.ui.Row.prototype.getLocationTop = function() {
   return 0;
 };
 
+
 /**
  * @private
  * @return  {number}
@@ -209,9 +213,9 @@ pear.ui.Row.prototype.getCellWidth = function(index) {
   return child.getCellWidth();
 };
 
-pear.ui.Row.prototype.getCellRenderedWidth = function(index) {
+pear.ui.Row.prototype.getCellComputedWidth = function(index) {
   var child = this.getChildAt(index);
-  return child.getCellRenderedWidth();
+  return child.getCellComputedWidth();
 };
 
 
@@ -228,5 +232,6 @@ pear.ui.Row.prototype.setPosition_ = function() {
   //top = this.getModel().getLocationTop();
 
   goog.style.setPosition(this.getElement(), left, top);
+  goog.style.setSize(this.getElement(), this.getWidth(), this.getHeight());
 };
 
