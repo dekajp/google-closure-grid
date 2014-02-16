@@ -94,13 +94,10 @@
     logconsole.setCapturing(true);
 
     var GRID_EVENTS = goog.object.getValues(pear.ui.Grid.EventType);
-    var DATAVIEW_EVENTS = goog.object.getValues(pear.data.DataView.EventType);
-    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ') +' , '+DATAVIEW_EVENTS.join(', ') + '.');
+    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ') + '.');
 
     function logEvent(e) {
       var component = e.target;
-     // var caption = (typeof component.getCaption == 'function') ?
-     //     component.getCaption() : component.getId();
       logger.info(' dispatched: ' + e.type);
       if (isChecked('id_consoledir')){
         console.dir(e);
@@ -195,12 +192,12 @@
 
     grid.registerPlugin( new pear.plugin.FooterStatus());
 
+    goog.events.listen(grid, GRID_EVENTS, logEvent);
+
     grid.render(goog.dom.getElement('target1'));
     var end =  +new Date();  
     var diff = end - start;
     //console.log('Load Time : '+diff+'ms');
-    goog.events.listen(grid, GRID_EVENTS, logEvent);
-
   };
 
   var changeDataSource = function(){
@@ -230,6 +227,8 @@
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
   goog.events.listen(goog.dom.getElement('id_changeds'), goog.events.EventType.CLICK, changeDataSource);
+
+  load();
   
  </script>
 

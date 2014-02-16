@@ -106,13 +106,10 @@
     logconsole.setCapturing(true);
 
     var GRID_EVENTS = goog.object.getValues(pear.ui.Grid.EventType);
-    var DATAVIEW_EVENTS = goog.object.getValues(pear.data.DataView.EventType);
-    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ') +' , '+DATAVIEW_EVENTS.join(', ') + '.');
+    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ') + '.');
 
     function logEvent(e) {
       var component = e.target;
-     // var caption = (typeof component.getCaption == 'function') ?
-     //     component.getCaption() : component.getId();
       logger.info(' dispatched: ' + e.type);
       if (isChecked('id_consoledir')){
         console.dir(e);

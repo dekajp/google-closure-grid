@@ -6,23 +6,34 @@ goog.require('pear.ui.Plugin');
 
 
 
-
-pear.plugin.Pager = function(grid, opt_renderer, opt_domHelper) {
+/**
+ * [Pager description]
+ * @constructor
+ * @extends {pear.ui.Plugin}
+ */
+pear.plugin.Pager = function() {
   pear.ui.Plugin.call(this);
   // Combobox setvalue fire change event - so to avoid infinite loop
   this.trigger_ = false;
 };
 goog.inherits(pear.plugin.Pager, pear.ui.Plugin);
 
+/**
+ * @inheritDoc
+ */
 pear.plugin.Pager.prototype.getClassId = function() {
   return 'Pager';
 };
 
+/**
+ * [init description]
+ *  
+ */
 pear.plugin.Pager.prototype.init = function() {
   var grid = this.getGrid();
   this.createPager_();
 
-  goog.events.listen(grid, pear.ui.Grid.EventType.DATAROWS_CHANGED, function(ge) {
+  goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, function(ge) {
     this.handleRowCountChange_(ge);
     this.updateMsg_(ge);
   },false, this);
@@ -30,7 +41,7 @@ pear.plugin.Pager.prototype.init = function() {
   goog.events.listen(grid, pear.ui.Grid.EventType.PAGE_INDEX_CHANGED, function(ge) {
     this.trigger_ = false;
     this.updateMsg_(ge);
-    this.updatePagerDropdown_(this.getGrid().getCurrentPageIndex());
+    this.updatePagerDropdown_(this.getGrid().getPageIndex());
     this.trigger_ = true;
   },false, this);
 
@@ -59,6 +70,9 @@ pear.plugin.Pager.prototype.createPager_ = function() {
 
 };
 
+/**
+ * @inheritDoc
+ */
 pear.plugin.Pager.prototype.disposeInternal = function() {
   this.pagerComboBox_.dispose();
   this.pagerComboBox_ = null;
@@ -72,11 +86,18 @@ pear.plugin.Pager.prototype.disposeInternal = function() {
   pear.plugin.Pager.superClass_.disposeInternal.call(this);
 };
 
-
+/**
+ * [getPageIndex description]
+ * @return {number} [description]
+ */
 pear.plugin.Pager.prototype.getPageIndex = function() {
   return this.getGrid().getPageIndex();
 };
 
+/**
+ * [createFooter_ description]
+ * @private
+ */
 pear.plugin.Pager.prototype.createFooter_ = function() {
   var grid = this.getGrid();
   var parentElem = grid.getElement();
@@ -94,18 +115,19 @@ pear.plugin.Pager.prototype.createFooter_ = function() {
 
   this.footerStatus_.render(this.footer_);
   this.updateMsg_();
-
-
 };
 
 
 
-
+/**
+ * [createPagerDropDown_ description]
+ * @private
+ */
 pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
   var elem = this.getElement();
   var grid = this.getGrid();
   var rowsPerPage = grid.getConfiguration().PageSize;
-  var totalRows = grid.getRowCount();
+  var totalRows = grid.getDataViewRowCount();
 
   this.pagerComboBox_ = new goog.ui.ComboBox();
   this.pagerComboBox_.setUseDropdownArrow(true);
@@ -123,11 +145,15 @@ pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
       listen(this.pagerComboBox_, goog.ui.Component.EventType.CHANGE, this.handleChange_, false, this);
 };
 
+/**
+ * [createPagerNavControls_ description]
+ * @private
+ */
 pear.plugin.Pager.prototype.createPagerNavControls_ = function() {
   var elem = this.getElement();
   var grid = this.getGrid();
   var rowsPerPage = grid.getConfiguration().PageSize;
-  var totalRows = grid.getRowCount();
+  var totalRows = grid.getDataViewRowCount();
 
   var prev = new goog.ui.Control(
       goog.dom.createDom('span', 'fa fa-chevron-left'),
@@ -148,6 +174,11 @@ pear.plugin.Pager.prototype.createPagerNavControls_ = function() {
   },this);
 };
 
+/**
+ * [handleAction_ description]
+ * @param  {goog.events.Event} ge [description]
+ * @private
+ */
 pear.plugin.Pager.prototype.handleAction_ = function(ge) {
   var grid = this.getGrid();
   var index = this.getPageIndex();
@@ -159,6 +190,11 @@ pear.plugin.Pager.prototype.handleAction_ = function(ge) {
   ge.stopPropagation();
 };
 
+/**
+ * [updatePagerDropdown_ description]
+ * @param  {number} index [description]
+ * @private
+ */
 pear.plugin.Pager.prototype.updatePagerDropdown_ = function(index) {
   // TODO : check for boundary
   index = (index < 0) ? 0 : index;
@@ -166,27 +202,42 @@ pear.plugin.Pager.prototype.updatePagerDropdown_ = function(index) {
   this.pagerComboBox_.setValue(index + 1);
 };
 
-
+/**
+ * [handleChange_ description]
+ * @param  {goog.events.Event} ge [description]
+ * @private
+ */
 pear.plugin.Pager.prototype.handleChange_ = function(ge) {
   var grid = this.getGrid();
   if (this.trigger_) {
-    grid.setPageIndex(parseInt(this.pagerComboBox_.getValue()) - 1);
+    var index = parseInt(this.pagerComboBox_.getValue(),10) - 1;
+    grid.setPageIndex(index);
   }
 };
 
+/**
+ * [handlePageIndexChange_ description]
+ * @param  {goog.events.Event} ge [description]
+ * @private
+ */
 pear.plugin.Pager.prototype.handlePageIndexChange_ = function(ge) {
-  index = this.getGrid().getPageIndex();
+  var index = this.getGrid().getPageIndex();
   // THIS WILL ALSO CAUSE COMBOBOX CHANGE EVENT
   // setPageIndex are fired 2 times , this could be avoided by directly calling
   // handlePageIndexChange_ from handleChange_
   this.pagerComboBox_.setValue(index + 1);
 };
 
+/**
+ * [handleRowCountChange_ description]
+ * @param  {goog.events.Event} ge [description]
+ * @private
+ */
 pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge) {
   var elem = this.getElement();
   var grid = this.getGrid();
   var rowsPerPage = grid.getConfiguration().PageSize;
-  var totalRows = grid.getRowCount();
+  var totalRows = grid.getDataViewRowCount();
 
   this.pagerComboBox_.removeAllItems();
   var i = 0;
@@ -195,16 +246,20 @@ pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge) {
     i++;
   }while (i * rowsPerPage < totalRows);
 
-  index = this.getGrid().getPageIndex();
+  var index = this.getGrid().getPageIndex();
   this.pagerComboBox_.setValue(index + 1);
 };
 
+/**
+ * [updateMsg_ description]
+ * @private
+ */
 pear.plugin.Pager.prototype.updateMsg_ = function() {
   var grid = this.getGrid();
   var startRowIndex = 1;
-  var rowCount = grid.getRowCount();
+  var rowCount = grid.getDataViewRowCount();
   var configuration = grid.getConfiguration();
-  var currentPageIndex = grid.getCurrentPageIndex();
+  var currentPageIndex = grid.getPageIndex();
   var endRowIndex = currentPageIndex * grid.getPageSize();
 
   if (configuration.AllowPaging) {
@@ -215,7 +270,7 @@ pear.plugin.Pager.prototype.updateMsg_ = function() {
                       (startRowIndex ? startRowIndex : 1) :
                       0;
   endRowIndex = endRowIndex ? endRowIndex : rowCount;
-  this.footerStatus_.setContent('['+ startRowIndex + ' - '+ endRowIndex + '] of ' + rowCount + '');
+  this.footerStatus_.setContent('[' + startRowIndex + ' - ' + endRowIndex + '] of ' + rowCount + '');
 };
 
 

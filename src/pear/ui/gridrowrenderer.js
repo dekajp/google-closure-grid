@@ -54,11 +54,14 @@ pear.ui.GridRowRenderer.prototype.getClassNames = function(container) {
     baseClass,
     (isHorizontal ?
         goog.getCssName(baseClass, 'horizontal') :
-        goog.getCssName(baseClass, 'vertical')),
-    (even ?
-        goog.getCssName(baseClass, 'even') :
-        goog.getCssName(baseClass, 'odd'))
-  ];
+        goog.getCssName(baseClass, 'vertical'))];
+  if (container.isAllowAlternateRowHighlight()) {
+    classNames.push(even ? goog.getCssName(baseClass, 'even') :
+                        goog.getCssName(baseClass, 'odd'));
+  }else {
+    // No Alternate Color Highlight
+  }
+
   if (!container.isEnabled()) {
     classNames.push(goog.getCssName(baseClass, 'disabled'));
   }

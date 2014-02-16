@@ -7,22 +7,27 @@ goog.require('pear.data.RowView');
 
 
 /**
+ * [DataView description]
+ * @param {Array} datacolumns
+ * @param {Array} datarows
  * @constructor
- * @param {pear.data.DataView} datamodel
- * @extends {goog.Disposable}
+ * @extends {goog.events.EventTarget}
  */
 pear.data.DataView = function(datacolumns, datarows) {
-  pear.data.DataTable.call(this, datacolumns, datarows);
+  goog.events.EventTarget.call(this);
+
+  this.dataTable_ = new pear.data.DataTable(datacolumns, datarows);
 
   if (datacolumns && datarows) {
-    this.setDataRowViews(datarows);
+    this.initDataRowViews_();
   }
+  this.attachEvents_();
 };
-goog.inherits(pear.data.DataView, pear.data.DataTable);
+goog.inherits(pear.data.DataView, goog.events.EventTarget);
 
 
 /**
- * @enum
+ * @enum {number}
  */
 pear.data.DataView.FilterType = {
   LIKE: 1,
@@ -33,60 +38,165 @@ pear.data.DataView.FilterType = {
 };
 
 
+/**
+ * [EventType description]
+ * @enum {string}
+ */
 pear.data.DataView.EventType = {
-  ROWVIEWS_CHANGED: 'row-views-changed'
+  DATAVIEW_CHANGED: 'dataview-changed',
+  DATASOURCE_CHANGED: 'datasource-changed',
+  ROWVIEW_CHANGED: 'rowview-changed',
+  DATAROW_CHANGED: 'datarow-changed'
 };
 
 
 /**
  * @private
- * @type {pear.ui.Grid}
+ * @type {?pear.data.DataTable}
+ */
+pear.data.DataView.prototype.dataTable_ = null;
+
+
+/**
+ * @private
+ * @type {?pear.ui.Grid}
  */
 pear.data.DataView.prototype.grid_ = null;
 
 
 /**
  * @private
- * @type {pear.ui.Grid}
+ * @type {Array.<pear.data.RowView>}
  */
-pear.data.DataView.prototype.dataRowidx_ = [];
+pear.data.DataView.prototype.dataRowViews_ = [];
 
 
 /**
  * @private
- * @type {Object}
+ * @type {Array.<pear.data.RowView>}
  */
-pear.data.DataView.prototype.dataRowViews_ = [];
-
-pear.data.DataView.prototype.sortField_ = null;
-
-pear.data.DataView.prototype.sortDirection_ = null;
-
-// Zero based Index
-pear.data.DataView.prototype.pageIndex_ = null;
-
-pear.data.DataView.prototype.pageSize_ = null;
+pear.data.DataView.prototype.originalDataRowViews_ = [];
 
 
+/**
+ * @private
+ * @type {?Array.<string>}
+ */
+pear.data.DataView.prototype.selectedRowViewsIds_ = [];
 
-pear.data.DataView.prototype.disposeInternal = function() {
-  this.dataRowidx_ = null;
-  this.originaldataRowViews_ = null;
-  this.dataRowViews_ = null;
-  this.grid_ = null;
-  this.pageIndex_ = null;
-  this.pageSize_ = null;
-  this.sortFieldId_ = null;
-  this.sortDirection_ = null;
 
-  pear.data.DataView.superClass_.disposeInternal.call(this);
+/**
+ * [getDataColumns description]
+ * @return {Array}
+ */
+pear.data.DataView.prototype.getDataColumns = function() {
+  return this.dataTable_.getDataColumns();
 };
 
 
+/**
+ * [setDataColumns description]
+ * @param {Array.<Object>} dc
+ */
+pear.data.DataView.prototype.setDataColumns = function(dc) {
+  this.dataTable_.setDataColumns(dc);
+};
+
+
+/**
+ * [getDataRows description]
+ * @return {Array}
+ */
+pear.data.DataView.prototype.getDataRows = function() {
+  return this.dataTable_.getDataRows();
+};
+
+
+/**
+ * [setDataRows description]
+ * @param {Array} data
+ */
 pear.data.DataView.prototype.setDataRows = function(data) {
-  pear.data.DataView.superClass_.setDataRows.call(this, data);
-  this.pageIndex_ = 0;
-  this.setDataRowViews(data);
+  this.dataTable_.setDataRows(data);
+  this.initDataRowViews_();
+  this.dispatchDataViewChange_();
+};
+
+
+/**
+ * [getDataRowViews description]
+ * @return {Array}
+ */
+pear.data.DataView.prototype.getDataRowViews = function() {
+  return this.dataRowViews_;
+};
+
+
+/**
+ * [initDataRowViews_ description]
+ */
+pear.data.DataView.prototype.initDataRowViews_ = function() {
+  var map = this.dataTable_.getMapIdToRow();
+  this.dataRowViews_ = [];
+  goog.iter.forEach(map.getKeyIterator(), function(key) {
+    this.dataRowViews_.push(new pear.data.RowView(key, map.get(key)));
+  },this);
+};
+
+
+/**
+ * [setDataRowViews description]
+ * @param {Array.<pear.data.RowView>} rowViews
+ */
+pear.data.DataView.prototype.setDataRowViews = function(rowViews) {
+  this.dataRowViews_ = rowViews;
+  this.dispatchDataViewChange_();
+};
+
+
+/**
+ * [selectRowView description]
+ * @param  {pear.data.RowView} rowview
+ * @param  {boolean} select
+ */
+pear.data.DataView.prototype.selectRowView = function(rowview, select) {
+  this.selectedRowViewsIds_.push(rowview.getRowId());
+  rowview.setSelected(select);
+};
+
+
+/**
+ * [getSelectedRowViewsIds description]
+ * @return {?Array.<string>}
+ */
+pear.data.DataView.prototype.getSelectedRowViewsIds = function() {
+  return this.selectedRowViewsIds_;
+};
+
+
+/**
+ * [clearSelectedRowViews description]
+ */
+pear.data.DataView.prototype.clearSelectedRowViews = function() {
+  this.selectedRowViewsIds_ = [];
+};
+
+
+/**
+ * [getRowCount description]
+ * @return {number}
+ */
+pear.data.DataView.prototype.getRowCount = function() {
+  return this.dataTable_.getDataRows().length;
+};
+
+
+/**
+ * [getDataRowViewCount description]
+ * @return {number}
+ */
+pear.data.DataView.prototype.getDataRowViewCount = function() {
+  return this.dataRowViews_.length;
 };
 
 
@@ -97,54 +207,62 @@ pear.data.DataView.prototype.setGrid = function(grid) {
   this.grid_ = grid;
 };
 
+
+/**
+ * [getGrid description]
+ * @return {pear.ui.Grid}
+ */
 pear.data.DataView.prototype.getGrid = function() {
   return this.grid_;
 };
 
-pear.data.DataView.prototype.setPageIndex = function(pageIndex) {
-  var index = (this.pageSize_ && this.pageSize_ > 0) ?
-                  (pageIndex ? pageIndex : 0) : 0;
-  var rowcount = this.getDataRowViewCount();
-  var pagesize = this.getPageSize();
 
-  this.pageIndex_ = index;
-
-  if (this.pageIndex_ < 0) {
-    this.pageIndex_ = 0;
-  }
-  index++;
-  if (index * pagesize >= rowcount) {
-    this.pageIndex_ = Math.ceil(rowcount / pagesize) - 1;
-  }
-
-  var evt = new pear.data.DataViewEvent(pear.data.DataView.EventType.PAGE_INDEX_CHANGED, this);
-  this.dispatchEvent(evt);
-};
-
-pear.data.DataView.prototype.getPageIndex = function() {
-  this.pageIndex_ = this.pageIndex_ || 0;
-  return this.pageIndex_;
-};
-
-pear.data.DataView.prototype.setPageSize = function(pageSize) {
-  this.pageSize_ = pageSize;
-  var evt = new pear.data.DataViewEvent(pear.data.DataView.EventType.PAGE_SIZE_CHANGED, this);
-  this.dispatchEvent(evt);
-};
-
-pear.data.DataView.prototype.getPageSize = function() {
-  var rowcount = this.getDataRowViewCount();
-  this.pageSize_ = this.pageSize_ || rowcount;
-  this.pageSize_ = (this.pageSize_ > rowcount) ? rowcount : this.pageSize_;
-  return this.pageSize_;
+/**
+ * [addDataRow description]
+ * @param {Array} row
+ */
+pear.data.DataView.prototype.addDataRow = function(row) {
+  this.dataTable_.addDataRow(row);
+  this.updateDataRowViews_();
+  // assume there is undefined row - hence adding row means undefined to
+  // defined row
+  this.dispatchDataRowChange_(row);
+  this.dispatchDataSourceChange_();
 };
 
 
-/*
- * filter ={
+/**
+ * [removeDataRow description]
+ * @param  {?string} id
+ */
+pear.data.DataView.prototype.removeDataRow = function(id) {
+  this.dataTable_.removeDataRow(id);
+  this.updateDataRowViews_();
+  this.dispatchDataSourceChange_();
+};
+
+
+/**
+ * [updateDataRow description]
+ * @param  {string} uniqueid
+ * @param  {Array} datarow
+ */
+pear.data.DataView.prototype.updateDataRow = function(uniqueid, datarow) {
+  this.dataTable_.updateDataRow(uniqueid, datarow);
+  this.updateDataRowViews_();
+  this.dispatchDataRowChange_(datarow);
+  this.dispatchDataSourceChange_();
+};
+
+
+/**
+ * [addColumnFilter description]
+ *  filter ={
  *   type:
  *   expression:
  *  }
+ * @param {Object} dataColumn
+ * @param {Object} filter
  */
 pear.data.DataView.prototype.addColumnFilter = function(dataColumn, filter) {
   var columns = this.getDataColumns();
@@ -158,6 +276,12 @@ pear.data.DataView.prototype.addColumnFilter = function(dataColumn, filter) {
   },this);
 };
 
+
+/**
+ * [getColumnFilter description]
+ * @param  {Object} dataColumn
+ * @return {string}
+ */
 pear.data.DataView.prototype.getColumnFilter = function(dataColumn) {
   var columns = this.getDataColumns();
   var text = '';
@@ -170,6 +294,12 @@ pear.data.DataView.prototype.getColumnFilter = function(dataColumn) {
   },this);
   return text;
 };
+
+
+/**
+ * [clearColumnFilter description]
+ * @param  {Object} dataColumn
+ */
 pear.data.DataView.prototype.clearColumnFilter = function(dataColumn) {
   var columns = this.getDataColumns();
   goog.array.forEach(columns, function(column, index) {
@@ -180,83 +310,87 @@ pear.data.DataView.prototype.clearColumnFilter = function(dataColumn) {
 };
 
 
-
-
-
 /**
- * @private
- * @type {number}
+ * [applyFilter description]
+ * @param  {function(pear.data.RowView)} fnFilter
+ * @param  {Object} op_context
  */
-//pear.data.DataView.prototype.idx_ = 0;
-
-//pear.data.DataView.prototype.getNextIdx = function() {
-//  var id =  this.idx_ ;
-//  this.idx_ ++;
-//  return id;
-//};
-
-
-/**
- * @return {Array.<pear.data.RowModel>}
- */
-pear.data.DataView.prototype.getRowViewByRowId = function(rowId) {
-  var rv = null;
-  rv = this.dataRowViews_[rowId] || [];
-  return rv;
+pear.data.DataView.prototype.applyFilter = function(fnFilter, op_context) {
+  this.initDataRowViews_();
+  var filteredRows = this.dataRowViews_.filter(fnFilter, this);
+  return filteredRows;
 };
 
 
 /**
- * @param {Object} row
+ * [getDataRowById description]
+ * @param  {string} rowid
+ * @return {Array}
  */
-//pear.data.DataView.prototype.addRow = function(row) {
-//  this.rows_.push(row);
-//  this.addRowView_(row);
-//};
+pear.data.DataView.prototype.getDataRowById = function(rowid) {
+  return this.dataTable_.getMapIdToRow().get(rowid);
+};
 
 
 /**
- * @return {Array.<pear.data.RowModel>}
+ * [attachEvents_ description]
  */
-pear.data.DataView.prototype.getDataRowViews = function() {
-  return this.dataRowViews_;
+pear.data.DataView.prototype.attachEvents_ = function() {
+
 };
 
-pear.data.DataView.prototype.getPagedRowsViews_ = function() {
-  var pgIdx = this.getPageIndex();
-  var pgSize = this.getPageSize();
-  var start = (pgIdx * pgSize) > this.dataRowViews_.length ? this.dataRowViews_.length : (pgIdx * pgSize);
-  var end = (start + pgSize) > this.dataRowViews_.length ? this.dataRowViews_.length : (start + pgSize);
-  var rows = this.dataRowViews_.slice(start, end);
 
-  return rows;
-};
-
-pear.data.DataView.prototype.setDataRowViews = function(rowviews) {
-  this.dataRowViews_ = rowviews;
-  this.updateRowsIdx();
-  this.dispatchRowChange();
-};
-
-pear.data.DataView.prototype.dispatchRowChange = function() {
-  var evt = new pear.data.DataViewEvent(pear.data.DataView.EventType.ROWVIEWS_CHANGED, this);
+/**
+ * [dispatchDataViewChange_ description]
+ */
+pear.data.DataView.prototype.dispatchDataViewChange_ = function() {
+  var evt = new pear.data.DataViewEvent(
+      pear.data.DataView.EventType.DATAVIEW_CHANGED, this);
   this.dispatchEvent(evt);
 };
 
 
-pear.data.DataView.prototype.getRowCount = function() {
-  return this.getDataRows().length;
+/**
+ * [dispatchDataRowChange_ description]
+ * @param  {Array} row
+ */
+pear.data.DataView.prototype.dispatchDataRowChange_ = function(row) {
+  var evt = new pear.data.DataRowChangeEvent(
+      pear.data.DataView.EventType.DATAROW_CHANGED, this, row);
+  this.dispatchEvent(evt);
 };
 
-pear.data.DataView.prototype.getDataRowViewCount = function() {
-  return this.dataRowViews_.length;
+
+/**
+ * [dispatchDataSourceChange_ description]
+ */
+pear.data.DataView.prototype.dispatchDataSourceChange_ = function() {
+  var evt = new pear.data.DataTableEvent(
+      pear.data.DataView.EventType.DATASOURCE_CHANGED, this.dataTable_);
+  this.dispatchEvent(evt);
 };
 
-pear.data.DataView.prototype.updateRowsIdx = function() {
-  this.dataRowidx_ = [];
-  goog.array.forEach(this.dataRowViews_, function(value, index) {
-    this.dataRowidx_.push(index);
-  },this);
+
+/**
+ * [updateDataRowViews_ description]
+ */
+pear.data.DataView.prototype.updateDataRowViews_ = function() {
+  this.initDataRowViews_();
+};
+
+
+/**
+ * @override
+ */
+pear.data.DataView.prototype.disposeInternal = function() {
+  goog.array.forEach(this.dataRowViews_, function(rv) {
+    rv.dispose();
+  });
+
+  this.dataRowViews_ = null;
+  this.dataTable_.dispose();
+  this.grid_ = null;
+  pear.data.DataView.superClass_.disposeInternal.call(this);
 };
 
 
@@ -274,3 +408,36 @@ pear.data.DataViewEvent = function(type, target) {
   goog.events.Event.call(this, type, target);
 };
 goog.inherits(pear.data.DataViewEvent, goog.events.Event);
+
+
+
+/**
+ * Object representing DataRowChangeEvent.
+ *
+ * @param {string} type Event type.
+ * @param {pear.data.DataView} target
+ * @extends {goog.events.Event}
+ * @constructor
+ * @final
+ */
+pear.data.DataRowChangeEvent = function(type, target, row) {
+  goog.events.Event.call(this, type, target);
+  this.dataRow = row;
+};
+goog.inherits(pear.data.DataRowChangeEvent, goog.events.Event);
+
+
+
+/**
+ * Object representing DataTableEvent.
+ *
+ * @param {string} type Event type.
+ * @param {pear.data.DataTable} target
+ * @extends {goog.events.Event}
+ * @constructor
+ * @final
+ */
+pear.data.DataTableEvent = function(type, target) {
+  goog.events.Event.call(this, type, target);
+};
+goog.inherits(pear.data.DataTableEvent, goog.events.Event);

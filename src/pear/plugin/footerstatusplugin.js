@@ -5,23 +5,37 @@ goog.require('pear.ui.Plugin');
 
 
 
+/**
+ * FooterStatus Plugin
+ * @constructor
+ * @extends {pear.ui.Plugin}
+ */
 pear.plugin.FooterStatus = function() {
   pear.ui.Plugin.call(this);
 };
 goog.inherits(pear.plugin.FooterStatus, pear.ui.Plugin);
 
-
+/**
+ * [getClassId description]
+ * @return {string} [description]
+ */
 pear.plugin.FooterStatus.prototype.getClassId = function() {
   return 'FooterStatus';
 };
 
+/**
+ * [init description]
+ */
 pear.plugin.FooterStatus.prototype.init = function() {
   var grid = this.getGrid();
   this.createFooterStatus();
 };
 
+/**
+ * @override
+ */
 pear.plugin.FooterStatus.prototype.disposeInternal = function() {
-  this.grid_ = null;
+  this.setGrid(null);
   this.footerStatus_.dispose();
   if (this.footer_) {
     this.footer_.remove();
@@ -32,7 +46,7 @@ pear.plugin.FooterStatus.prototype.disposeInternal = function() {
 
 
 /**
- * @override
+ * @private
  *
  */
 pear.plugin.FooterStatus.prototype.createFooterStatus = function() {
@@ -54,17 +68,20 @@ pear.plugin.FooterStatus.prototype.createFooterStatus = function() {
   this.footerStatus_.render(this.footer_);
   this.updateMsg_();
 
-  // goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_INDEX_CHANGED,this.updateMsg_,false,this);
-  // goog.events.listen(grid.getDataView(),pear.data.DataView.EventType.PAGE_SIZE_CHANGED,this.updateMsg_,false,this);
-  goog.events.listen(grid, pear.ui.Grid.EventType.DATAROWS_CHANGED, this.updateMsg_, false, this);
+  goog.events.listen(grid, pear.ui.Grid.EventType.DATAROWS_CHANGED,
+                                             this.updateMsg_, false, this);
 };
 
+/**
+ * [updateMsg_ description]
+ * @private
+ */
 pear.plugin.FooterStatus.prototype.updateMsg_ = function() {
   var grid = this.getGrid();
   var startIndex = 1;
-  var rowCount = grid.getRowCount();
+  var rowCount = grid.getDataViewRowCount();
   startIndex = startIndex ? startIndex : 1;
-  this.footerStatus_.setContent('['+ startIndex + ' - '+ rowCount + ']');
+  this.footerStatus_.setContent('[' + startIndex + ' - ' + rowCount + ']');
 };
 
 

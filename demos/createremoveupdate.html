@@ -6,10 +6,8 @@
   <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
 
-  
   <link rel="stylesheet" href="../src/css/grid.css" />
   
- 
  <style>
   body {
   background-color: white;
@@ -19,7 +17,6 @@
  </style>
   <script src="../lib/closure-library/closure/goog/base.js"></script>
   <script src="../src/bin/release/pear.grid.js"></script>
-  <!--<script src="../src/pear/peardeps.js"></script>-->
   <script>
     goog.require('goog.debug.DivConsole');
     goog.require('goog.debug.LogManager');
@@ -38,24 +35,39 @@
       margin:0px 2px 0px 2px;
       border-radius:3px;
     }
+    input[type="button"].config-item {
+      border-color: lightblue;
+      border-width: 1px 1px 1px 1px;
+      border-style: solid;
+    }
+    input[type="button"].config-item:hover {
+      border-color: blue;
+      cursor:pointer;
+    }
   </style>
 </head>
 <body>
    <fieldset class="goog-debug-panel">
     <legend>Row Selection</legend>
     <div id="">
-      <li> Row Selection - with KeyBoard Navigation</li>
-      <li> Navigate to Any row and update/Delete that row</li>
+      <li> Row Selection - with KeyBoard Navigation (Hit Enter to Select/Unselect a Row)</li>
+      <li> Update/Delete Selected Row(s)</li>
       <li> Add Row at the end </li>
-      <li> Add/Delete fire DataRow Change event , as count of rows is changed </li>
     </div>
   </fieldset>
 
   <fieldset class="goog-debug-panel">
     <legend>Data / Debug</legend>
     <div id="">
+      <div class="config-item"> SelectionMode: 
+          <select id ="id_selectionmode">
+             <option value="2">ROW</option>
+             <option value="3">MULTIPLE ROW</option>
+          </select> 
+      </div>
+      <input class="config-item" type="button" id="id_reload" value="Reload Grid"  />
       <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  /> </div>
-      
+      <input class="config-item" type="button" id="id_cleareventlog" value="Clear Event Log" onclick="logconsole.clear()" />
     </div>
   </fieldset>
  
@@ -63,8 +75,8 @@
     <legend>Action</legend>
     <div id="">
     <input class="config-item" type="button" id="id_add" value="Add Row"  />
-    <input class="config-item" type="button" id="id_update" value="Update Row"  />
-    <input class="config-item" type="button" id="id_delete" value="Delete Row"  />
+    <input class="config-item" type="button" id="id_update" value="Update Row(s)"  />
+    <input class="config-item" type="button" id="id_delete" value="Delete Row(s)"  />
   </fieldset>
   <br>
   <!-- This div will have a Sample Component added to its contents. -->
@@ -88,13 +100,11 @@
     logconsole.setCapturing(true);
 
     var GRID_EVENTS = goog.object.getValues(pear.ui.Grid.EventType);
-    //var DATAVIEW_EVENTS = goog.object.getValues(pear.data.DataView.EventType);
-    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ')+ ' .');
+    var DATAVIEW_EVENTS = goog.object.getValues(pear.data.DataView.EventType);
+    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ')+ DATAVIEW_EVENTS.join(', ')+' .');
 
     function logEvent(e) {
       var component = e.target;
-     // var caption = (typeof component.getCaption == 'function') ?
-     //     component.getCaption() : component.getId();
       logger.info(' dispatched: ' + e.type);
       if (isChecked('id_consoledir')){
         console.dir(e);
@@ -160,7 +170,7 @@
       grid.dispose();
     }
     var data = [];
-    var limit = 25
+    var limit = 10000;
     var temp;
     for (var i = 0; i < parseInt(limit,10); i++) {
       data[i] = {
@@ -176,20 +186,20 @@
       data[i].created = '11/21/2013';
     }
 
+    var dv = new pear.data.DataView(columns,data);
     var start = +new Date();  // log start timestamp
 
 
     grid = new pear.ui.Grid();
     var config = {
       AllowColumnResize:true,
-      AllowRowSelection:true
+      SelectionMode: parseInt(goog.dom.forms.getValue(goog.dom.getElement('id_selectionmode')),10)
     };
     config = grid.setConfiguration(config);
 
     grid.setWidth(800);
     grid.setHeight(400);
-    grid.setColumns(columns);
-    grid.setDataRows(data);
+    grid.setDataView(dv)
 
     grid.render(goog.dom.getElement('target1'));
     var end =  +new Date();  
@@ -197,17 +207,13 @@
     console.log('Load Time : '+diff+'ms');
     
     goog.events.listen(grid, GRID_EVENTS, logEvent);
-    goog.events.listen(grid, pear.ui.Grid.EventType.GRIDROW_SELECT, selectrowchange);
+    goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
   };
 
   goog.events.listen(goog.dom.getElement('id_add'), goog.events.EventType.CLICK, addRow);
   goog.events.listen(goog.dom.getElement('id_update'), goog.events.EventType.CLICK, updateRow);
   goog.events.listen(goog.dom.getElement('id_delete'), goog.events.EventType.CLICK, deleteRow);
 
-  var selectRowIndex = -1;
-  function selectrowchange(ge){
-    selectRowIndex = ge.gridRowIndex;
-  }
 
   function addRow (ge){
     var rowcount = grid.getDataRows().length;
@@ -219,42 +225,47 @@
       data.total = data.unitprice * data.quantity;
       data.processed= true;
       data.created = '11/21/2013';
-    grid.addDataRow(data);
+    var dv = grid.getDataView();
+    dv.addDataRow(data);
+    grid.refresh();
   };
 
   function updateRow (){
-    var gridRow = grid.getCurrentHighlightedRow();
-    var datarows = grid.getDataRows();
-    if (gridRow){
-      goog.array.forEach(datarows ,function(value){
-        if (value.orderno === gridRow.getDataRow().orderno){
-          value.item = item[0];
-          value.unitprice = unitprice[0];
-          value.quantity = 5;
-          value.total = value.unitprice * value.quantity;
-          value.processed= true;
-          value.created = '11/21/2013';
-        }
-      });
-    }
+    
+    var value = {};
+    value.item = item[0];
+    value.unitprice = unitprice[0];
+    value.quantity = 5;
+    value.total = value.unitprice * value.quantity;
+    value.processed= true;
+    value.created = '11/21/2013';
+
+    var rowids = grid.getSelectedGridRowsIds();
+    var dv = grid.getDataView();
+    goog.array.forEach(rowids,function(id){
+      var rowdata = dv.getDataRowById(id);
+      value.orderno = rowdata.orderno;
+      grid.updateDataRow(id,value); 
+    },this);
+    grid.refresh();
+  };
+
+  function deleteRow (){
+    var rowids = grid.getSelectedGridRowsIds();
+    var dv = grid.getDataView();
+    goog.array.forEach(rowids,function(id){
+      grid.removeDataRow(id);
+    },this);
+    grid.clearSelectedGridRows();
     grid.refresh();
   };
   
 
-  function deleteRow (){
-    var gridRow = grid.getCurrentHighlightedRow();
-    if (gridRow){
-      var datarows = grid.getDataRows();
-      goog.array.remove(datarows, gridRow.getDataRow());
-      grid.setDataRows(datarows);
-      grid.refresh();
-    }
-  };
-  
+  goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
 
   load();
 
   
- </script>
+  </script>
 
 </html>

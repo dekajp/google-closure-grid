@@ -20,7 +20,8 @@ goog.require('pear.ui.RowRenderer');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.Row = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
+pear.ui.Row = function(grid, height, opt_orientation,
+    opt_renderer, opt_domHelper) {
 
   goog.ui.Container.call(this, goog.ui.Container.Orientation.HORIZONTAL,
       opt_renderer || pear.ui.RowRenderer.getInstance(),
@@ -28,16 +29,15 @@ pear.ui.Row = function(grid, height, opt_orientation, opt_renderer, opt_domHelpe
 
   // To avoid Blur Event on Header cells
   this.setFocusable(false);
-
-  this.grid_ = grid;
-  this.height_ = height || 25;
+  
+  this.setGrid(grid);
 };
 goog.inherits(pear.ui.Row, goog.ui.Container);
 
 
 /**
- * Grid
- * @type {pear.ui.Grid}
+ * grid
+ * @type {?pear.ui.Grid}
  * @private
  */
 pear.ui.Row.prototype.grid_ = null;
@@ -48,7 +48,7 @@ pear.ui.Row.prototype.grid_ = null;
  * @type {number}
  * @private
  */
-pear.ui.Row.prototype.height_ = 25;
+pear.ui.Row.prototype.height_ = -1;
 
 
 /**
@@ -59,12 +59,6 @@ pear.ui.Row.prototype.height_ = 25;
 pear.ui.Row.prototype.rowPosition_ = -1;
 
 
-pear.ui.Row.prototype.disposeInternal = function() {
-  this.grid_ = null;
-  pear.ui.Row.superClass_.disposeInternal.call(this);
-};
-
-
 /**
   @override
 */
@@ -72,7 +66,148 @@ pear.ui.Row.prototype.enterDocument = function() {
   pear.ui.Row.superClass_.enterDocument.call(this);
   var elem = this.getElement();
 
-  this.setPosition_();
+  this.setPosition();
+};
+
+
+/**
+ * @return {?pear.data.RowView}
+ */
+pear.ui.Row.prototype.getRowView = function() {
+  return (/** @type {pear.data.RowView} */ (this.getModel()));
+};
+
+
+/**
+ * add Cell
+ * @param {pear.ui.Cell} cell
+ * @param {boolean=} opt_render Whether the new child should be rendered
+ *     immediately after being added (defaults to false).
+ */
+pear.ui.Row.prototype.addCell = function(cell, opt_render) {
+  this.addChild(cell, opt_render);
+};
+
+
+/**
+ * return grid
+ * @return {pear.ui.Grid}
+*/
+pear.ui.Row.prototype.getGrid = function() {
+  return this.grid_;
+};
+
+/**
+ * [setGrid description]
+ * @param {pear.ui.Grid} grid [description]
+ */
+pear.ui.Row.prototype.setGrid = function(grid) {
+  this.grid_=grid;
+};
+
+/**
+ * set height of row
+ * @param {number} height
+*/
+pear.ui.Row.prototype.setHeight = function(height) {
+  this.height_ = height;
+};
+
+
+/**
+ * get width  of row
+ * @return {number}
+ */
+pear.ui.Row.prototype.getWidth = function() {
+  var width = 0;
+  this.forEachChild(function(child) {
+    width = width + child.getCellComputedWidth();
+  });
+
+  return width;
+};
+
+
+/**
+ * get height of row
+ * @return {number}
+ */
+pear.ui.Row.prototype.getHeight = function() {
+  return this.height_;
+};
+
+
+/**
+ * get computed height of row
+ * @return {number}
+ */
+pear.ui.Row.prototype.getComputedHeight = function() {
+  return this.getHeight();
+};
+
+
+/**
+ * set positon of row
+ * @param {number} pos
+ */
+pear.ui.Row.prototype.setRowPosition = function(pos) {
+  this.rowPosition_ = pos;
+};
+
+
+/**
+ * get position of row
+ * @return {number}
+ */
+pear.ui.Row.prototype.getRowPosition = function() {
+  return this.rowPosition_;
+};
+
+
+/**
+ * @public
+ * @return {number}
+ */
+pear.ui.Row.prototype.getLocationTop = function() {
+  return 0;
+};
+
+
+/**
+ * return cell width
+ * @param {number} index of cell
+ * @return {number}
+ */
+pear.ui.Row.prototype.getCellWidth = function(index) {
+  var child = this.getChildAt(index);
+  return child.getCellWidth();
+};
+
+
+/**
+ * return computed cell width
+ * @param {number} index of cell
+ * @return {number}
+ */
+pear.ui.Row.prototype.getCellComputedWidth = function(index) {
+  var child = this.getChildAt(index);
+  return child.getCellComputedWidth();
+};
+
+
+/**
+ * 
+ */
+pear.ui.Row.prototype.setPosition = function() {
+  var left, top;
+  left = 0;
+  top = 0;
+  left = 0;
+  top = this.getLocationTop();
+  //top = this.getModel().getLocationTop();
+
+  goog.style.setPosition(this.getElement(), left, top);
+  goog.style.setSize(this.getElement(), this.getWidth(), this.getHeight());
 };
 
 
@@ -102,136 +237,12 @@ pear.ui.Row.prototype.handleClickEvent_ = function(be) {
 
 
 /**
-  @public
-  @param  model
-*/
-pear.ui.Row.prototype.setDataRow = function(model) {
-  pear.ui.Row.superClass_.setModel.call(this, model);
-  model.setRowContainer(this);
-};
-
-
-pear.ui.Row.prototype.getDataRow = function() {
-  return this.getModel();
-};
-
-
-/**
-  @public
-  @param {pear.ui.Cell} cell
-  @param {boolean=} opt_render Whether the new child should be rendered
-      immediately after being added (defaults to false).
-*/
-pear.ui.Row.prototype.addCell = function(cell, opt_render) {
-  this.addChild(cell, opt_render);
-};
-
-
-/**
-  @public
-  @return {pear.ui.Grid}
-*/
-pear.ui.Row.prototype.getGrid = function() {
-  return this.grid_;
-};
-
-
-/**
-  @public
-  @param {number} height
-*/
-pear.ui.Row.prototype.setHeight = function(height) {
-  this.height_ = height;
-};
-
-
-/**
-  @public
-  @param {number} height
-*/
-pear.ui.Row.prototype.getWidth = function() {
-  var width = 0;
-  this.forEachChild(function(child) {
-    width = width + child.getCellComputedWidth();
-  });
-
-  return width;
-};
-
-
-/**
-  @public
-  @return  {number}
-*/
-pear.ui.Row.prototype.getHeight = function() {
-  return this.height_;
-};
-
-
-/**
-  @public
-  @return {number}
-*/
-pear.ui.Row.prototype.getComputedHeight = function() {
-  return this.getHeight();
-};
-
-
-/**
-  @public
-  @param {number} pos
-*/
-pear.ui.Row.prototype.setRowPosition = function(pos) {
-  this.rowPosition_ = pos;
-};
-
-
-/**
-  @public
-  @return {number}
-*/
-pear.ui.Row.prototype.getRowPosition = function() {
-  return this.rowPosition_;
-};
-
-
-/**
-  @public
-  @return {number}
-*/
-pear.ui.Row.prototype.getLocationTop = function() {
-  return 0;
-};
-
-
-/**
- * @private
- * @return  {number}
+ * @override
  */
-pear.ui.Row.prototype.getCellWidth = function(index) {
-  var child = this.getChildAt(index);
-  return child.getCellWidth();
-};
-
-pear.ui.Row.prototype.getCellComputedWidth = function(index) {
-  var child = this.getChildAt(index);
-  return child.getCellComputedWidth();
-};
-
-
-/**
-  @public
-
-*/
-pear.ui.Row.prototype.setPosition_ = function() {
-  var left, top;
-  left = 0;
-  top = 0;
-  left = 0;
-  top = this.getLocationTop();
-  //top = this.getModel().getLocationTop();
-
-  goog.style.setPosition(this.getElement(), left, top);
-  goog.style.setSize(this.getElement(), this.getWidth(), this.getHeight());
+pear.ui.Row.prototype.disposeInternal = function() {
+  this.grid_ = null;
+  delete this.height_;
+  delete this.rowPosition_;
+  pear.ui.Row.superClass_.disposeInternal.call(this);
 };
 

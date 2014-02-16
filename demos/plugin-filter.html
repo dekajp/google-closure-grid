@@ -200,7 +200,8 @@
       AllowColumnResize: true,
       AllowColumnHeaderMenu: true,
       AllowPaging:true,
-      PageSize:50
+      PageSize:50,
+      AllowAlternateRowHighlight: true
     };
     config = grid.setConfiguration(config);
 
@@ -225,7 +226,7 @@
 
     goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.APPLY_FILTER, handleApplyFilter);
     goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.CLEAR_FILTER, handleClearFilter);
-    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.ROWVIEWS_CHANGED, handleRowViewsChanged);
+    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, handleRowViewsChanged);
 
 
   };
@@ -241,21 +242,21 @@
 
     dv.addColumnFilter(headercell.getCellData(),filterText);
 
-    var filteredRows = dv.getDataRows().filter(filterfn,this);
+    var filteredRows = dv.applyFilter(filterfn,this);
     console.dir(filteredRows);
     dv.setDataRowViews(filteredRows);
 
     setFilterIndicators(headercell,true);
   };
 
-   var handleClearFilter = function (ge){
+  var handleClearFilter = function (ge){
     var grid = ge.target;
     var headercell = ge.cell;
     var filterText = ge.filterText;
     var dv = grid.getDataView();
 
     dv.clearColumnFilter(headercell.getCellData());
-    var filteredRows = dv.getDataRows().filter(filterfn,this);
+    var filteredRows = dv.applyFilter(filterfn,this);
     console.dir(filteredRows);
     dv.setDataRowViews(filteredRows);
 
@@ -263,7 +264,6 @@
   };
 
   var handleRowViewsChanged = function (ge){
-    grid.setDataRows(dv.getDataRowViews());
     grid.setPageIndex(0);
     grid.refresh();
   }
@@ -271,32 +271,33 @@
 
 
 
- var filterfn = function(row) {
-  var columns = dv.getDataColumns();
-  var match = true;
-  goog.array.forEach(columns,function(column){
-    if (column.filter && column.filter.length > 0){
-      var str;
-      var filter = String(column.filter);
-      if (column.formatter){
-        str = String(column.formatter(row[column.id]));
+  var filterfn = function(rowview) {
+    var columns = dv.getDataColumns();
+    var match = true;
+    goog.array.forEach(columns,function(column){
+      var rowdata= rowview.getRowData();
+      if (column.filter && column.filter.length > 0){
+        var str;
+        var filter = String(column.filter);
+        if (column.formatter){
+          str = String(column.formatter(rowdata[column.id]));
+        }else{
+          str = String(rowdata[column.id]);
+        }
+          
+        if (str.toLowerCase().indexOf(filter.toLowerCase()) >=0) {
+          match = match && true;
+        }else{
+          match = match && false;
+        }
       }else{
-        str = String(row[column.id]);
+  
       }
-        
-      if (str.toLowerCase().indexOf(filter.toLowerCase()) >=0) {
-        match = match && true;
-      }else{
-        match = match && false;
-      }
-    }else{
-
-    }
-  },this);
-  return match;
-};
-
-var setFilterIndicators = function (headerCell,showFilterIndicator){
+    },this);
+    return match;
+  };
+  
+  var setFilterIndicators = function (headerCell,showFilterIndicator){
     if (!headerCell) return;
     var icon ;
     var contentIndicatorElem = headerCell.getContentIndicatorElement();

@@ -177,7 +177,8 @@
 
     grid = new pear.ui.Grid();
     var config = {
-      AllowSorting:true,
+      AllowColumnResize: true,
+      AllowAlternateRowHighlight: true,
       AllowColumnResize:true
     };
     config = grid.setConfiguration(config);
@@ -241,7 +242,7 @@
     setSortIndicators(headerCell,sortDirection);
     prevSortColumn = headerCell;
 
-    grid.setDataRows(dataRows);
+   // grid.setDataRows(dataRows);
     grid.refresh();
     headerCell.adjustContentCellWidth();
   };
@@ -261,6 +262,8 @@
       goog.style.showElement(elDesc,true);
     }
   };
+
+  load();
  </script>
 
 </html>

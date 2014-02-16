@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
 
-  
+  <link rel="stylesheet" href="css/demo.css" />
   <link rel="stylesheet" href="../src/css/grid.css" />
   
  
@@ -19,7 +19,6 @@
  </style>
   <script src="../lib/closure-library/closure/goog/base.js"></script>
   <script src="../src/bin/release/pear.grid.js"></script>
-  <!--<script src="../src/pear/peardeps.js"></script>-->
   <script>
     goog.require('goog.debug.DivConsole');
     goog.require('goog.debug.LogManager');
@@ -29,22 +28,14 @@
   </script>
 
   <style>
-    .config-item{
-      display: inline-block;
-      padding:2px 3px 2px 8px;
-      border-color: gray;
-      border-width: 0px 0px 0px 0px;
-      border-style: solid;
-      margin:0px 2px 0px 2px;
-      border-radius:3px;
-    }
+    
   </style>
 </head>
 <body>
    <fieldset class="goog-debug-panel">
     <legend>Simple Grid</legend>
     <div id="">
-      <li> Load grid with 1000-500,000 records </li>
+      <li> Load grid with 1000-100,000 random records </li>
     </div>
   </fieldset>
 
@@ -56,12 +47,11 @@
           <select id ="id_rows">
              <option value="10">10</option>
              <option value="1000">1000</option>
-             <option value="10000">10,000</option>
+             <option selected value="10000">10,000</option>
              <option value="50000">50,000</option>
-             <option selected value="100000">100,000</option>
-             <option value="500000">500,000</option>
+             <option value="100000">100,000</option>
            </select> 
-        </div>
+      </div>
     </div>
   </fieldset>
  
@@ -69,6 +59,7 @@
     <legend>Action</legend>
     <div id="">
     <input class="config-item" type="button" id="id_reload" value="Reload"  />
+    <input class="config-item" type="button" id="id_cleareventlog" value="Clear Event Log" onclick="logconsole.clear()" />
   </fieldset>
   <br>
   <!-- This div will have a Sample Component added to its contents. -->
@@ -92,7 +83,6 @@
     logconsole.setCapturing(true);
 
     var GRID_EVENTS = goog.object.getValues(pear.ui.Grid.EventType);
-    //var DATAVIEW_EVENTS = goog.object.getValues(pear.data.DataView.EventType);
     goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ')+ ' .');
 
     function logEvent(e) {
@@ -185,7 +175,8 @@
 
     grid = new pear.ui.Grid();
     var config = {
-      AllowColumnResize:true
+      AllowColumnResize: true,
+      AllowAlternateRowHighlight: true
     };
     config = grid.setConfiguration(config);
 
@@ -193,17 +184,18 @@
     grid.setHeight(400);
     grid.setColumns(columns);
     grid.setDataRows(data);
+    
+    goog.events.listen(grid, GRID_EVENTS, logEvent);
 
     grid.render(goog.dom.getElement('target1'));
     var end =  +new Date();  
     var diff = end - start;
     console.log('Load Time : '+diff+'ms');
-    
-    goog.events.listen(grid, GRID_EVENTS, logEvent);
-   // goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
   };
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
+
+  load();
   
  </script>
 

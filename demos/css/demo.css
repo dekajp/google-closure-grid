@@ -1,0 +1,18 @@
+.config-item{
+  display: inline-block;
+  padding:2px 3px 2px 8px;
+  border-color: gray;
+  border-width: 0px 0px 0px 0px;
+  border-style: solid;
+  margin:0px 2px 0px 2px;
+  border-radius:3px;
+}
+input[type="button"].config-item {
+  border-color: lightblue;
+  border-width: 1px 1px 1px 1px;
+  border-style: solid;
+}
+input[type="button"].config-item:hover {
+  border-color: blue;
+  cursor:pointer;
+}

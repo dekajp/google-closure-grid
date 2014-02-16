@@ -7,34 +7,40 @@ goog.require('goog.ui.ToolbarMenuButton');
 goog.require('pear.ui.Plugin');
 
 
-
+/**
+ * [HeaderMenu description]
+ * @constructor
+ * @extends {pear.ui.Plugin} 
+ */
 pear.plugin.HeaderMenu = function() {
   pear.ui.Plugin.call(this);
 };
 goog.inherits(pear.plugin.HeaderMenu, pear.ui.Plugin);
 
-
+/**
+ * @inheritDoc
+ */
 pear.plugin.HeaderMenu.prototype.getClassId = function() {
   return 'HeaderMenu';
 };
 
+/**
+ * [init description]
+ */
 pear.plugin.HeaderMenu.prototype.init = function() {
   var grid = this.getGrid();
   this.createHeaderMenuDom();
 };
 
+/**
+ * [disposeInternal description]
+ */
 pear.plugin.HeaderMenu.prototype.disposeInternal = function() {
   goog.array.forEach(this.headerMenuBtns_, function(mb) {
     mb.dispose();
   });
   pear.plugin.HeaderMenu.superClass_.disposeInternal.call(this);
 };
-
-
-//pear.plugin.HeaderMenu.prototype.getElement = function (){
-//  return this.element_;
-//}
-
 
 /**
  * @private
@@ -58,7 +64,7 @@ pear.plugin.HeaderMenu.prototype.createHeaderMenuDom = function() {
           } else {
             item = new goog.ui.MenuSeparator();
           }
-          m1.addItem(item);
+          m1.addChild(item);
         });
 
     var mb = new pear.plugin.HeaderMenuButton('', m1);
@@ -76,52 +82,93 @@ pear.plugin.HeaderMenu.prototype.createHeaderMenuDom = function() {
   },this);
 };
 
+/**
+ * [close_ description]
+ */
 pear.plugin.HeaderMenu.prototype.close_ = function() {
-  goog.style.showElement(this.getElement(), '');
+  // goog.style.showElement(this.getElement(), '');
 };
 
+/**
+ * [getCSSClassName description]
+ * @return {string} [description]
+ */
 pear.plugin.HeaderMenu.prototype.getCSSClassName = function() {
   return 'pear-grid-header-cell-menu';
 };
 
-pear.plugin.HeaderMenu.prototype.handleMenuEvent_ = function(be) {
-  var menuBtn = be.currentTarget;
+/**
+ * [handleMenuEvent_ description]
+ * @param  {goog.events.Event} ge [description]
+ */
+pear.plugin.HeaderMenu.prototype.handleMenuEvent_ = function(ge) {
+  var menuBtn = (/** @type {pear.plugin.HeaderMenuButton} */ (ge.currentTarget));
   var headercell = menuBtn.getHeaderCell();
-  var headercellTitle = headercell.getCellData().headerText;
-  alert(be.target.getContent() + ' clicked on ' + headercellTitle + ' column.');
+  var headercellTitle = headercell.getCellData()['headerText'];
+  // alert(be.target.getContent() + ' clicked on ' + headercellTitle + ' column.');
+  alert(' clicked on ' + headercellTitle + ' column.');
 };
 
-pear.plugin.HeaderMenu.prototype.handleMenuShow_ = function(be) {
-  var menu = be.currentTarget;
+/**
+ * [handleMenuShow_ description]
+ * @param  {goog.events.Event} ge [description]
+ */
+pear.plugin.HeaderMenu.prototype.handleMenuShow_ = function(ge) {
+  var menu = (/** @type {goog.ui.Menu} */ (ge.currentTarget));
   var menuBtn = menu.getParent();
   var headercell = menuBtn.getHeaderCell();
   headercell.setMenuState(true);
 };
 
-pear.plugin.HeaderMenu.prototype.handleMenuHide_ = function(be) {
-  var menu = be.currentTarget;
+/**
+ * [handleMenuHide_ description]
+ * @param  {goog.events.Event} ge [description]
+ */
+pear.plugin.HeaderMenu.prototype.handleMenuHide_ = function(ge) {
+  var menu = (/** @type {goog.ui.Menu} */ (ge.currentTarget));
   var menuBtn = menu.getParent();
   var headercell = menuBtn.getHeaderCell();
   headercell.setMenuState(false);
   headercell.slideMenuOpen(false);
 };
 
+
+
+
 goog.provide('pear.plugin.HeaderMenuButton');
 
 goog.require('goog.ui.MenuButton');
 
-pear.plugin.HeaderMenuButton = function(
-    content, opt_menu, opt_renderer, opt_domHelper) {
-  goog.ui.MenuButton.call(this, content, opt_menu, opt_renderer);
+/**
+ * [HeaderMenuButton description]
+ * @param {string|Node|Array.<Node>|NodeList} content Text caption 
+ * or DOM structure to display as the content of the control (if any).
+ * @constructor
+ * @extends {goog.ui.MenuButton}
+ */
+pear.plugin.HeaderMenuButton = function(content, opt_menu) {
+  goog.ui.MenuButton.call(this, content, opt_menu);
 };
 goog.inherits(pear.plugin.HeaderMenuButton, goog.ui.MenuButton);
 
-//pear.plugin.HeaderMenuButton.prototype.cell_ = null;
+/**
+ * [cell_ description]
+ * @type {pear.ui.GridHeaderCell}
+ */
+pear.plugin.HeaderMenuButton.prototype.cell_ = null;
 
+/**
+ * [setHeaderCell description]
+ * @param {pear.ui.GridHeaderCell} cell [description]
+ */
 pear.plugin.HeaderMenuButton.prototype.setHeaderCell = function(cell) {
   this.cell_ = cell;
 };
 
+/**
+ * [getHeaderCell description]
+ * @return {pear.ui.GridHeaderCell} [description]
+ */
 pear.plugin.HeaderMenuButton.prototype.getHeaderCell = function() {
   return this.cell_;
 };

@@ -31,13 +31,9 @@ pear.ui.GridHeaderRow = function(grid, height, opt_orientation, opt_renderer, op
 };
 goog.inherits(pear.ui.GridHeaderRow, pear.ui.Row);
 
-
 /**
-  @public
-  @param {pear.ui.HeaderCell} cell
-  @param {boolean=} opt_render Whether the new child should be rendered
-      immediately after being added (defaults to false).
-*/
+ * @inheritDoc
+ */
 pear.ui.GridHeaderRow.prototype.addCell = function(cell, opt_render) {
   pear.ui.GridHeaderRow.superClass_.addCell.call(this, cell, true);
 };
@@ -45,9 +41,7 @@ pear.ui.GridHeaderRow.prototype.addCell = function(cell, opt_render) {
 
 /**
   @public
-  @param {pear.ui.Cell} cell
-  @param {boolean=} opt_render Whether the new child should be rendered
-      immediately after being added (defaults to false).
+  @param {string} id
 */
 pear.ui.Row.prototype.getHeaderCellById = function(id) {
   var cell;
@@ -60,11 +54,6 @@ pear.ui.Row.prototype.getHeaderCellById = function(id) {
 };
 
 
-pear.ui.GridHeaderRow.prototype.disposeInternal = function() {
-  pear.ui.GridHeaderRow.superClass_.disposeInternal.call(this);
-};
-
-
 /**
  * Configures the component after its DOM has been rendered, and sets up event
  * handling.  Overrides {@link goog.ui.Component#enterDocument}.
@@ -72,6 +61,14 @@ pear.ui.GridHeaderRow.prototype.disposeInternal = function() {
  */
 pear.ui.GridHeaderRow.prototype.enterDocument = function() {
   pear.ui.GridHeaderRow.superClass_.enterDocument.call(this);
+};
+
+/**
+ * 
+ * @inheritDoc
+ */
+pear.ui.GridHeaderRow.prototype.disposeInternal = function() {
+  pear.ui.GridHeaderRow.superClass_.disposeInternal.call(this);
 };
 
 

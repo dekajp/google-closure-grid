@@ -55,9 +55,7 @@
       <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir" /> </div>
       <div class="config-item"> Nos Of Rows : 
           <select id ="id_rows">
-             <option value="10">10</option>
              <option selected value="1000">1000</option>
-             <option value="50000">10,000</option>
            </select> 
         </div>
     </div>
@@ -127,11 +125,11 @@
     setSortIndicators(headerCell,sortDirection);
     prevSortColumn = headerCell;
 
-    this.setDataRowViews(sortedData);
+    this.setDataRows(sortedData);
   };
 
   SortedDataView.prototype.sort_ = function(sortCell,sortField,sortDirection) {
-    var rv = this.dataRowViews_;
+    var rv = this.getDataRows();
     var sortFn = function (column){
       
       var fn;
@@ -243,6 +241,7 @@
   var load = function () {
     if (grid){
       grid.dispose();
+      prevSortColumn = null;
     }
     var data = [];
     var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
@@ -267,6 +266,7 @@
 
     grid = new pear.ui.Grid();
     var config = {
+      AllowAlternateRowHighlight: true,
       AllowPaging:false,
       AllowSorting:true,
       AllowColumnResize:true,
@@ -293,7 +293,7 @@
     goog.events.listen(grid.getDataView(), EVENTS3, logEvent);
 
     goog.events.listen(grid, pear.ui.Grid.EventType.SORT, grid.getDataView().handleSort ,false ,grid.getDataView());
-    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.ROWVIEWS_CHANGED, handleRowViewsChanged);
+    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, handleRowViewsChanged);
   };
 
   var setSortIndicators = function (headerCell,sortDirection){
@@ -339,12 +339,14 @@
   var handleRowViewsChanged = function (ge){
     var dv = ge.target;
     var grid = dv.getGrid();
-    grid.setDataRows(dv.getDataRowViews());
+    // grid.setDataRows(dv.getDataRowViews());
     grid.refresh();
   }
 
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
+
+  load();
 
  </script>
 

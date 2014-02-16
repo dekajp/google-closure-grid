@@ -7,8 +7,6 @@ goog.require('pear.ui.GridHeaderCellMenuRenderer');
 goog.require('pear.ui.GridHeaderCellRenderer');
 goog.require('pear.ui.Resizable');
 
-
-
 /**
  * HeaderCell
  *
@@ -21,7 +19,8 @@ goog.require('pear.ui.Resizable');
  */
 pear.ui.GridHeaderCell = function(opt_renderer, opt_domHelper) {
   pear.ui.Cell.call(this,
-                    opt_renderer || pear.ui.GridHeaderCellRenderer.getInstance(),
+                    opt_renderer ||
+      pear.ui.GridHeaderCellRenderer.getInstance(),
                     opt_domHelper);
   this.setSupportedState(goog.ui.Component.State.ACTIVE, true);
 };
@@ -37,44 +36,63 @@ pear.ui.GridHeaderCell.prototype.headerMenuContainer_ = null;
 
 /**
  * @private
- * @type {goog.ui.Control}
+ * @type {?Element}
  */
 pear.ui.GridHeaderCell.prototype.contentCell_ = null;
 
-
-pear.ui.GridHeaderCell.prototype.disposeInternal = function() {
-  if (this.resizable_) {
-    this.resizable_.dispose();
-    this.resizable_ = null;
-  }
-  this.headerMenuContainer_ = null;
-  this.sortDirection_ = null;
-  pear.ui.GridHeaderCell.superClass_.disposeInternal.call(this);
-};
-
+/**
+ * @private
+ * @type {?Element}
+ */
+pear.ui.GridHeaderCell.prototype.contentIndicator_ =null;
 
 /**
  * @private
- * @type {enum}
+ * @type {number}
  */
-pear.ui.GridHeaderCell.prototype.sortDirection_ = null;
+pear.ui.GridHeaderCell.prototype.sortDirection_ = 0;
+
+
+/**
+ * [resizable_ description]
+ * @type {pear.ui.Resizable}
+ * @private
+ */
 pear.ui.GridHeaderCell.prototype.resizable_ = null;
 
+
+/**
+ * [getSortDirection description]
+ * @return {number}
+ */
 pear.ui.GridHeaderCell.prototype.getSortDirection = function() {
   this.sortDirection_ = this.sortDirection_ || pear.ui.Grid.SortDirection.NONE;
   return this.sortDirection_;
 };
 
+
+/**
+ * [setsortDirection description]
+ * @param  {?pear.ui.Grid.SortDirection} value
+ */
 pear.ui.GridHeaderCell.prototype.setsortDirection = function(value) {
   this.sortDirection_ = value || pear.ui.Grid.SortDirection.NONE;
 };
 
 
+/**
+ * [getMenuControl description]
+ * @return {goog.ui.Control}
+ */
 pear.ui.GridHeaderCell.prototype.getMenuControl = function() {
   return this.headerMenuContainer_;
 };
 
 
+/**
+ * [setMenuState description]
+ * @param {boolean} open
+ */
 pear.ui.GridHeaderCell.prototype.setMenuState = function(open) {
   this.keepSlideMenuOpen_ = open;
 };
@@ -90,22 +108,48 @@ pear.ui.GridHeaderCell.prototype.getContent = function() {
   return '';
 };
 
+
+/**
+ * [getContentCell description]
+ * @return {?Element}
+ */
 pear.ui.GridHeaderCell.prototype.getContentCell = function() {
   return this.contentCell_;
 };
 
+
+/**
+ * [getContentText description]
+ * @return {string}
+ */
 pear.ui.GridHeaderCell.prototype.getContentText = function() {
   return this.getModel()['headerText'];
 };
 
+
+/**
+ * [getCellData description]
+ * @return {Object}
+ */
 pear.ui.GridHeaderCell.prototype.getCellData = function() {
-  return this.getModel();
+  var columnData = (/** @type {Object} */ (this.getModel()));
+  return columnData;
 };
 
+
+/**
+ * [getColumnId description]
+ * @return {string}
+ */
 pear.ui.GridHeaderCell.prototype.getColumnId = function() {
   return this.getCellData()['id'];
 };
 
+
+/**
+ * [getContentIndicatorElement description]
+ * @return {Element}
+ */
 pear.ui.GridHeaderCell.prototype.getContentIndicatorElement = function() {
   return this.contentIndicator_;
 };
@@ -128,18 +172,19 @@ pear.ui.GridHeaderCell.prototype.enterDocument = function() {
  */
 pear.ui.GridHeaderCell.prototype.registerEvent_ = function() {
   this.getHandler().
-      listen(this, goog.ui.Component.EventType.ENTER,
+      listenWithScope(this, goog.ui.Component.EventType.ENTER,
           this.handleEnter_, false, this).
-      listen(this, goog.ui.Component.EventType.LEAVE,
+      listenWithScope(this, goog.ui.Component.EventType.LEAVE,
           this.handleLeave_, false, this).
-      listen(this.getElement(), goog.events.EventType.CLICK,
+      listenWithScope(this.getElement(), goog.events.EventType.CLICK,
           this.handleActive_, false, this);
 };
 
 
 /**
- * @private
  * Header cell is divided into 3 content , indicators and sliding menu
+ * @private
+ *
  */
 pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function() {
   var grid = this.getGrid();
@@ -165,7 +210,12 @@ pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function() {
   this.adjustContentCellWidth();
 };
 
-pear.ui.GridHeaderCell.prototype.createHeaderCellIndicatorPlaceHolder_ = function() {
+
+/**
+ * @private
+ */
+pear.ui.GridHeaderCell.prototype.createHeaderCellIndicatorPlaceHolder_
+                                                              = function() {
   // Header Menu Control
   this.contentIndicator_ = goog.dom.createDom('div',
       'pear-grid-cell-header-indicators'
@@ -175,13 +225,24 @@ pear.ui.GridHeaderCell.prototype.createHeaderCellIndicatorPlaceHolder_ = functio
 };
 
 
+/**
+ * [createHeaderCellMenu_ description]
+ * @private
+ */
 pear.ui.GridHeaderCell.prototype.createHeaderCellMenu_ = function() {
   // Header Menu Control
-  this.headerMenuContainer_ = new goog.ui.Control(null, pear.ui.GridHeaderCellMenuRenderer.getInstance());
-  this.headerMenuContainer_.setSupportedState(goog.ui.Component.State.ALL, false);
+  this.headerMenuContainer_ =
+      new goog.ui.Control(null, pear.ui.GridHeaderCellMenuRenderer.getInstance());
+  this.headerMenuContainer_.
+      setSupportedState(goog.ui.Component.State.ALL, false);
   this.headerMenuContainer_.render(this.getElement());
 };
 
+
+/**
+ * [createResizeHandle_ description]
+ * @private
+ */
 pear.ui.GridHeaderCell.prototype.createResizeHandle_ = function() {
   var resizeData = {
     handles: pear.ui.Resizable.Position.RIGHT
@@ -189,49 +250,73 @@ pear.ui.GridHeaderCell.prototype.createResizeHandle_ = function() {
 
   this.resizable_ = new pear.ui.Resizable(this.getElement(), resizeData);
   this.getHandler().
-      listen(this.resizable_, pear.ui.Resizable.EventType.RESIZE,
+      listenWithScope(this.resizable_, pear.ui.Resizable.EventType.RESIZE,
           this.handleResize_, false, this).
-      listen(this.resizable_, pear.ui.Resizable.EventType.END_RESIZE,
+      listenWithScope(this.resizable_, pear.ui.Resizable.EventType.END_RESIZE,
           this.handleResizeEnd_, false, this);
 };
 
+
+/**
+ * [adjustContentCellWidth description]
+ */
 pear.ui.GridHeaderCell.prototype.adjustContentCellWidth = function() {
   this.syncContentCellOnResize_();
 };
 
+
+/**
+ * [syncContentCellOnResize_ description]
+ * @private
+ */
 pear.ui.GridHeaderCell.prototype.syncContentCellOnResize_ = function() {
   var bound = goog.style.getBounds(this.getElement());
   var boundContent = goog.style.getContentBoxSize(this.getElement());
 
   var boundIndicator = goog.style.getBounds(this.getContentIndicatorElement());
-  var boundSlideMenu;
+  var boundSlideMenu, marginBox;
   var lessWidth = 0;
+  var grid = this.getGrid();
   if (grid.getConfiguration().AllowColumnHeaderMenu) {
-    var boundSlideMenu = goog.style.getBounds(this.headerMenuContainer_.getElement());
-    var marginBox = goog.style.getMarginBox(this.headerMenuContainer_.getElement());
+    boundSlideMenu = goog.style.getBounds(
+        this.headerMenuContainer_.getElement());
+    marginBox = goog.style.getMarginBox(
+        this.headerMenuContainer_.getElement());
     if (marginBox.left < 0) {
       lessWidth = lessWidth + boundSlideMenu.width;
     }
   }
 
   if (grid.getConfiguration().AllowColumnResize) {
-    var resizeHandle = goog.style.getBounds(this.resizable_.getHandle(pear.ui.Resizable.Position.RIGHT));
+    var resizeHandle = goog.style.getBounds(
+        this.resizable_.getHandle(pear.ui.Resizable.Position.RIGHT));
     if (resizeHandle.width > 0) {
       lessWidth = lessWidth + resizeHandle.width;
     }
   }
 
-  lessWidth = lessWidth + boundIndicator.width + (bound.width - boundContent.width);
+  lessWidth = lessWidth + boundIndicator.width +
+      (bound.width - boundContent.width);
   this.resizable_.setMinWidth(lessWidth + 10);
   goog.style.setWidth(this.contentCell_, bound.width - lessWidth);
 };
 
+
+/**
+ * [getHeaderMenuContainerWidth description]
+ * @return {number}
+ */
 pear.ui.GridHeaderCell.prototype.getHeaderMenuContainerWidth = function() {
   // TODO
   var bounds = goog.style.getBounds(this.headerMenuContainer_.getElement());
   return bounds.width;
 };
 
+
+/**
+ * [slideMenuOpen description]
+ * @param  {boolean} display
+ */
 pear.ui.GridHeaderCell.prototype.slideMenuOpen = function(display) {
   var marginleft = 0;
   var left = 0;
@@ -250,7 +335,7 @@ pear.ui.GridHeaderCell.prototype.slideMenuOpen = function(display) {
 /**
  * @override
  */
-pear.ui.GridHeaderCell.prototype.setPosition_ = function() {
+pear.ui.GridHeaderCell.prototype.setPosition = function() {
   var left, top;
   left = 0;
   top = 0;
@@ -266,49 +351,34 @@ pear.ui.GridHeaderCell.prototype.setPosition_ = function() {
 
 
 /**
- * @override
- *
+ * [handleMenuSlide_ description]
+ * @param  {Element} el
+ * @param  {Array.<number>} value
  */
-pear.ui.GridHeaderCell.prototype.setSize_ = function() {
-  var width, height;
-  width = this.getCellWidthOffset_();
-  height = this.getCellHeightOffset_();
-  goog.style.setHeight(this.getElement(), height);
-  goog.style.setWidth(this.getElement(), width);
-};
-
-
-/**
- * @override
- *
- */
-pear.ui.GridHeaderCell.prototype.draw = function() {
-  pear.ui.GridHeaderCell.superClass_.draw.call(this);
-};
-
-
 pear.ui.GridHeaderCell.prototype.handleMenuSlide_ = function(el, value) {
   var anim = new pear.fx.dom.HeaderMenuSlide(el, [0], value, 300);
-  goog.events.listen(anim, goog.fx.Animation.EventType.ANIMATE, this.adjustContentCellWidth, false, this);
+  goog.events.listen(anim, goog.fx.Animation.EventType.ANIMATE,
+      this.adjustContentCellWidth, false, this);
   anim.play();
 };
 
 
 /**
- * @private
- * @override the events - do not propagate events to container
+ * [handleChildMouseEvents_ description]
+ * @param  {goog.events.Event} ge [description]
  */
 pear.ui.GridHeaderCell.prototype.handleChildMouseEvents_ = function(ge) {
   ge.stopPropagation();
 };
 
-
 /**
- * @private
+ * [handleActive_ description]
+ * @param  {goog.events.Event} ge [description]
  */
 pear.ui.GridHeaderCell.prototype.handleActive_ = function(ge) {
   ge.stopPropagation();
-  if (this.resizable_ && this.resizable_.getResizehandle(pear.ui.Resizable.Position.RIGHT) ===
+  if (this.resizable_ && 
+      this.resizable_.getResizehandle(pear.ui.Resizable.Position.RIGHT) ===
       ge.target) {
     // Ignore
 
@@ -353,21 +423,26 @@ pear.ui.GridHeaderCell.prototype.handleLeave_ = function() {
 
 
 /**
+ * [handleResize_ description]
+ * @param  {pear.ui.ResizableEvent} ge [description]
  * @private
  */
-pear.ui.GridHeaderCell.prototype.handleResize_ = function(be) {
-  be.stopPropagation();
+pear.ui.GridHeaderCell.prototype.handleResize_ = function(ge) {
+  ge.stopPropagation();
   var pos = this.getCellIndex();
-  grid.setColumnWidth(pos, be.size.width);
+  var grid = this.getGrid();
+  grid.setColumnWidth(pos, ge.size.width);
   this.adjustContentCellWidth();
 };
 
 
 /**
+ * [handleResizeEnd_ description]
+ * @param  {pear.ui.ResizableEvent} ge [description]
  * @private
  */
-pear.ui.GridHeaderCell.prototype.handleResizeEnd_ = function(be) {
-  be.stopPropagation();
+pear.ui.GridHeaderCell.prototype.handleResizeEnd_ = function(ge) {
+  ge.stopPropagation();
   var grid = this.getGrid();
   grid.refresh();
 };
@@ -376,8 +451,8 @@ pear.ui.GridHeaderCell.prototype.handleResizeEnd_ = function(be) {
 /**
  * @public
  */
-pear.ui.GridHeaderCell.prototype.resetSortDirection = function(be) {
-  this.setsortDirection(null);
+pear.ui.GridHeaderCell.prototype.resetSortDirection = function() {
+  this.setsortDirection(pear.ui.Grid.SortDirection.NONE);
 };
 
 
@@ -396,9 +471,45 @@ pear.ui.GridHeaderCell.prototype.toggleSortDirection = function() {
 };
 
 
+/**
+ * @override
+ */
+pear.ui.GridHeaderCell.prototype.disposeInternal = function() {
+  if (this.resizable_) {
+    this.resizable_.dispose();
+    this.resizable_ = null;
+  }
+  this.headerMenuContainer_ = null;
+  //if (this.contentIndicator_){
+   // this.contentIndicator_.removeAll();
+  //}
+  //if (this.contentCell_){
+   // this.contentCell_.removeAll();
+  //}
+  delete this.contentIndicator_;
+  delete this.contentCell_;
+  delete this.sortDirection_;
+  pear.ui.GridHeaderCell.superClass_.disposeInternal.call(this);
+};
+
+
+
 goog.provide('pear.ui.GridHeaderCellMenuButton');
 goog.require('goog.ui.MenuButton');
 
+
+
+/**
+ * [GridHeaderCellMenuButton description]
+ * @param {string} content
+ * @param {goog.ui.Menu=} opt_menu Menu to render under the button when clicked.
+ * @param {goog.ui.ButtonRenderer=} opt_renderer Renderer used to render or
+ *     decorate the menu button; defaults to {@link goog.ui.MenuButtonRenderer}.
+ * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM hepler, used for
+ *     document interaction.
+ * @constructor
+ * @extends {goog.ui.MenuButton}
+ */
 pear.ui.GridHeaderCellMenuButton = function(
     content, opt_menu, opt_renderer, opt_domHelper) {
   goog.ui.MenuButton.call(this, content, opt_menu, opt_renderer ||

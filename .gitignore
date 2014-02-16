@@ -3,7 +3,7 @@
 *.py
 peardeps.js
 
-
+out/
 
 # OS generated files #
 ######################

@@ -69,7 +69,9 @@ goog.ui.Component.prototype.row_ = null;
  */
 goog.ui.Component.prototype.grid_ = null;
 
-
+/**
+ * @inheritDoc
+ */
 pear.ui.Cell.prototype.disposeInternal = function() {
   this.grid_ = null;
   this.row_ = null;
@@ -116,7 +118,7 @@ pear.ui.Cell.prototype.getGrid = function() {
 
 
 /**
- * @param {number} pos
+ * @param {number} index
  */
 pear.ui.Cell.prototype.setCellIndex = function(index) {
   this.columnIndex_ = index;
@@ -130,9 +132,13 @@ pear.ui.Cell.prototype.getCellIndex = function() {
   return this.columnIndex_;
 };
 
+/**
+ * [getColumnObject description]
+ * @return {Object} [description]
+ */
 pear.ui.Cell.prototype.getColumnObject = function() {
   var grid = this.getGrid();
-  var columns = grid.getColumns_();
+  var columns = grid.getDataView().getDataColumns();
   return columns[this.getCellIndex()];
 };
 
@@ -193,11 +199,11 @@ pear.ui.Cell.prototype.getCellHeight_ = function() {
 pear.ui.Cell.prototype.getCellWidthOffset_ = function() {
   var width = this.getCellWidth();
   return width;
-  var paddingBox = goog.style.getPaddingBox(this.getElement());
+  /*var paddingBox = goog.style.getPaddingBox(this.getElement());
   var borderBox = goog.style.getBorderBox(this.getElement());
 
   return (width - paddingBox.left - paddingBox.right - borderBox.left -
-      borderBox.right);
+      borderBox.right);*/
 };
 
 
@@ -217,9 +223,9 @@ pear.ui.Cell.prototype.getCellHeightOffset_ = function() {
 
 
 /**
- * @private
+ * 
  */
-pear.ui.Cell.prototype.setPosition_ = function() {
+pear.ui.Cell.prototype.setPosition = function() {
   var left, top;
   left = 0;
   top = 0;
@@ -254,5 +260,7 @@ pear.ui.Cell.prototype.setSize_ = function() {
  */
 pear.ui.Cell.prototype.draw = function() {
   this.setSize_();
-  this.setPosition_();
+  this.setPosition();
 };
+
+

@@ -34,7 +34,9 @@ pear.ui.GridFooterRow.prototype.getPager = function() {
   return this.pager_;
 };
 
-
+/**
+ * @inheritDoc
+ */
 pear.ui.GridFooterRow.prototype.disposeInternal = function() {
   if (this.pager_) {
     this.pager_.dispose();
@@ -53,7 +55,7 @@ pear.ui.GridFooterRow.prototype.enterDocument = function() {
   var config = this.getGrid().getConfiguration();
   this.setHeight(5);
   var elem = this.getElement();
-  this.setPosition_();
+  this.setPosition();
   goog.style.setSize(elem, this.getGrid().getWidth(),
       this.getHeight());
 

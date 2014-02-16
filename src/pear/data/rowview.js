@@ -6,45 +6,76 @@ goog.require('goog.ui.IdGenerator');
 
 
 /**
+ * [RowView description]
+ * @param {?string} rowid   
+ * @param {?Array} rowdata 
  * @constructor
- * @param {number} id
- * @param {Array} rowdata
  * @extends {goog.Disposable}
  */
-/*pear.data.RowView = function(rowdata,dv) {
+pear.data.RowView = function(rowid, rowdata) {
   goog.Disposable.call(this);
 
-  // this.position_= position;
-  this.rowdata_ = rowdata;
-  this.dataview_ = dv;
-  this.rowId_ = this.idGenerator_.getNextUniqueId();
+  this.rowdata_ = rowdata || [];
+  this.rowId_ = rowid || '';
 };
 goog.inherits(pear.data.RowView, goog.Disposable);
 
-pear.data.RowView.prototype.idGenerator_ = goog.ui.IdGenerator.getInstance();
-pear.data.RowView.prototype.rowId_ = null;
 
+/**
+ * [rowdata_ description]
+ * @type {?Array}
+ * @private
+ */
+pear.data.RowView.prototype.rowdata_ = null;
+
+
+/**
+ * [rowId_ description]
+ * @type {string}
+ * @private
+ */
+pear.data.RowView.prototype.rowId_ = '';
+
+
+/**
+ * [selectState_ description]
+ * @type {boolean}
+ */
+pear.data.RowView.prototype.selectState_ = false;
+
+
+/**
+ * [getRowData description]
+ * @return {?Array}
+ */
 pear.data.RowView.prototype.getRowData = function() {
   return this.rowdata_;
 };
 
 
-//pear.data.RowView.prototype.setRowID = function(id) {
-//  this.rowId_ = id;
-//};
-
-pear.data.RowView.prototype.getDataView = function() {
-  return this.dataview_;
-};
-
+/**
+ * [getRowId description]
+ * @return {string}
+ */
 pear.data.RowView.prototype.getRowId = function() {
-  return this.rowId_;
+  return this.rowId_ || 'no-id';
 };
-*/
 
-//pear.data.RowView.prototype.getRowContainer = function() {
-//  return this.row_;
-//};
-//pear.data.RowView.prototype.setRowContainer = function(container) {
-//  this.row_ = container;
-//};
+
+/**
+ * [setSelected description]
+ * @param {boolean} select
+ */
+pear.data.RowView.prototype.setSelected = function(select) {
+  this.selectState_ = select;
+};
+
+
+/**
+ * @override
+ */
+pear.data.RowView.prototype.disposeInternal = function() {
+  this.rowdata_ = null;
+  delete this.rowId_;
+  pear.data.RowView.superClass_.disposeInternal.call(this);
+};

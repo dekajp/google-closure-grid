@@ -8,17 +8,27 @@ goog.require('pear.ui.Plugin');
 
 
 
-
+/**
+ * [ColumnPicker description]
+ * @constructor 
+ * @extends {pear.ui.Plugin}
+ */
 pear.plugin.ColumnPicker = function() {
   pear.ui.Plugin.call(this);
 };
 goog.inherits(pear.plugin.ColumnPicker, pear.ui.Plugin);
 
 
+/**
+ * @inheritDoc
+ */
 pear.plugin.ColumnPicker.prototype.getClassId = function() {
   return 'ColumnPicker';
 };
 
+/**
+ * init plugin
+ */
 pear.plugin.ColumnPicker.prototype.init = function() {
   var grid = this.getGrid();
   this.makeColumnsDraggable();
@@ -26,35 +36,14 @@ pear.plugin.ColumnPicker.prototype.init = function() {
   goog.events.listen(grid, pear.ui.Grid.EventType.HEADERCELLS_RENDERED, this.makeColumnsDraggable, false, this);
 };
 
-pear.plugin.ColumnPicker.prototype.disposeInternal = function() {
-  this.grid_ = null;
 
-  pear.plugin.ColumnPicker.superClass_.disposeInternal.call(this);
-};
-
-
-
+/**
+ * [makeColumnsDraggable description]
+ */
 pear.plugin.ColumnPicker.prototype.makeColumnsDraggable = function() {
 
   var grid = this.getGrid();
   var headerRow = grid.getHeaderRow();
-
-  /*var dlg = new goog.fx.DragDropGroup();
-  headerRow.forEachChild (function (headercell){
-    dlg.addItem(headercell.getElement(), headercell.getElement().firstChild.nodeValue);
-  });
-
-  headerRow.forEachChild (function (headercell){
-    dlg.addTarget(new goog.fx.DragDrop (headercell.getElement()));
-  });
-  dlg.setDragClass('drag-class');
-  //dlg.setSourceClass('source-class');
-  dlg.setTargetClass('target-class');
-  dlg.init();
-
-  goog.events.listen(dlg,goog.fx.AbstractDragDrop.EventType.DRAGEND ,this.handleDragEvent_,false,this);
-  goog.events.listen(dlg,goog.fx.AbstractDragDrop.EventType.DRAG ,this.handleDragMove_,false,this);
-  */
 
   var dlg = new goog.fx.DragListGroup();
   dlg.setDragItemHoverClass('cursor_move');
@@ -67,14 +56,24 @@ pear.plugin.ColumnPicker.prototype.makeColumnsDraggable = function() {
   goog.events.listen(dlg, goog.fx.DragListGroup.EventType.DRAGMOVE, this.handleDragMove_, false, this);
 };
 
+/**
+ * [handleDragMove_ description]
+ * @param  {goog.events.Event} ge [description]
+ * @private
+ */
 pear.plugin.ColumnPicker.prototype.handleDragMove_ = function(ge) {
 
 };
 
+/**
+ * [handleDragEvent_ description]
+ * @param  {goog.events.Event} ge [description]
+ * @private
+ */
 pear.plugin.ColumnPicker.prototype.handleDragEvent_ = function(ge) {
   var grid = this.getGrid();
   var headerRow = grid.getHeaderRow();
-  var columns = grid.getColumns_();
+  var columns =grid.getColumns();// grid.getColumns_();
   var newColumns = [];
   var columnsNodes = goog.dom.getChildren(headerRow.getElement());
   goog.array.forEach(columnsNodes, function(node, index) {
@@ -88,6 +87,14 @@ pear.plugin.ColumnPicker.prototype.handleDragEvent_ = function(ge) {
 
 };
 
+/**
+ * @inheritDoc
+ */
+pear.plugin.ColumnPicker.prototype.disposeInternal = function() {
+  this.setGrid(null);
+
+  pear.plugin.ColumnPicker.superClass_.disposeInternal.call(this);
+};
 
 
 

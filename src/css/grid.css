@@ -63,6 +63,10 @@
   background: #E0EEEE;
 }
 
+.pear-grid-row-select .pear-grid-cell{
+  background: #E0E5EB;
+}
+
 .pear-grid-cell{
   position: absolute;
   border: 1px solid transparent;
@@ -155,9 +159,6 @@
   display: inline-block;
   position: absolute;
 }
-
-
-
 
 .pear-ui-resizable-handle {
   font-size: 0.1px;
