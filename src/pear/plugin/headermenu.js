@@ -1,4 +1,4 @@
-goog.provide('pear.plugin.HeaderMenu');
+  goog.provide('pear.plugin.HeaderMenu');
 
 goog.require('goog.events.Event');
 goog.require('goog.positioning.MenuAnchoredPosition');
@@ -53,7 +53,7 @@ pear.plugin.HeaderMenu.prototype.createHeaderMenuDom = function() {
   headerRow.forEachChild(function(headercell) {
 
     var m1 = new goog.ui.Menu();
-    m1.setId('menudemo');
+    m1.setId('menudemo'+headercell.getCellIndex());
     goog.array.forEach(['Menu Option-1', 'Menu Option-2', 'Menu Option-3', 'Menu Option-4', null, 'Menu Option-5'],
         function(label) {
           var item;
@@ -64,7 +64,7 @@ pear.plugin.HeaderMenu.prototype.createHeaderMenuDom = function() {
           } else {
             item = new goog.ui.MenuSeparator();
           }
-          m1.addChild(item);
+          m1.addChild(item,true);
         });
 
     var mb = new pear.plugin.HeaderMenuButton('', m1);
