@@ -18,10 +18,10 @@ version 0.1 (unstable)
 * Data Filter
 * Column Move
 
-
 ##Credits 
 * pear.ui.Grid borrows concepts and inspiration from [Slickgrid](https://github.com/mleibman/SlickGrid)
 * [Google-Closure-Library](https://code.google.com/p/closure-library/)
 
 ##License
 MIT-License
+
