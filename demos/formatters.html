@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
-
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/checkbox.css">
   
   <link rel="stylesheet" href="../src/css/grid.css" />
   
@@ -24,8 +24,9 @@
     goog.require('goog.debug.DivConsole');
     goog.require('goog.debug.LogManager');
     goog.require('goog.dom.forms');
-    goog.require('goog.i18n.NumberFormat')
-    goog.require('goog.i18n.DateTimeFormat')
+    goog.require('goog.i18n.NumberFormat');
+    goog.require('goog.i18n.DateTimeFormat');
+    goog.require('goog.ui.Checkbox');
 
     goog.require('pear.ui.Grid');
     
@@ -108,70 +109,58 @@
     return  elem.checked;
   };
 
-  function currencyFormatter(val){
+  function currencyFormatter(gridcell){
     var fmt = new goog.i18n.NumberFormat (goog.i18n.NumberFormat.Format.CURRENCY);
-    return fmt.format(val);
+    var text = fmt.format(gridcell.getModel());
+    goog.dom.setTextContent(gridcell.getElement(),text);
   };
 
-  function numberFormatter(val){
+  function numberFormatter(gridcell){
     var fmt = new goog.i18n.NumberFormat (goog.i18n.NumberFormat.Format.DECIMAL);
-    return fmt.format(val);
+    var text = fmt.format(gridcell.getModel());
+    goog.dom.setTextContent(gridcell.getElement(),text);
   };
 
-  function dateFormatter(val){
+  function dateFormatter(gridcell){
     var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
-    return fmt.format(val);
+    var text = fmt.format(gridcell.getModel());
+
+    goog.dom.setTextContent(gridcell.getElement(),text);
   };
 
+  function processedFormatter(gridcell){
+    var text = gridcell.getModel();
+    goog.dom.setTextContent(gridcell.getElement(),'');
+    var enable = new goog.ui.Checkbox();
+    if (text){
+      enable.setChecked(true);
+    }else{
+      enable.setChecked(false);
+    }
+    
+    enable.render(gridcell.getElement());
+  };
 
   var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
   var unitprice = [1.01,2.25,3.45,4.97,5.0,6.0,7.0,8.2,9.5,10];
 
+  
   var grid;
   var columns = [
-    { 
-      id: "orderno",
-      headerText: "Order No",
-      width:75,
-      datatype:pear.data.DataTable.DataType.NUMBER
-    },
-    {
-      id: "item",
-      headerText: "Item",
-      width:75,
-      datatype:pear.data.DataTable.DataType.TEXT
-    },
-    {
-      id: "unitprice",
-      headerText: "Unit Price",
-      width:75,
-      datatype:pear.data.DataTable.DataType.NUMBER,
-      formatter:currencyFormatter
-    },
-    {
-      id: "quantity", 
-      headerText: "Quantity",
-      datatype:pear.data.DataTable.DataType.NUMBER,
-      formatter:numberFormatter
-    },
-    {
-      id: "total",
-      headerText: "Total",
-      datatype:pear.data.DataTable.DataType.NUMBER,
-      formatter:currencyFormatter
-    },
-    {
-      id: "created",
-      headerText: "Created On",
-      datatype:pear.data.DataTable.DataType.DATETIME,
-      formatter:dateFormatter
-     },
-    {
-      id: "processed",
-      headerText: "Processed",
-      datatype:pear.data.DataTable.DataType.BOOLEAN
-    }
+    new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
+    new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME),
+    new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
   ];
+
+  columns[2].setColumnFormatter(currencyFormatter,this);
+  columns[3].setColumnFormatter(numberFormatter,this);
+  columns[4].setColumnFormatter(currencyFormatter,this);
+  columns[5].setColumnFormatter(dateFormatter,this);
+  columns[6].setColumnFormatter(processedFormatter,this);
 
   var load = function () {
     if (grid){

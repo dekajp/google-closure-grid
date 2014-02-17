@@ -2,33 +2,26 @@
 
 version 0.1 (unstable)
 
-Demo : http://dekajp.github.io/demos/index.html
-
+* Demo : http://dekajp.github.io/demos/index.html
+* API  : http://dekajp.github.io/docs/ 
 
 ##Complete Features
 
 * Data Virtualization ~ 100,000 Rows
-* Alternate Row Highlight
 * Active Cell and Active Row Highlight
 * Sorting
 * Column Resizing
-* Cell Click Event
+* Header Cell Menu
 * Paging
+* Column Formatting
+* Keyboard Navigation
+* Data Filter
+* Column Move
 
-
-
-##Todo - Features
-
-* Show/Hide Columns
-* Columns Move
-* Keyboard Navigation - Cell Level and Grid Level
-* Column Filterns
-* Column Formatters
-* -
-* -
-* -
-* -
-* -
 
 ##Credits 
-pear.ui.Grid borrows concepts and inspiration from [Slickgrid](https://github.com/mleibman/SlickGrid)
+* pear.ui.Grid borrows concepts and inspiration from [Slickgrid](https://github.com/mleibman/SlickGrid)
+* [Google-Closure-Library](https://code.google.com/p/closure-library/)
+
+##License
+MIT-License

@@ -33,13 +33,23 @@ goog.inherits(pear.ui.GridCell, pear.ui.Cell);
  *     comprising the component's contents.
  */
 pear.ui.GridCell.prototype.getContent = function() {
-  var columnObject = this.getColumnObject();
-  if (columnObject.formatter) {
-    return String(columnObject.formatter(this.getModel()));
-  }
+  
   return String(this.getModel());
 };
 
+/**
+ * Returns the text caption or DOM structure displayed in the component.
+ * @return {goog.ui.ControlContent} Text caption or DOM structure
+ *     comprising the component's contents.
+ */
+pear.ui.GridCell.prototype.applyFormatting = function() {
+  var columnObject = this.getColumnObject();
+  var formatter = columnObject.getColumnFormatter();
+  var handler = formatter.handler || this;
+  if (formatter && formatter.fn){
+    formatter.fn.call(handler,this);
+  }
+};
 
 /**
  * Configures the component after its DOM has been rendered, and sets up event
@@ -55,6 +65,8 @@ pear.ui.GridCell.prototype.enterDocument = function() {
   }
   */
   pear.ui.GridCell.superClass_.enterDocument.call(this);
+
+  this.applyFormatting();
 };
 
 

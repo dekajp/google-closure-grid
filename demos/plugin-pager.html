@@ -121,44 +121,13 @@
 
   var grid;
   var columns = [
-    { 
-      id: "orderno",
-      headerText: "Order No",
-      width:75,
-      datatype:pear.data.DataTable.DataType.NUMBER
-    },
-    {
-      id: "item",
-      headerText: "Item",
-      width:75,
-      datatype:pear.data.DataTable.DataType.TEXT
-    },
-    {
-      id: "unitprice",
-      headerText: "Unit Price",
-      width:75,
-      datatype:pear.data.DataTable.DataType.NUMBER
-    },
-    {
-      id: "quantity", 
-      headerText: "Quantity",
-      datatype:pear.data.DataTable.DataType.NUMBER
-    },
-    {
-      id: "total",
-      headerText: "Total",
-      datatype:pear.data.DataTable.DataType.NUMBER
-    },
-    {
-      id: "created",
-      headerText: "Created On",
-      datatype:pear.data.DataTable.DataType.DATETIME,
-     },
-    {
-      id: "processed",
-      headerText: "Processed",
-      datatype:pear.data.DataTable.DataType.BOOLEAN
-    }
+    new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
+    new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME),
+    new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
   ];
 
   var load = function () {
@@ -179,7 +148,7 @@
       data[i].quantity = Math.round(Math.random() * 10000);
       data[i].total = data[i].unitprice * data[i].quantity;
       data[i].processed= (i % 5 === 0);
-      data[i].created = '03/01/2014'
+      data[i].created = '11/21/2013';
     }
 
     var start = +new Date();  // log start timestamp

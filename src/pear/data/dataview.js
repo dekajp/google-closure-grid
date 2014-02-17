@@ -87,19 +87,19 @@ pear.data.DataView.prototype.selectedRowViewsIds_ = [];
 
 /**
  * [getDataColumns description]
- * @return {Array}
+ * @return {Array.<pear.data.Column>}
  */
-pear.data.DataView.prototype.getDataColumns = function() {
-  return this.dataTable_.getDataColumns();
+pear.data.DataView.prototype.getColumns = function() {
+  return this.dataTable_.getColumns();
 };
 
 
 /**
- * [setDataColumns description]
- * @param {Array.<Object>} dc
+ * set column info of dataview
+ * @param {Array.<pear.data.Column>} dc
  */
-pear.data.DataView.prototype.setDataColumns = function(dc) {
-  this.dataTable_.setDataColumns(dc);
+pear.data.DataView.prototype.setColumns = function(dc) {
+  this.dataTable_.setColumns(dc);
 };
 
 
@@ -265,9 +265,9 @@ pear.data.DataView.prototype.updateDataRow = function(uniqueid, datarow) {
  * @param {Object} filter
  */
 pear.data.DataView.prototype.addColumnFilter = function(dataColumn, filter) {
-  var columns = this.getDataColumns();
+  var columns = this.getColumns();
   goog.array.forEach(columns, function(column, index) {
-    if (column.id === dataColumn.id) {
+    if (column.getId() === dataColumn.getId())  {
       column.filter = column.filter || [];
       // TODO - Multiple Filter support not yet complete
       column.filter = [];
@@ -283,10 +283,10 @@ pear.data.DataView.prototype.addColumnFilter = function(dataColumn, filter) {
  * @return {string}
  */
 pear.data.DataView.prototype.getColumnFilter = function(dataColumn) {
-  var columns = this.getDataColumns();
+  var columns = this.getColumns();
   var text = '';
   goog.array.forEach(columns, function(column, index) {
-    if (column.id === dataColumn.id) {
+    if (column.getId() === dataColumn.getId()) {
       if (column.filter) {
         text = column.filter[0] || '';
       }
@@ -301,9 +301,9 @@ pear.data.DataView.prototype.getColumnFilter = function(dataColumn) {
  * @param  {Object} dataColumn
  */
 pear.data.DataView.prototype.clearColumnFilter = function(dataColumn) {
-  var columns = this.getDataColumns();
+  var columns = this.getColumns();
   goog.array.forEach(columns, function(column, index) {
-    if (column.id === dataColumn.id) {
+    if (column.getId() === dataColumn.getId()) {
       column.filter = null;
     }
   },this);

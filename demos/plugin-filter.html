@@ -127,46 +127,16 @@
   var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
 
   var grid,dv;
+  var datecol = new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME);
+  datecol.setColumnFormatter(dateFormatter);
   var columns = [
-    { 
-      id: "orderno",
-      headerText: "Order No",
-      width:75,
-      datatype:pear.data.DataTable.DataType.NUMBER
-    },
-    {
-      id: "item",
-      headerText: "Item",
-      width:75,
-      datatype:pear.data.DataTable.DataType.TEXT
-    },
-    {
-      id: "unitprice",
-      headerText: "Unit Price",
-      width:75,
-      datatype:pear.data.DataTable.DataType.NUMBER
-    },
-    {
-      id: "quantity", 
-      headerText: "Quantity",
-      datatype:pear.data.DataTable.DataType.NUMBER
-    },
-    {
-      id: "total",
-      headerText: "Total",
-      datatype:pear.data.DataTable.DataType.NUMBER
-    },
-    {
-      id: "created",
-      headerText: "Created On",
-      datatype:pear.data.DataTable.DataType.DATETIME,
-      formatter:dateFormatter
-     },
-    {
-      id: "processed",
-      headerText: "Processed",
-      datatype:pear.data.DataTable.DataType.BOOLEAN
-    }
+    new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
+    new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
+    datecol,
+    new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
   ];
 
   var load = function () {

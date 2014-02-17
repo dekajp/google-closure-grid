@@ -1,13 +1,13 @@
 goog.provide('pear.data.DataTable');
 
 goog.require('goog.events.EventTarget');
-
+goog.require('pear.data.Column');
 
 
 /**
  * DataTable - holds column and raw data for grid
  * 
- * @param {Array} datacolumns
+ * @param {Array} columns
  * @param {Array} datarows
  * @constructor
  * @extends {goog.events.EventTarget}
@@ -31,6 +31,7 @@ pear.data.DataTable.DataType = {
   TEXT: 'text',
   BOOLEAN: 'boolean',
   DATETIME: 'datetime'
+  // DECIMAL: 'decimal'
 };
 
 
@@ -44,7 +45,7 @@ pear.data.DataTable.prototype.idGenerator_ = goog.ui.IdGenerator.getInstance();
 
 /**
  * @private
- * @type {Array}
+ * @type {Array.<pear.data.Column>}
  */
 pear.data.DataTable.prototype.dataColumns_ = [];
 
@@ -62,19 +63,29 @@ pear.data.DataTable.prototype.dataRows_ = [];
  */
 pear.data.DataTable.prototype.mapIdToRow_ = null;
 
+/**
+ * struct to keep mapping between DataRow and RowId (RowView Id)
+ * @return {goog.structs.Map} [description]
+ */
 pear.data.DataTable.prototype.getMapIdToRow = function() {
   return this.mapIdToRow_;
 };
 
 
 /**
- * @return {Array}
+ * get columns
+ * @return {Array.<pear.data.Column>}
  */
-pear.data.DataTable.prototype.getDataColumns = function() {
+pear.data.DataTable.prototype.getColumns = function() {
   return this.dataColumns_;
 };
 
-pear.data.DataTable.prototype.setDataColumns = function(dc) {
+
+/**
+ * set columns
+ * @param {Array.<pear.data.Column>} dc
+ */
+pear.data.DataTable.prototype.setColumns = function(dc) {
   this.dataColumns_ = dc;
 };
 

@@ -44,6 +44,7 @@ goog.require('goog.log');
 goog.require('goog.object');
 goog.require('pear.data.DataTable');
 goog.require('pear.data.DataView');
+goog.require('pear.data.Column');
 goog.require('pear.plugin.ColumnPicker');
 goog.require('pear.plugin.FilterMenu');
 goog.require('pear.plugin.FooterStatus');
@@ -544,42 +545,55 @@ pear.ui.Grid.prototype.setDataView = function(dv) {
 
 /**
  * clone array of columns and return them
- * @return {Array}
+ * @return {Array.<pear.data.Column>}
  */
 pear.ui.Grid.prototype.getColumns = function() {
-	var datacolumns = this.dataview_.getDataColumns();
+	var cols = this.dataview_.getColumns();
 	var columns = [];
-	goog.array.forEach(datacolumns, function(c) {
+	goog.array.forEach(cols, function(c) {
 		var clone = goog.object.clone(c);
 		columns.push(clone);
 	});
 	return columns;
 };
 
+/**
+ * Get column by id
+ * @param  {string} id [description]
+ * @return {?pear.data.Column}
+ */
+pear.ui.Grid.prototype.getColumnById = function(id) {
+	var columns = this.getColumns_();
+  goog.array.forEach(columns,function(col){
+    if (col.getId()=== id){
+      return col;
+    }
+  });
+};
 
 /**
  * clone array of columns and return them
- * @return {Array}
+ * @return {Array.<pear.data.Column>} 
  * @private
  */
 pear.ui.Grid.prototype.getColumns_ = function() {
-	var datacolumns = this.dataview_.getDataColumns();
-	return datacolumns;
+	var cols = this.dataview_.getColumns();
+	return cols;
 };
 
 
 /**
  * set columns of grid , dispatch COLUMN_CHANGED event
- * @param {Array} datacolumns
+ * @param {Array.<pear.data.Column>} cols
  */
-pear.ui.Grid.prototype.setColumns = function(datacolumns) {
+pear.ui.Grid.prototype.setColumns = function(cols) {
 	var columns = [];
 
-	goog.array.forEach(datacolumns, function(c) {
+	goog.array.forEach(cols, function(c) {
 		var clone = goog.object.clone(c);
 		columns.push(clone);
 	});
-	this.getDataView().setDataColumns(columns);
+	this.getDataView().setColumns(columns);
 
 	var evt = new goog.events.Event(pear.ui.Grid.EventType.COLUMNS_CHANGED,
 			this);
@@ -1253,7 +1267,7 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
 
 	goog.array.forEach(columns, function(value, index) {
 		var c = new pear.ui.GridCell();
-		c.setModel(model[value.id]);
+		c.setModel(model[value.getId()]);
 		c.setCellIndex(index);
 		row.addCell(c, true);
 	},this);
