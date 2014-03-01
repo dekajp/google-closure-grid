@@ -8,7 +8,10 @@ goog.require('pear.ui.Plugin');
 
 
 /**
- * [HeaderMenu description]
+ * @class  HeaderMenu
+ * @classdesc
+ * A very basic plugin to add Dropdown style menu at each
+ * {@link pear.ui.GridHeaderCell}
  * @constructor
  * @extends {pear.ui.Plugin} 
  */
@@ -25,7 +28,8 @@ pear.plugin.HeaderMenu.prototype.getClassId = function() {
 };
 
 /**
- * [init description]
+ * initialize plugin
+ * @private
  */
 pear.plugin.HeaderMenu.prototype.init = function() {
   var grid = this.getGrid();
@@ -33,7 +37,7 @@ pear.plugin.HeaderMenu.prototype.init = function() {
 };
 
 /**
- * [disposeInternal description]
+ * @inheritDoc
  */
 pear.plugin.HeaderMenu.prototype.disposeInternal = function() {
   goog.array.forEach(this.headerMenuBtns_, function(mb) {
@@ -43,6 +47,7 @@ pear.plugin.HeaderMenu.prototype.disposeInternal = function() {
 };
 
 /**
+ * create DOM for plugin Dropdown Menu
  * @private
  *
  */
@@ -83,23 +88,18 @@ pear.plugin.HeaderMenu.prototype.createHeaderMenuDom = function() {
 };
 
 /**
- * [close_ description]
- */
-pear.plugin.HeaderMenu.prototype.close_ = function() {
-  // goog.style.showElement(this.getElement(), '');
-};
-
-/**
- * [getCSSClassName description]
+ * get CSS Class for Header Cell Menu UI
  * @return {string} [description]
+ * @private
  */
 pear.plugin.HeaderMenu.prototype.getCSSClassName = function() {
   return 'pear-grid-header-cell-menu';
 };
 
 /**
- * [handleMenuEvent_ description]
+ * Handle Menu Click Event 
  * @param  {goog.events.Event} ge [description]
+ * @private
  */
 pear.plugin.HeaderMenu.prototype.handleMenuEvent_ = function(ge) {
   var menuBtn = (/** @type {pear.plugin.HeaderMenuButton} */ (ge.currentTarget));
@@ -110,8 +110,9 @@ pear.plugin.HeaderMenu.prototype.handleMenuEvent_ = function(ge) {
 };
 
 /**
- * [handleMenuShow_ description]
- * @param  {goog.events.Event} ge [description]
+ * handle Menu Show event 
+ * @param  {goog.events.Event} ge 
+ * @private
  */
 pear.plugin.HeaderMenu.prototype.handleMenuShow_ = function(ge) {
   var menu = (/** @type {goog.ui.Menu} */ (ge.currentTarget));
@@ -121,8 +122,8 @@ pear.plugin.HeaderMenu.prototype.handleMenuShow_ = function(ge) {
 };
 
 /**
- * [handleMenuHide_ description]
- * @param  {goog.events.Event} ge [description]
+ * handle Menu Hide event - close slide menu of GridHeaderCell
+ * @param  {goog.events.Event} ge 
  */
 pear.plugin.HeaderMenu.prototype.handleMenuHide_ = function(ge) {
   var menu = (/** @type {goog.ui.Menu} */ (ge.currentTarget));
@@ -140,7 +141,7 @@ goog.provide('pear.plugin.HeaderMenuButton');
 goog.require('goog.ui.MenuButton');
 
 /**
- * [HeaderMenuButton description]
+ * @classdesc HeaderMenuButton for {@link pear.plugin.HeaderMenu}
  * @param {string|Node|Array.<Node>|NodeList} content Text caption 
  * or DOM structure to display as the content of the control (if any).
  * @constructor
@@ -152,22 +153,23 @@ pear.plugin.HeaderMenuButton = function(content, opt_menu) {
 goog.inherits(pear.plugin.HeaderMenuButton, goog.ui.MenuButton);
 
 /**
- * [cell_ description]
+ * GridHeaderCell reference on which the Menu Button is hosted
  * @type {pear.ui.GridHeaderCell}
+ * @private
  */
 pear.plugin.HeaderMenuButton.prototype.cell_ = null;
 
 /**
- * [setHeaderCell description]
- * @param {pear.ui.GridHeaderCell} cell [description]
+ * set GridHeaderCell on which HeaderMenuButton is added
+ * @param {pear.ui.GridHeaderCell} cell GridHeaderCell of Column
  */
 pear.plugin.HeaderMenuButton.prototype.setHeaderCell = function(cell) {
   this.cell_ = cell;
 };
 
 /**
- * [getHeaderCell description]
- * @return {pear.ui.GridHeaderCell} [description]
+ * get GridHeaderCell in which MenuButton is part of
+ * @return {pear.ui.GridHeaderCell}
  */
 pear.plugin.HeaderMenuButton.prototype.getHeaderCell = function() {
   return this.cell_;

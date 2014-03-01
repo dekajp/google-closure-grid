@@ -24,42 +24,58 @@ pear.ui.Plugin.prototype.grid_ = null;
 
 
 /**
+ * Whether plugin is enabled or not 
+ * @type {boolean}
+ * @private
+ */
+pear.ui.Plugin.prototype.enabled_ = true;
+
+
+/**
  * @return {pear.ui.Grid}
+ * @public
  */
 pear.ui.Plugin.prototype.getGrid = function() {
-  return this.gridObject;
+  return this.grid_;
 };
 
 
 /**
  * @param {pear.ui.Grid} grid
+ * @private
  */
-pear.ui.Plugin.prototype.setGrid = function(grid) {
-  this.gridObject = grid;
+pear.ui.Plugin.prototype.setGrid_ = function(grid) {
+  this.grid_ = grid;
 };
 
 
 /**
  * @param {pear.ui.Grid} grid
+ * @public 
  */
 pear.ui.Plugin.prototype.registerGrid = function(grid) {
-  this.setGrid(grid);
+  this.setGrid_(grid);
 };
 
 
 /**
+ * disabling the plugin from the grid , this will call disable on the Plugin
  * @param {pear.ui.Grid} grid
+ * 
+ * @public
  */
 pear.ui.Plugin.prototype.unregisterGrid = function(grid) {
   if (this.getGrid()) {
     this.disable(this.getGrid());
-    this.setGrid(null);
+    this.setGrid_(null);
   }
 };
 
 
 /**
+ * enable the plugin
  * @param {pear.ui.Grid} grid
+ * @public
  */
 pear.ui.Plugin.prototype.enable = function(grid) {
   if (this.getGrid() == grid) {
@@ -72,6 +88,7 @@ pear.ui.Plugin.prototype.enable = function(grid) {
 
 
 /**
+ * disable the plugin
  * @param {pear.ui.Grid} grid
  */
 pear.ui.Plugin.prototype.disable = function(grid) {
@@ -85,28 +102,13 @@ pear.ui.Plugin.prototype.disable = function(grid) {
 
 
 /**
- * [isEnabled description]
- * @param  {pear.ui.Grid}  fieldObject
+ * Is plugin enabled ?
+ * @param  {pear.ui.Grid}  gridObject
  * @return {boolean}
+ * @public
  */
-pear.ui.Plugin.prototype.isEnabled = function(fieldObject) {
-  return this.getGrid() == fieldObject ? this.enabled_ : false;
-};
-
-
-/**
- * @param {boolean} autoDispose
- */
-pear.ui.Plugin.prototype.setAutoDispose = function(autoDispose) {
-  this.autoDispose_ = autoDispose;
-};
-
-
-/**
- * @return {boolean}
- */
-pear.ui.Plugin.prototype.isAutoDispose = function() {
-  return this.autoDispose_;
+pear.ui.Plugin.prototype.isEnabled = function(gridObject) {
+  return this.getGrid() == gridObject ? this.enabled_ : false;
 };
 
 
@@ -115,7 +117,7 @@ pear.ui.Plugin.prototype.disposeInternal = function() {
   if (this.getGrid()) {
     this.unregisterGrid(this.getGrid());
   }
-
+  delete this.enabled_ ;
   pear.ui.Plugin.superClass_.disposeInternal.call(this);
 };
 

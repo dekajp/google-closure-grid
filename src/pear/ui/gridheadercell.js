@@ -48,7 +48,7 @@ pear.ui.GridHeaderCell.prototype.contentIndicator_ =null;
 
 /**
  * @private
- * @type {number}
+ * @type {pear.ui.Grid.SortDirection | number}
  */
 pear.ui.GridHeaderCell.prototype.sortDirection_ = 0;
 
@@ -60,10 +60,18 @@ pear.ui.GridHeaderCell.prototype.sortDirection_ = 0;
  */
 pear.ui.GridHeaderCell.prototype.resizable_ = null;
 
+/**
+ * get Resizable Control
+ * @return {pear.ui.Resizable}
+ * @public
+ */
+pear.ui.GridHeaderCell.prototype.getResizable = function() {
+  return this.resizable_;
+};
 
 /**
- * [getSortDirection description]
- * @return {number}
+ * get Sort Direction {@link pear.ui.Grid.SortDirection}
+ * @return {pear.ui.Grid.SortDirection}
  */
 pear.ui.GridHeaderCell.prototype.getSortDirection = function() {
   this.sortDirection_ = this.sortDirection_ || pear.ui.Grid.SortDirection.NONE;
@@ -266,7 +274,7 @@ pear.ui.GridHeaderCell.prototype.adjustContentCellWidth = function() {
 
 
 /**
- * [syncContentCellOnResize_ description]
+ * Synchronize Cells on Resize Event
  * @private
  */
 pear.ui.GridHeaderCell.prototype.syncContentCellOnResize_ = function() {
@@ -293,11 +301,12 @@ pear.ui.GridHeaderCell.prototype.syncContentCellOnResize_ = function() {
     if (resizeHandle.width > 0) {
       lessWidth = lessWidth + resizeHandle.width;
     }
+
+    this.resizable_.setMinWidth(lessWidth + 10);
   }
 
   lessWidth = lessWidth + boundIndicator.width +
       (bound.width - boundContent.width);
-  this.resizable_.setMinWidth(lessWidth + 10);
   goog.style.setWidth(this.contentCell_, bound.width - lessWidth);
 };
 

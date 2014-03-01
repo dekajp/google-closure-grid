@@ -5,6 +5,7 @@ goog.require('goog.ui.Component');
 
 
 /**
+ * @classdesc Represent Body of Grid
  * @param {goog.ui.ControlRenderer=} opt_renderer Renderer used to render or
  *     decorate the component; defaults to {@link goog.ui.ControlRenderer}.
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper, used for

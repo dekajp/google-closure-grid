@@ -6,6 +6,8 @@ goog.require('pear.ui.CellRenderer');
 
 
 /**
+ * @classdesc Represent a Cell of Grid , this is a base class for All different 
+ * types of cells e.g GridHeaderCell , GridCell
  * @param {goog.ui.ControlRenderer=} opt_renderer Renderer used to render or
  *     decorate the component; defaults to {@link goog.ui.ControlRenderer}.
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper, used for
@@ -169,7 +171,7 @@ pear.ui.Cell.prototype.setCellWidth = function(width, opt_render) {
  */
 pear.ui.Cell.prototype.getCellWidth = function() {
   this.columnWidth_ = this.columnWidth_ ||
-      this.getGrid().getColumnWidth(this.getCellIndex()) ||
+      this.getGrid().getColumnWidthAt(this.getCellIndex()) ||
       this.getGrid().getConfiguration().ColumnWidth;
   return this.columnWidth_;
 };

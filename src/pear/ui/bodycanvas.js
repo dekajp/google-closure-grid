@@ -6,7 +6,7 @@ goog.require('goog.ui.ContainerRenderer');
 
 
 /**
- * Body Canvas
+ * @classdesc Represent Body Canvas of Grid
  *
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper.
  * @constructor
@@ -47,8 +47,8 @@ pear.ui.BodyCanvas.prototype.enterDocument = function() {
 };
 
 /**
- * [getKeyEventTarget description]
- * @return {Element} [description]
+ * Get Key Event target - on which Key Events will be handled
+ * @return {Element} BodyCanvas Element
  */
 pear.ui.BodyCanvas.prototype.getKeyEventTarget = function() {
 	return this.getElement();

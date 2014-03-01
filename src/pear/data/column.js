@@ -6,10 +6,13 @@ goog.require('goog.ui.IdGenerator');
 
 
 /**
- * Represent the Column of Grid
+ * @classdesc  Represent the Column of Grid
+ * @example
+ * new pear.data.Column("header Text",'column-id',275,pear.data.DataType.NUMBER)
+ * 
  * @param {string | Object.<string,string,string,number>} content   
  * @param {string=} opt_id       column id should be unique
- * @param {string=} opt_datatype enum for DataType
+ * @param {pear.data.DataType=} opt_datatype DataType
  * @param {number=} opt_width    width of column
  * @constructor
  * @extends {goog.events.EventTarget}
@@ -25,7 +28,20 @@ goog.inherits(pear.data.Column, goog.events.EventTarget);
 
 
 /**
- * [rowdata_ description]
+ * DataType
+ * @enum {string}
+ * @public
+ */
+pear.data.DataType = {
+  NUMBER: 'number',
+  TEXT: 'text',
+  BOOLEAN: 'boolean',
+  DATETIME: 'datetime'
+  // DECIMAL: 'decimal'
+};
+
+/**
+ * header text of column
  * @type {string}
  * @private
  */
@@ -33,7 +49,7 @@ pear.data.Column.prototype.headerText = '';
 
 
 /**
- * [rowId_ description]
+ * column id
  * @type {string}
  * @private
  */
@@ -41,11 +57,11 @@ pear.data.Column.prototype.id = '';
 
 
 /**
- * [dataType description]
- * @type {string}
+ * datatype of column
+ * @type {pear.data.DataType}
  * @private
  */
-pear.data.Column.prototype.dataType = 'text';
+pear.data.Column.prototype.dataType = pear.data.DataType.TEXT;
 
 /**
  * width of column
@@ -57,26 +73,30 @@ pear.data.Column.prototype.width = -1;
 /**
  * formatting function 
  * @type {?function}
+ * @private
  */
 pear.data.Column.prototype.formatterFn = null;
 
 /**
  * formatting function execution scope
  * @type {?Object}
+ * @private
  */
 pear.data.Column.prototype.formatterFnScope = null;
 
 /**
  * get Header Text of Column
- * @return {string} [description]
+ * @return {string} header text of column
+ * @public
  */
 pear.data.Column.prototype.getHeaderText=function(){
   return this.headerText;
 };
 
 /**
- * get Column ID
+ * get Column Id
  * @return {string} [description]
+ * @public
  */
 pear.data.Column.prototype.getId=function(){
   return this.id;
@@ -84,7 +104,8 @@ pear.data.Column.prototype.getId=function(){
 
 /**
  * Get DataType of Column
- * @return {string} [description]
+ * @return {pear.data.DataType} [description]
+ * @public
  */
 pear.data.Column.prototype.getDataType=function(){
   return this.dataType;
@@ -93,14 +114,17 @@ pear.data.Column.prototype.getDataType=function(){
 /**
  * get Column Width
  * @return {number} [description]
+ * @public
  */
 pear.data.Column.prototype.getWidth=function(){
   return this.width;
 };
 
 /**
- * column formatting
+ * Get the column formatting function - this function will be called
+ * for each DataCell for the column it belong to
  * @return {{fn: function, handler: Object}} [description]
+ * @public
  */
 pear.data.Column.prototype.getColumnFormatter = function(){
   return {
@@ -111,8 +135,19 @@ pear.data.Column.prototype.getColumnFormatter = function(){
 
 /**
  * formatting function
- * @param {Function} fn        [description]
+ * @example
+ * function myformatter (GridCell) {
+ *   
+ *   // this function is called for every cell 
+ *   // for given column
+ * }
+ * ...
+ * ...
+ * column.setColumnFormatter(myformatter);
+ * 
+ * @param {Function} fn    formatting function 
  * @param {Object=} opt_scope  whose scope to call the formatter.
+ * @public
  */
 pear.data.Column.prototype.setColumnFormatter = function(fn,opt_scope){
   this.formatterFn = fn;
@@ -122,11 +157,15 @@ pear.data.Column.prototype.setColumnFormatter = function(fn,opt_scope){
 };
 
 /**
- * @override
+ * Deletes or nulls out any references to COM objects, DOM nodes, or other
+ * disposable objects
+ * @protected
  */
 pear.data.Column.prototype.disposeInternal = function() {
   delete this.headerText;
   delete this.id;
   delete this.dataType;
+  this.formatter =null;
+  this.formatterFn=null;
   pear.data.Column.superClass_.disposeInternal.call(this);
 };

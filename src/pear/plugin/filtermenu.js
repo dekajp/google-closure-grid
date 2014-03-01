@@ -11,7 +11,8 @@ goog.require('pear.ui.GridHeaderCell');
 
 
 /**
- * Filter Menu Plugin
+ * @classdesc This plugin attaches a Fitler UI to the sliding dropdown menu of 
+ * each header cell
  * @constructor
  * @extends {pear.ui.Plugin}
  */
@@ -24,41 +25,55 @@ goog.inherits(pear.plugin.FilterMenu, pear.ui.Plugin);
 /**
  * Events on Plugin
  * @enum {string}
+ * @public
  */
 pear.plugin.FilterMenu.EventType = {
+  /**
+   * On apply of filter
+   * @type {string}
+   */
   APPLY_FILTER: 'on-apply-filter',
+  /**
+   * on clear of filter
+   * @type {string}
+   */
   CLEAR_FILTER: 'on-clear-filter'
 };
 
 
 /**
- * [headerCell_ description]
+ * header cell
  * @type {?pear.ui.GridHeaderCell}
+ * @private
  */
 pear.plugin.FilterMenu.prototype.headerCell_ =null;
 
 /**
- * [titleContent_ description]
+ * title of filter UI window
  * @type {Node|Element}
+ * @private
  */
 pear.plugin.FilterMenu.prototype.titleContent_ = null;
 
 /**
- * [closeElement__ description]
+ * close element at top right corner to close the UI
  * @type {Node|Element}
+ * @private
  */
 pear.plugin.FilterMenu.prototype.closeElement_ = null;
 
 
 /**
- * [element_ description]
+ * Root element 
  * @type {?Element}
+ * @private
  */
 pear.plugin.FilterMenu.prototype.element_ = null;
 
 /**
- * [filterInput_ description]
+ * input label
  * @type {?goog.ui.LabelInput}
+ * @private
  */
 pear.plugin.FilterMenu.prototype.filterInput_ =null;
 
@@ -75,7 +90,8 @@ pear.plugin.FilterMenu.prototype.getClassId = function() {
 };
 
 /**
- * 
+ * init 
+ * @private
  */
 pear.plugin.FilterMenu.prototype.init = function() {
   var grid = this.getGrid();
@@ -110,13 +126,19 @@ pear.plugin.FilterMenu.prototype.disposeInternal = function() {
 
 
 /**
- * [getElement description]
+ * get root element
  * @return {Element} 
+ * @private
  */
 pear.plugin.FilterMenu.prototype.getElement = function() {
   return this.element_;
 };
 
+/**
+ * create the menu dropdown DOM and render in GridHeaderCell
+ * menu placeholder
+ * @private
+ */
 pear.plugin.FilterMenu.prototype.createHeaderMenuDom = function() {
   var grid = this.getGrid();
   var headerRow = grid.getHeaderRow();
@@ -138,8 +160,8 @@ pear.plugin.FilterMenu.prototype.createHeaderMenuDom = function() {
 
 
 /**
+ * create the Filter UI body
  * @private
- *
  */
 pear.plugin.FilterMenu.prototype.createFilterUIBody = function() {
   var grid = this.getGrid();
@@ -172,6 +194,7 @@ pear.plugin.FilterMenu.prototype.createFilterUIBody = function() {
 
 
 /**
+ * create filter UI body
  * @private
  */
 pear.plugin.FilterMenu.prototype.createFilterMenu_ = function() {
@@ -198,7 +221,7 @@ pear.plugin.FilterMenu.prototype.createFilterMenu_ = function() {
 };
 
 /**
- * [handleApplyFilter_ description]
+ * Dispatch On Apply Filter Event and synchronize GridHeaderCell Menu slide
  * @param  {goog.events.BrowserEvent} be 
  * @private 
  */
@@ -215,7 +238,7 @@ pear.plugin.FilterMenu.prototype.handleApplyFilter_ = function(be) {
 };
 
 /**
- * [handleCancelFilter_ description]
+ * Dispatch On Clear Filter Event and synchronize GridHeaderCell Menu slide
  * @param  {goog.events.BrowserEvent} be 
  * @private
  */
@@ -238,7 +261,7 @@ pear.plugin.FilterMenu.prototype.handleCancelFilter_ = function(be) {
 };
 
 /**
- * [close_ description]
+ * Close the Filter UI
  * @private 
  */
 pear.plugin.FilterMenu.prototype.close_ = function() {
@@ -248,6 +271,8 @@ pear.plugin.FilterMenu.prototype.close_ = function() {
 };
 
 /**
+ * Show the filter UI - do positioning just below the GridHeaderCell
+ * menu dropdown
  * @param  {goog.events.Event} ge 
  * @private 
  */
@@ -300,7 +325,7 @@ pear.plugin.FilterMenu.prototype.getCSSClassName = function() {
 
 
 /**
- * [FilterMenuButton description]
+ * @classdesc Menu button to activate {@link pear.plugin.FilterMenu} UI
  * @param {string|Node|Array.<Node>|NodeList} content Text caption 
  * or DOM structure to display as the content of the control (if any).
  * @param {goog.ui.ControlRenderer=} opt_renderer Renderer used to render or
@@ -342,11 +367,12 @@ pear.plugin.FilterMenuButton.prototype.getHeaderCell = function() {
 
 
 /**
- * [FilterMenuEvent description]
- * @param {string} type       [description]
- * @param {pear.ui.Grid} target     [description]
- * @param {pear.ui.GridHeaderCell} cell       [description]
- * @param {string} filterText [description]
+ * @classdesc FilterMenuEvent for {@link pear.plugin.FilterMenu}
+ * @param {string} type       Event Type 
+ * @param {pear.ui.Grid} target     Grid
+ * @param {pear.ui.GridHeaderCell} cell   GridHeaderCell on which the Filter
+ *                                        plugin is activated
+ * @param {string} filterText filter text 
  * @constructor
  * @extends {goog.events.Event}
  */
@@ -354,12 +380,12 @@ pear.plugin.FilterMenuEvent = function(type, target, cell, filterText) {
   goog.events.Event.call(this, type, target);
 
   /**
-   * header cell.
+   * Grid Header Cell - source of event {@link pear.ui.GridHeaderCell}
    * @type {pear.ui.GridHeaderCell}
    */
   this.cell = cell;
   /**
-   * [filterText description]
+   * Filter Text - on "clear" event text is blank.
    * @type {string}
    */
   this.filterText = filterText;

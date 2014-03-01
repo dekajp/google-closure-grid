@@ -25,7 +25,7 @@
     goog.require('goog.debug.LogManager');
     goog.require('goog.dom.forms');
     goog.require('pear.ui.Grid');
-    goog.require('pear.plugin.ColumnPicker');
+    goog.require('pear.plugin.ColumnMove');
     
   </script>
 
@@ -171,7 +171,7 @@
     grid.setColumns(columns);
     grid.setDataRows(data);
 
-    grid.registerPlugin( new pear.plugin.ColumnPicker());
+    grid.registerPlugin( new pear.plugin.ColumnMove());
 
     grid.render(goog.dom.getElement('target1'));
     var end =  +new Date();  

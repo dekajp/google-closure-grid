@@ -90,6 +90,17 @@ pear.ui.Row.prototype.addCell = function(cell, opt_render) {
 
 
 /**
+ * get Child Cell at
+ * @param  {number} index  
+ * @return {pear.ui.Cell}  
+ * @public
+ */
+pear.ui.Row.prototype.getCellAt = function(index) {
+  return this.getChildAt(index);
+};
+
+
+/**
  * return grid
  * @return {pear.ui.Grid}
 */

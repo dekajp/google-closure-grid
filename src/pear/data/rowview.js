@@ -6,7 +6,8 @@ goog.require('goog.ui.IdGenerator');
 
 
 /**
- * [RowView description]
+ * @class
+ * @classdesc this represent a individual Row and Row state
  * @param {?string} rowid   
  * @param {?Array} rowdata 
  * @constructor
@@ -22,15 +23,15 @@ goog.inherits(pear.data.RowView, goog.Disposable);
 
 
 /**
- * [rowdata_ description]
- * @type {?Array}
+ * Data , this is typically a DataRow
+ * @type {?Array.<Object>}
  * @private
  */
 pear.data.RowView.prototype.rowdata_ = null;
 
 
 /**
- * [rowId_ description]
+ * unique Id to identify each row
  * @type {string}
  * @private
  */
@@ -38,15 +39,18 @@ pear.data.RowView.prototype.rowId_ = '';
 
 
 /**
- * [selectState_ description]
+ * Row State , whether the row is selected or not
+ * @todo  this should be enumerator 
  * @type {boolean}
+ * @private
  */
 pear.data.RowView.prototype.selectState_ = false;
 
 
 /**
- * [getRowData description]
+ * get Data of Row
  * @return {?Array}
+ * @public
  */
 pear.data.RowView.prototype.getRowData = function() {
   return this.rowdata_;
@@ -54,8 +58,9 @@ pear.data.RowView.prototype.getRowData = function() {
 
 
 /**
- * [getRowId description]
+ * get Row Id 
  * @return {string}
+ * @public
  */
 pear.data.RowView.prototype.getRowId = function() {
   return this.rowId_ || 'no-id';
@@ -63,8 +68,10 @@ pear.data.RowView.prototype.getRowId = function() {
 
 
 /**
- * [setSelected description]
+ * Set state of row as selected
+ * @todo  this should be enum
  * @param {boolean} select
+ * @public
  */
 pear.data.RowView.prototype.setSelected = function(select) {
   this.selectState_ = select;
@@ -73,6 +80,7 @@ pear.data.RowView.prototype.setSelected = function(select) {
 
 /**
  * @override
+ * @protected
  */
 pear.data.RowView.prototype.disposeInternal = function() {
   this.rowdata_ = null;

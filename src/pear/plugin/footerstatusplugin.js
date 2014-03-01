@@ -6,7 +6,10 @@ goog.require('pear.ui.Plugin');
 
 
 /**
- * FooterStatus Plugin
+ * @class  pear.plugin.FooterStatus
+ * @classdesc 
+ * FooterStatus Plugin - very basic plugin to show total rows as 
+ * footer row
  * @constructor
  * @extends {pear.ui.Plugin}
  */
@@ -16,7 +19,7 @@ pear.plugin.FooterStatus = function() {
 goog.inherits(pear.plugin.FooterStatus, pear.ui.Plugin);
 
 /**
- * [getClassId description]
+ * class id
  * @return {string} [description]
  */
 pear.plugin.FooterStatus.prototype.getClassId = function() {
@@ -24,7 +27,8 @@ pear.plugin.FooterStatus.prototype.getClassId = function() {
 };
 
 /**
- * [init description]
+ * init plugin
+ * @private
  */
 pear.plugin.FooterStatus.prototype.init = function() {
   var grid = this.getGrid();
@@ -46,6 +50,7 @@ pear.plugin.FooterStatus.prototype.disposeInternal = function() {
 
 
 /**
+ * create plugin UI DOM
  * @private
  *
  */
@@ -66,17 +71,17 @@ pear.plugin.FooterStatus.prototype.createFooterStatus = function() {
       pear.plugin.FooterStatusRenderer.getInstance());
 
   this.footerStatus_.render(this.footer_);
-  this.updateMsg_();
+  this.handleDataSourceChange_();
 
   goog.events.listen(grid, pear.ui.Grid.EventType.DATAROWS_CHANGED,
-                                             this.updateMsg_, false, this);
+                                             this.handleDataSourceChange_, false, this);
 };
 
 /**
- * [updateMsg_ description]
+ * Update Footer Status
  * @private
  */
-pear.plugin.FooterStatus.prototype.updateMsg_ = function() {
+pear.plugin.FooterStatus.prototype.handleDataSourceChange_ = function() {
   var grid = this.getGrid();
   var startIndex = 1;
   var rowCount = grid.getDataViewRowCount();
@@ -94,9 +99,11 @@ goog.require('goog.ui.ControlRenderer');
 
 
 /**
-  @constructor
-  @extends {goog.ui.ControlRenderer}
-*/
+ * @class pear.plugin.FooterStatusRenderer
+ * @classdesc {@link pear.plugin.FooterStatus} Renderer
+ * @constructor
+ * @extends {goog.ui.ControlRenderer}
+ */
 pear.plugin.FooterStatusRenderer = function() {
   goog.ui.ControlRenderer.call(this);
 };

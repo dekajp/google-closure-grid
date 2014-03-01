@@ -45,7 +45,7 @@ goog.require('goog.object');
 goog.require('pear.data.DataTable');
 goog.require('pear.data.DataView');
 goog.require('pear.data.Column');
-goog.require('pear.plugin.ColumnPicker');
+goog.require('pear.plugin.ColumnMove');
 goog.require('pear.plugin.FilterMenu');
 goog.require('pear.plugin.FooterStatus');
 goog.require('pear.plugin.HeaderMenu');
@@ -63,7 +63,15 @@ goog.require('pear.ui.Plugin');
 
 
 /**
- * Grid
+ * @classdesc 
+ * Table/Grid built in Google Closure
+ * <ul>
+ *   <li> Data Virtualization ~ 100,000 Rows </li>
+ *   <li> Active Cell and Active Row Highlight </li>
+ *   <li> Sorting , Column Resizing , Header Cell Menu , Paging  </li>
+ *   <li> Column Formatting , Keyboard Navigation , Data Filter </li>
+ *   <li> Column Move </li>
+ * </ul>
  *
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper.
  * @constructor
@@ -258,6 +266,12 @@ pear.ui.Grid.prototype.headerRow_ = null;
  */
 pear.ui.Grid.prototype.body_ = null;
 
+/**
+ * Body Canvas 
+ * @type {pear.ui.BodyCanvas?}
+ */
+pear.ui.Grid.prototype.bodyCanvas_ = null;
+
 
 /**
  * gridrows , which are currently loaded in grid
@@ -335,6 +349,7 @@ pear.ui.Grid.prototype.logger =
 /**
  * configuration object of grid
  * @return {*}
+ * @public
  */
 pear.ui.Grid.prototype.getConfiguration = function() {
 	return this.Configuration_;
@@ -345,6 +360,7 @@ var logger = goog.log.getLogger('demo');
 
 /**
  * @return {pear.ui.Body}
+ * @public
  */
 pear.ui.Grid.prototype.getBody = function() {
 	return this.body_;
@@ -352,9 +368,18 @@ pear.ui.Grid.prototype.getBody = function() {
 
 
 /**
+ * @return {pear.ui.BodyCanvas}
+ * @public
+ */
+pear.ui.Grid.prototype.getBodyCanvas = function() {
+	return this.bodyCanvas_
+};
+
+/**
  * Total count of gridrows. The number of rows currently grid has loaded
  * if paging is included that total rows
  * @return {number}
+ * @private
  */
 pear.ui.Grid.prototype.getGridRowsCount_ = function() {
 	this.gridRows_ = this.gridRows_ || [];
@@ -366,8 +391,9 @@ pear.ui.Grid.prototype.getGridRowsCount_ = function() {
  * All gridrows visible in Grid , in case of paging this should show all
  * available in all pages
  * @return {Array.<pear.ui.GridRow>}
+ * @public
  */
-pear.ui.Grid.prototype.getGridRows_ = function() {
+pear.ui.Grid.prototype.getGridRows = function() {
 	this.gridRows_ = this.gridRows_ || [];
 	return this.gridRows_;
 };
@@ -376,8 +402,9 @@ pear.ui.Grid.prototype.getGridRows_ = function() {
 /**
  * Get a gridrow at position
  * @return {pear.ui.GridRow}
+ * @public
  */
-pear.ui.Grid.prototype.getGridRowsAt_ = function(index) {
+pear.ui.Grid.prototype.getGridRowAt = function(index) {
 	return this.gridRows_[index];
 };
 
@@ -385,6 +412,7 @@ pear.ui.Grid.prototype.getGridRowsAt_ = function(index) {
 /**
  * set Grid Rows
  * @param {Array.<pear.ui.GridRow>} rows
+ * @private
  */
 pear.ui.Grid.prototype.setGridRows_ = function(rows) {
 	this.gridRows_ = rows || [];
@@ -394,6 +422,7 @@ pear.ui.Grid.prototype.setGridRows_ = function(rows) {
 /**
  * add a single row
  * @param {pear.ui.GridRow} row
+ * @private
  */
 pear.ui.Grid.prototype.addGridRows_ = function(row) {
 	this.gridRows_.push(row);
@@ -404,6 +433,7 @@ pear.ui.Grid.prototype.addGridRows_ = function(row) {
 /**
  * is Grid is rendered ?
  * @return {boolean}
+ * @public
  */
 pear.ui.Grid.prototype.isRendered = function() {
 	return this.renderState_ == pear.ui.Grid.RenderState_.RENDERED;
@@ -413,6 +443,7 @@ pear.ui.Grid.prototype.isRendered = function() {
 /**
  * Get a list of all plugins currently loaded by the grid
  * @return {Object.<string,pear.ui.Plugin>}
+ * @public
  */
 pear.ui.Grid.prototype.getPlugins = function() {
 	this.plugins_ = this.plugins_ || [];
@@ -424,6 +455,7 @@ pear.ui.Grid.prototype.getPlugins = function() {
  * Returns the registered plugin with the given classId.
  * @param {string} classId classId of the plugin.
  * @return {pear.ui.Plugin} Registered plugin with the given classId.
+ * @public
  */
 pear.ui.Grid.prototype.getPluginByClassId = function(classId) {
 	return this.plugins_[classId];
@@ -433,6 +465,7 @@ pear.ui.Grid.prototype.getPluginByClassId = function(classId) {
 /**
  * width of grid
  * @return {number}
+ * @public
  */
 pear.ui.Grid.prototype.getWidth = function() {
 	this.width_ = this.width_ || this.Configuration_.Width;
@@ -443,6 +476,7 @@ pear.ui.Grid.prototype.getWidth = function() {
 /**
  * height of grid
  * @return {number}
+ * @public
  */
 pear.ui.Grid.prototype.getHeight = function() {
 	this.height_ = this.height_ || this.Configuration_.Height;
@@ -453,6 +487,7 @@ pear.ui.Grid.prototype.getHeight = function() {
 /**
  * set width of grid
  * @param {number} width
+ * @public
  */
 pear.ui.Grid.prototype.setWidth = function(width) {
 	return this.width_ = width;
@@ -462,6 +497,7 @@ pear.ui.Grid.prototype.setWidth = function(width) {
 /**
  * set height of grid
  * @param {number} height
+ * @public
  */
 pear.ui.Grid.prototype.setHeight = function(height) {
 	return this.height_ = height;
@@ -470,9 +506,11 @@ pear.ui.Grid.prototype.setHeight = function(height) {
 
 /**
  * get width of column
+ * @param {number} [index] Column Index
  * @return {number}
+ * @public
  */
-pear.ui.Grid.prototype.getColumnWidth = function(index) {
+pear.ui.Grid.prototype.getColumnWidthAt = function(index) {
 	var coldata = this.getColumns_();
 	coldata[index]['width'] = coldata[index]['width'] ||
 			this.Configuration_.ColumnWidth;
@@ -485,6 +523,7 @@ pear.ui.Grid.prototype.getColumnWidth = function(index) {
  * @param {number} index
  * @param {number} width
  * @param {boolean}  opt_render if true ,render it now
+ * @private
  */
 pear.ui.Grid.prototype.applyColumnWidth_ = function(index, width, opt_render) {
 	var coldata = this.getColumns_();
@@ -501,6 +540,7 @@ pear.ui.Grid.prototype.applyColumnWidth_ = function(index, width, opt_render) {
  * Set the width of column , this will instantly apply the changes
  * @param {number} index
  * @param {number} width
+ * @public
  */
 pear.ui.Grid.prototype.setColumnWidth = function(index, width) {
 	var coldata = this.getColumns_();
@@ -525,6 +565,7 @@ pear.ui.Grid.prototype.getScrollbarWidth = function() {
  * DataView associated with this Grid. All data is encapsulated with in DataView
  * DataView also acts like a Adapter between DataTable and Grid
  * @return {pear.data.DataView}
+ * @public
  */
 pear.ui.Grid.prototype.getDataView = function() {
 	this.dataview_ = this.dataview_ || new pear.data.DataView([], []);
@@ -536,6 +577,7 @@ pear.ui.Grid.prototype.getDataView = function() {
  * DataView associated with this Grid. All data is encapsulated with in DataView
  * DataView also acts like a Adapter between DataTable and Grid.
  * @param {pear.data.DataView} dv
+ * @public
  */
 pear.ui.Grid.prototype.setDataView = function(dv) {
 	this.dataview_ = dv;
@@ -546,6 +588,7 @@ pear.ui.Grid.prototype.setDataView = function(dv) {
 /**
  * clone array of columns and return them
  * @return {Array.<pear.data.Column>}
+ * @public
  */
 pear.ui.Grid.prototype.getColumns = function() {
 	var cols = this.dataview_.getColumns();
@@ -561,6 +604,7 @@ pear.ui.Grid.prototype.getColumns = function() {
  * Get column by id
  * @param  {string} id [description]
  * @return {?pear.data.Column}
+ * @public
  */
 pear.ui.Grid.prototype.getColumnById = function(id) {
 	var columns = this.getColumns_();
@@ -585,6 +629,7 @@ pear.ui.Grid.prototype.getColumns_ = function() {
 /**
  * set columns of grid , dispatch COLUMN_CHANGED event
  * @param {Array.<pear.data.Column>} cols
+ * @public
  */
 pear.ui.Grid.prototype.setColumns = function(cols) {
 	var columns = [];
@@ -604,6 +649,7 @@ pear.ui.Grid.prototype.setColumns = function(cols) {
 /**
  * array of datarows - dispatches DATASOURCE_CHANGE event
  * @param {Array} data
+ * @public
  */
 pear.ui.Grid.prototype.setDataRows = function(data) {
 	this.getDataView().setDataRows(goog.array.clone(data));
@@ -615,6 +661,7 @@ pear.ui.Grid.prototype.setDataRows = function(data) {
  * get rows , currently dispalyed or loaded in grid , in case of paging
  * this will return all the rows
  * @return {Array}
+ * @public
  */
 pear.ui.Grid.prototype.getDisplayDataRows = function(data) {
 	var rows = goog.array.clone(this.getDataView().getDataRowViews());
@@ -625,6 +672,7 @@ pear.ui.Grid.prototype.getDisplayDataRows = function(data) {
 /**
  * get all rows
  * @return {Array}
+ * @public
  */
 pear.ui.Grid.prototype.getDataRows = function(data) {
 	var rows = goog.array.clone(this.getDataView().getDataRows());
@@ -635,6 +683,7 @@ pear.ui.Grid.prototype.getDataRows = function(data) {
 /**
  * get all rows
  * @return {Array.<pear.data.RowView>}
+ * @public
  */
 pear.ui.Grid.prototype.getDataRowViews = function() {
 	var rows = this.dataview_.getDataRowViews();
@@ -645,6 +694,7 @@ pear.ui.Grid.prototype.getDataRowViews = function() {
 /**
  * number of rows currently loaded in grid
  * @return {number}
+ * @public
  */
 pear.ui.Grid.prototype.getDataViewRowCount = function() {
 	return this.getDataRowViews().length;
@@ -656,6 +706,7 @@ pear.ui.Grid.prototype.getDataViewRowCount = function() {
  * page index
  * @private
  * @return {Array.<pear.data.RowView>}
+ * @private
  */
 pear.ui.Grid.prototype.getDataRowsGrid_ = function() {
 	var rows = (this.getConfiguration().AllowPaging) ?
@@ -727,6 +778,7 @@ pear.ui.Grid.prototype.updateDataRow = function(rowid, row) {
 /**
  * Header Row
  * @return {pear.ui.GridHeaderRow?}
+ * @public
  */
 pear.ui.Grid.prototype.getHeaderRow = function() {
 	return this.headerRow_;
@@ -736,6 +788,7 @@ pear.ui.Grid.prototype.getHeaderRow = function() {
 /**
  * Header Row
  * @return {pear.ui.GridHeaderRow?}
+ * @public
  */
 pear.ui.Grid.prototype.getFooterRow = function() {
 	return this.footerRow_;
@@ -745,6 +798,7 @@ pear.ui.Grid.prototype.getFooterRow = function() {
 /**
  * Get the column Index on which sort is applied
  * @return {string}
+ * @public
  */
 pear.ui.Grid.prototype.getSortColumnId = function() {
 	return this.sortColumnId_;
@@ -754,6 +808,7 @@ pear.ui.Grid.prototype.getSortColumnId = function() {
 /**
  * set Sorted Column Index
  * @param {string}  id
+ * @public
  */
 pear.ui.Grid.prototype.setSortColumnId = function(id) {
 	return this.sortColumnId_ = id;
@@ -763,6 +818,7 @@ pear.ui.Grid.prototype.setSortColumnId = function(id) {
 /**
  * Get the page size configuration
  * @return {number}
+ * @public
  */
 pear.ui.Grid.prototype.getPageSize = function() {
 	return this.getConfiguration().PageSize;
@@ -772,6 +828,7 @@ pear.ui.Grid.prototype.getPageSize = function() {
 /**
  * Set the current page index of grid , Also dispatches PageIndex Change Event
  * @param {number} index
+ * @public
  */
 pear.ui.Grid.prototype.setPageIndex = function(index) {
 	if (index === this.currentPageIndex_ ||
@@ -791,6 +848,7 @@ pear.ui.Grid.prototype.setPageIndex = function(index) {
 /**
  * get the Max Page Index
  * @return {number}
+ * @public
  */
 pear.ui.Grid.prototype.getMaxPageIndex = function() {
 	var max = Math.ceil(this.getDataViewRowCount() / this.getPageSize());
@@ -801,6 +859,7 @@ pear.ui.Grid.prototype.getMaxPageIndex = function() {
 /**
  * Get the current page index of grid
  * @return {number}
+ * @public
  */
 pear.ui.Grid.prototype.getPageIndex = function() {
 	return this.currentPageIndex_;
@@ -809,6 +868,7 @@ pear.ui.Grid.prototype.getPageIndex = function() {
 
 /**
  * Goto Next Page
+ * @public
  */
 pear.ui.Grid.prototype.gotoNextPage = function() {
 	this.setPageIndex(this.currentPageIndex_ + 1);
@@ -818,6 +878,7 @@ pear.ui.Grid.prototype.gotoNextPage = function() {
 
 /**
  * Goto Previous Page
+ * @public
  */
 pear.ui.Grid.prototype.gotoPreviousPage = function() {
 	this.setPageIndex(this.currentPageIndex_ - 1);
@@ -827,6 +888,7 @@ pear.ui.Grid.prototype.gotoPreviousPage = function() {
 
 /**
  * Goto First Page
+ * @public
  */
 pear.ui.Grid.prototype.gotoFirstPage = function() {
 	this.setPageIndex(0);
@@ -836,6 +898,7 @@ pear.ui.Grid.prototype.gotoFirstPage = function() {
 
 /**
  * Goto Last Page
+ * @public
  */
 pear.ui.Grid.prototype.gotoLastPage = function() {
 	this.setPageIndex(parseInt(
@@ -847,6 +910,7 @@ pear.ui.Grid.prototype.gotoLastPage = function() {
 /**
  * get Header Cell on which Sort is applied
  * @return {pear.ui.GridHeaderCell}
+ * @public
  */
 pear.ui.Grid.prototype.getSortedHeaderCell = function() {
 	var cell = this.headerRow_.getHeaderCellById(this.getSortColumnId());
@@ -857,9 +921,10 @@ pear.ui.Grid.prototype.getSortedHeaderCell = function() {
 /**
  * get current highlighted Row
  * @return {pear.ui.GridRow}
+ * @public
  */
 pear.ui.Grid.prototype.getCurrentHighlightedRow = function() {
-	var row = this.getGridRowsAt_(this.highlightedGridRowIndex_);
+	var row = this.getGridRowAt(this.highlightedGridRowIndex_);
 	return row;
 };
 
@@ -867,6 +932,7 @@ pear.ui.Grid.prototype.getCurrentHighlightedRow = function() {
 /**
  * get current highlighted Cell
  * @return {pear.ui.GridCell}
+ * @public
  */
 pear.ui.Grid.prototype.getCurrentHighlightedCell = function() {
 	var cell = ( /** @type {pear.ui.GridCell} */ (this.getCurrentHighlightedRow().
@@ -878,6 +944,7 @@ pear.ui.Grid.prototype.getCurrentHighlightedCell = function() {
 /**
  * get Selected Rows Ids
  * @return {Array.<string>}
+ * @public
  */
 pear.ui.Grid.prototype.getSelectedGridRowsIds = function() {
 	var rows = this.selectedGridRowsIds_ || [];
@@ -888,6 +955,7 @@ pear.ui.Grid.prototype.getSelectedGridRowsIds = function() {
 /**
  * Clear all row selection , also raises ROW-UNSELECT event for each
  * row , getting unselected
+ * @public
  */
 pear.ui.Grid.prototype.clearSelectedGridRows = function() {
 	this.getDataView().clearSelectedRowViews();
@@ -905,6 +973,7 @@ pear.ui.Grid.prototype.clearSelectedGridRows = function() {
 /**
  * Set configuration object
  * @param {Object} config
+ * @public
  */
 pear.ui.Grid.prototype.setConfiguration = function(config) {
 	goog.object.forEach(config, function(value, key) {
@@ -1016,11 +1085,11 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
 
 	this.renderHeader_();
 	this.renderBody_();
+	this.prepareGridRows_();
 	if (this.Configuration_.AllowPaging) {
 		this.setPageIndex(0);
 		//this.getDataView().setPageSize(this.Configuration_.PageSize);
 	}
-	this.prepareGridRows_();
 	this.setCanvasHeight_();
 	//this.renderfooterRow_();
 	this.updateWidthOfHeaderRow_();
@@ -1229,7 +1298,7 @@ pear.ui.Grid.prototype.restoreHighlightedRow_ = function() {
 	if (this.highlightedGridRowIndex_ > -1 &&
 			this.highlightedGridRowIndex_ < this.getGridRowsCount_() &&
 			this.getGridRowsCount_() > 0) {
-		var gridrow = this.getGridRowsAt_(this.highlightedGridRowIndex_);
+		var gridrow = this.getGridRowAt(this.highlightedGridRowIndex_);
 		gridrow.setHighlight(true);
 		gridrow.getElement().focus();
 	}
@@ -1320,10 +1389,10 @@ pear.ui.Grid.prototype.refreshRenderRows_ = function() {
 	endIndex = (endIndex > rowCount) ? rowCount : endIndex;
 
 	var i = 0;
-	var gridrows = this.getGridRows_();
+	var gridrows = this.getGridRows();
 	for (i = startIndex; (i < endIndex && i < gridrows.length); i++) {
 		if (!this.renderedGridRowsCache_[i]) {
-			this.renderedGridRows_[i] = this.getGridRowsAt_(i);
+			this.renderedGridRows_[i] = this.getGridRowAt(i);
 		}
 	}
 	this.removeRowsFromRowModelCache_(startIndex, endIndex);
@@ -1464,7 +1533,7 @@ pear.ui.Grid.prototype.selectGridRow = function() {
  * @return {pear.ui.GridRow?}
  */
 pear.ui.Grid.prototype.getHighlightedGridRow = function() {
-	return this.getGridRowsAt_(this.getHighlightedGridRowIndex());
+	return this.getGridRowAt(this.getHighlightedGridRowIndex());
 };
 
 
@@ -1515,8 +1584,8 @@ pear.ui.Grid.prototype.getHighlightedCell = function(index) {
  * @return {number} 0-based index of gridrow; -1 if not found.
  */
 pear.ui.Grid.prototype.indexOfGridRow = function(gridrow) {
-	return (this.getGridRows_ && gridrow) ?
-			goog.array.indexOf(this.getGridRows_(), gridrow) : -1;
+	return (this.getGridRows && gridrow) ?
+			goog.array.indexOf(this.getGridRows(), gridrow) : -1;
 };
 
 
@@ -1544,9 +1613,11 @@ pear.ui.Grid.prototype.setHighlightedGridRowIndex = function(index) {
 		this.setHighlighted(this.getHighlightedGridRow(), false);
 	}
 
-	var gridRow = this.getGridRowsAt_(index);
+	var gridRow = this.getGridRowAt(index);
 	if (gridRow) {
 		this.setHighlighted(gridRow, true);
+		this.highlightedGridRowIndex_ = index;
+	}else{
 		this.highlightedGridRowIndex_ = index;
 	}
 };
@@ -1663,7 +1734,7 @@ pear.ui.Grid.prototype.highlightHelper = function(fn, startIndex) {
 	this.highligtedCellIndex_ = this.getHighlightedCellIndex();
 	var visited = 0;
 	while (visited <= numItems) {
-		var gridrow = this.getGridRowsAt_(curIndex);
+		var gridrow = this.getGridRowAt(curIndex);
 		if (gridrow && this.canHighlightGridRow(gridrow)) {
 			this.setHighlightedIndexFromKeyEvent(curIndex);
 			this.setHighlightedCellIndex(this.highligtedCellIndex_);
@@ -2122,18 +2193,25 @@ pear.ui.Grid.prototype.disposeInternal = function() {
 	}
 	delete(this.plugins_);
 
-	this.headerRow_.dispose();
+	if(this.headerRow_){
+		this.headerRow_.dispose();
+	}
+	
 	this.headerRow_ = null;
 
-	goog.array.forEach(this.getGridRows_() , function(value) {
+	goog.array.forEach(this.getGridRows() , function(value) {
 		value.dispose();
 	});
 	this.gridRows_ = null;
 
-	this.body_.dispose();
+	if (this.body_){
+		this.body_.dispose();
+	}
 	this.body_ = null;
 
-	this.bodyCanvas_.dispose();
+	if (this.bodyCanvas_){
+		this.bodyCanvas_.dispose();
+	}
 	this.bodyCanvas_ = null;
 
 	if (this.footerRow_) {

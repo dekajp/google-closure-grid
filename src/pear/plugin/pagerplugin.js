@@ -7,7 +7,16 @@ goog.require('pear.ui.Plugin');
 
 
 /**
- * [Pager description]
+ * @class Pager
+ * @classdesc
+ * Pager plugin is full featured plugin - Just add this plugin to enable paging
+ * features on the Grid
+ * <ul>
+ *   <li> Navigation of Next and Previous Page </li>
+ *   <li> Jump to any page - this is enabled by pager dropdown </li>
+ *   <li> On Change of Datasource ,e.g when filters are updated , row counts are
+ *   updated</li>
+ * </ul>
  * @constructor
  * @extends {pear.ui.Plugin}
  */
@@ -19,10 +28,40 @@ pear.plugin.Pager = function() {
 goog.inherits(pear.plugin.Pager, pear.ui.Plugin);
 
 /**
+ * Navigation Control Array
+ * @type {Array.<goog.ui.Control>?}
+ */
+pear.plugin.Pager.prototype.navControl_ = null;
+
+/**
+ * Pager Dropdown control
+ * @type {goog.ui.ComboBox?}
+ */
+pear.plugin.Pager.prototype.pagerComboBox_ = null;
+
+
+/**
  * @inheritDoc
  */
 pear.plugin.Pager.prototype.getClassId = function() {
   return 'Pager';
+};
+
+/**
+ * Navigation Controls (goog.ui.Control) [left,right]
+ * @public
+ * @return {Array.<goog.ui.Control>?} Navigation Controls 
+ */
+pear.plugin.Pager.prototype.getNavigationControls = function() {
+  return this.navControl_;
+};
+
+/**
+ * get the pager dropdown
+ * @return {goog.ui.ComboBox?}  pager dropdown
+ */
+pear.plugin.Pager.prototype.getPagerDropdown = function() {
+  return this.pagerComboBox_;
 };
 
 /**
@@ -87,7 +126,9 @@ pear.plugin.Pager.prototype.disposeInternal = function() {
 };
 
 /**
- * [getPageIndex description]
+ * Get Page Index
+ * @private
+ * 
  * @return {number} [description]
  */
 pear.plugin.Pager.prototype.getPageIndex = function() {
@@ -95,7 +136,7 @@ pear.plugin.Pager.prototype.getPageIndex = function() {
 };
 
 /**
- * [createFooter_ description]
+ * Create footer DOM
  * @private
  */
 pear.plugin.Pager.prototype.createFooter_ = function() {
@@ -120,7 +161,7 @@ pear.plugin.Pager.prototype.createFooter_ = function() {
 
 
 /**
- * [createPagerDropDown_ description]
+ * Create Pager Dropdown List 
  * @private
  */
 pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
@@ -146,7 +187,7 @@ pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
 };
 
 /**
- * [createPagerNavControls_ description]
+ * Create Pager Navigation controls
  * @private
  */
 pear.plugin.Pager.prototype.createPagerNavControls_ = function() {
@@ -175,8 +216,8 @@ pear.plugin.Pager.prototype.createPagerNavControls_ = function() {
 };
 
 /**
- * [handleAction_ description]
- * @param  {goog.events.Event} ge [description]
+ * Handle Navigation Events
+ * @param  {goog.events.Event} ge Navigation Button events
  * @private
  */
 pear.plugin.Pager.prototype.handleAction_ = function(ge) {
@@ -191,8 +232,8 @@ pear.plugin.Pager.prototype.handleAction_ = function(ge) {
 };
 
 /**
- * [updatePagerDropdown_ description]
- * @param  {number} index [description]
+ * Update Pager Dropdownlist
+ * @param  {number} index  Grid Page Index
  * @private
  */
 pear.plugin.Pager.prototype.updatePagerDropdown_ = function(index) {
@@ -203,7 +244,7 @@ pear.plugin.Pager.prototype.updatePagerDropdown_ = function(index) {
 };
 
 /**
- * [handleChange_ description]
+ * Handle Pager Dropdown Change Event
  * @param  {goog.events.Event} ge [description]
  * @private
  */
@@ -216,7 +257,7 @@ pear.plugin.Pager.prototype.handleChange_ = function(ge) {
 };
 
 /**
- * [handlePageIndexChange_ description]
+ * Handle Page Index Change
  * @param  {goog.events.Event} ge [description]
  * @private
  */
@@ -229,8 +270,8 @@ pear.plugin.Pager.prototype.handlePageIndexChange_ = function(ge) {
 };
 
 /**
- * [handleRowCountChange_ description]
- * @param  {goog.events.Event} ge [description]
+ * Handle Row Count Change 
+ * @param  {pear.data.DataViewEvent} ge  
  * @private
  */
 pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge) {
@@ -251,7 +292,7 @@ pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge) {
 };
 
 /**
- * [updateMsg_ description]
+ * Update Footer Message
  * @private
  */
 pear.plugin.Pager.prototype.updateMsg_ = function() {

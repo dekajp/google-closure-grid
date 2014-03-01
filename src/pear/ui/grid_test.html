@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Closure Unit Tests - pear.ui.Grid</title>
+  <link rel="stylesheet" href="../../css/grid.css" />
+  <script src="../../../lib/closure-library/closure/goog/base.js"></script>
+  <script src="../peardeps.js"></script>
+  <script>
+    goog.require('goog.dom');
+    goog.require('goog.testing.jsunit');
+    goog.require('goog.testing.events');
+    goog.require('pear.ui.Grid');
+  </script>
+</head>
+<body>
+  <div id="content">
+    <div id="target1" style="width:800px;height:500px">
+    </div>
+  </div>
+  <script>
+    var grid;
+    var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
+    var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
+
+    var columns = [
+      new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
+      new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
+      new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
+      new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
+      new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
+      new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME),
+      new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
+    ];
+    function getData(){
+      var data = [];
+      var limit = 500
+      var temp;
+      for (var i = 0; i < parseInt(limit,10); i++) {
+        data[i] = {
+          orderno:  i +1
+        };
+        temp = Math.round(Math.random() * 9);
+       
+        data[i].item = item[temp];
+        data[i].unitprice = unitprice[temp];
+        data[i].quantity = Math.round(Math.random() * 100);
+        data[i].total = data[i].unitprice * data[i].quantity;
+        data[i].processed= (i % 5 === 0);
+        data[i].created = '11/21/2013';
+      }
+
+      return data;
+    }
+    function setUp() {
+      grid = new pear.ui.Grid();
+    }
+
+    function setConfiguration(config){
+      grid.setConfiguration(config);
+    }
+    function renderGrid(){
+      grid.setWidth(800);
+      grid.setHeight(400);
+      grid.setColumns(columns);
+      grid.setDataRows(getData());
+      grid.render(goog.dom.getElement('target1'));
+    }
+    function tearDown() {
+      grid.dispose();
+      grid = null;
+    }
+
+    function testConstructor() {
+      assertNotNull('Should have successful construction', grid);
+      assertNotNull('Should be in document', grid);
+    }
+
+    function testColumnResize(){
+      var config = {
+        AllowColumnResize: true
+      };
+     
+      setConfiguration(config);
+      renderGrid();
+
+      var headerCell=grid.getHeaderRow().getHeaderCellById("orderno");
+      var resizable = headerCell.getResizable();
+      var resizableHandle = resizable.getHandle(pear.ui.Resizable.Position.RIGHT);
+      goog.testing.events.fireMouseDownEvent(resizableHandle);
+      var bounds = goog.style.getBounds(resizableHandle);
+      var previousWidth = grid.getColumnWidthAt(0);
+      var newCoord = new goog.math.Coordinate(bounds.left + 100, bounds.top);
+      goog.testing.events.fireMouseMoveEvent(resizableHandle,newCoord);
+      var newWidth = grid.getColumnWidthAt(0);
+
+      assertEquals('After header column resize',previousWidth+100, newWidth);
+      grid.refresh();
+      var firstrow = grid.getGridRowAt(0);
+      bounds = goog.style.getContentBoxSize(firstrow.getCellAt(0).getElement());
+      assertEquals('All cells resize',previousWidth+100,bounds.width);
+    }
+
+    function testConfigAllowColumnResizeIsFalse(){
+      var config = {
+        AllowColumnResize: false
+      };
+     
+      setConfiguration(config);
+      renderGrid();
+
+      var headerCell=grid.getHeaderRow().getHeaderCellById("orderno");
+      var resizable = headerCell.getResizable();
+      assertNull('AllowColumnResize:false , No Resizable handle',resizable);
+    }
+
+    function testConfigAllowColumnResizeIsTrue(){
+      var config = {
+        AllowColumnResize: true
+      };
+     
+      setConfiguration(config);
+      renderGrid();
+
+      var headerCell=grid.getHeaderRow().getHeaderCellById("orderno");
+      var resizable = headerCell.getResizable();
+      var resizableHandle = resizable.getHandle(pear.ui.Resizable.Position.RIGHT);
+      assertNotNull('AllowColumnResize:true ,Resizable handle exists',resizableHandle);
+    }
+
+    function testWidth(){
+       var config = {
+        Width: 800
+      };
+      setConfiguration(config);
+      renderGrid();
+
+      var w=grid.getWidth();
+      assertEquals('Width ',w,800);
+      var bound = goog.style.getBounds(grid.getElement());
+      assertEquals('Width ',800,bound.width);
+    }
+
+    function testHeight(){
+       var config = {
+        Height: 400
+      };
+      setConfiguration(config);
+      renderGrid();
+
+      var h=grid.getHeight();
+      assertEquals('Height ',h,400);
+      var bound = goog.style.getBounds(grid.getElement());
+      assertEquals('Width ',400,bound.height);
+    };
+
+    function testRowHeight(){
+      var config = {
+        RowHeight: 30
+      };
+     
+      setConfiguration(config);
+      renderGrid();
+
+      var firstrow = grid.getGridRowAt(0);
+      var bound = goog.style.getContentBoxSize(firstrow.getElement());
+
+      assertEquals('Config: RowHeight ',30,bound.height);
+    }
+
+    function testRowHeaderHeight(){
+      var config = {
+        RowHeaderHeight: 40
+      };
+     
+      setConfiguration(config);
+      renderGrid();
+
+      var row = grid.getHeaderRow();
+      var bound = goog.style.getContentBoxSize(row.getElement());
+
+      assertEquals('Config: RowHeaderHeight ',40,bound.height);
+    }
+
+    function testColumnWidth(){
+      renderGrid();
+
+      var width = grid.getColumnWidthAt(0);
+      assertEquals('Column Width',width,75);
+
+      var row = grid.getHeaderRow();
+      var bound = goog.style.getContentBoxSize(row.getCellAt(0).getElement());
+      assertEquals('Header Cell Width',bound.width,width);
+
+      var firstrow = grid.getGridRowAt(0);
+      bound = goog.style.getContentBoxSize(firstrow.getCellAt(0).getElement());
+      assertEquals('First Row,First Cell Width',bound.width,width);
+    }
+
+    function testScroll(){
+      renderGrid();
+
+      var firstrow = grid.getGridRowAt(0);
+      
+    }
+  </script>
+</body>
+</html>

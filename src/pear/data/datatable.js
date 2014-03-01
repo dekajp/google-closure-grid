@@ -5,9 +5,13 @@ goog.require('pear.data.Column');
 
 
 /**
+ * @class  pear.data.DataTable
+ * @classdesc
  * DataTable - holds column and raw data for grid
- * 
- * @param {Array} columns
+ * Any operations Directly done on DataTable will
+ * affect Grid expected behaviour. All operations on DataTable should be done
+ * thru DataView {@link pear.data.DataView}
+ * @param {Array.<pear.data.Column>} datacolumns
  * @param {Array} datarows
  * @constructor
  * @extends {goog.events.EventTarget}
@@ -21,18 +25,12 @@ pear.data.DataTable = function(datacolumns, datarows) {
 };
 goog.inherits(pear.data.DataTable, goog.events.EventTarget);
 
-
 /**
- * [DataType description]
- * @type {Object}
+ * DataType
+ * @enum {string}
+ * @public
  */
-pear.data.DataTable.DataType = {
-  NUMBER: 'number',
-  TEXT: 'text',
-  BOOLEAN: 'boolean',
-  DATETIME: 'datetime'
-  // DECIMAL: 'decimal'
-};
+pear.data.DataTable.DataType = pear.data.DataType;
 
 
 /**
@@ -44,31 +42,32 @@ pear.data.DataTable.prototype.idGenerator_ = goog.ui.IdGenerator.getInstance();
 
 
 /**
- * @private
  * @type {Array.<pear.data.Column>}
+ * @private
  */
 pear.data.DataTable.prototype.dataColumns_ = [];
 
 
 /**
- * @private
  * @type {Array}
+ * @private
  */
 pear.data.DataTable.prototype.dataRows_ = [];
 
 
 /**
- * [mapIdToRow_ description]
+ * Map of RowID and DataRow
  * @type {goog.structs.Map}
+ * @private
  */
-pear.data.DataTable.prototype.mapIdToRow_ = null;
+pear.data.DataTable.prototype.dataRowsMap_ = null;
 
 /**
  * struct to keep mapping between DataRow and RowId (RowView Id)
  * @return {goog.structs.Map} [description]
  */
 pear.data.DataTable.prototype.getMapIdToRow = function() {
-  return this.mapIdToRow_;
+  return this.dataRowsMap_;
 };
 
 
@@ -91,6 +90,8 @@ pear.data.DataTable.prototype.setColumns = function(dc) {
 
 
 /**
+ * Get Datarows
+ *
  * @return {Array}
  */
 pear.data.DataTable.prototype.getDataRows = function() {
@@ -99,7 +100,20 @@ pear.data.DataTable.prototype.getDataRows = function() {
 
 
 /**
- * [setDataRows description]
+ * Set DataRows 
+ * @example
+ *   var data = [
+ *     {orderno:1,item:'Samsung-Galaxy',unitprice:200,...,...,...},
+ *     {orderno:2,item:'Iphone',unitprice:200,...,...,...},
+ *     {orderno:3,item:'Kindle-Fire',unitprice:200,...,...,...},
+ *     ...
+ *     ...
+ *     ...
+ *   ];
+ *
+ *  // Set DataRows
+ *  mydataTable.setDataRows(data);
+ *     
  * @param {Array} rows
  */
 pear.data.DataTable.prototype.setDataRows = function(rows) {
@@ -109,71 +123,81 @@ pear.data.DataTable.prototype.setDataRows = function(rows) {
 
 
 /**
- * [init_ description]
+ * Initialize the dataRowsMap for DataRows - each 
+ * row is assigned a ID and it is stored in the dataRowsMap
+ * @private
  */
 pear.data.DataTable.prototype.init_ = function() {
 
-  this.mapIdToRow_ = new goog.structs.Map();
+  this.dataRowsMap_ = new goog.structs.Map();
   // Add a unique Row Identifier
   goog.array.forEach(this.dataRows_, function(row, index) {
     var uniqueId = this.idGenerator_.getNextUniqueId();
-    this.mapIdToRow_.set(uniqueId, row);
+    this.dataRowsMap_.set(uniqueId, row);
   },this);
 };
 
 
 /**
- * [getDataRowById description]
+ * Return a single row by Id , this Id is unique id
+ * generated for each Row and stored in DataM
  * @param  {string} rowid
  * @return {Array}
+ * @public
  */
 pear.data.DataTable.prototype.getDataRowById = function(rowid) {
-  return this.mapIdToRow_.get(rowid);
+  return this.dataRowsMap_.get(rowid);
 };
 
 
 /**
- * [addDataRow description]
+ * Add a single row
+ * @todo  Allow to add Multiple rows
  * @param {Array} row
+ * @public
  */
 pear.data.DataTable.prototype.addDataRow = function(row) {
   var uniqueId = this.idGenerator_.getNextUniqueId();
-  this.mapIdToRow_.set(uniqueId, row);
+  this.dataRowsMap_.set(uniqueId, row);
   this.dataRows_.push(row);
 };
 
 
 /**
- * Remove row
- * @param  {?string} id
+ * Remove a single row
+ * @todo Allow to remove multiple rows
+ * @param  {?string} id - unique RowId
+ * @public
  */
 pear.data.DataTable.prototype.removeDataRow = function(id) {
-  this.mapIdToRow_.remove(id);
-  this.dataRows_ = this.mapIdToRow_.getValues();
+  this.dataRowsMap_.remove(id);
+  this.dataRows_ = this.dataRowsMap_.getValues();
 };
 
 
 /**
- * UpdateDataRow
- * @param  {?string} uniqueid
+ * Update a Single DataRow
+ * @param  {?string} uniqueid is Unique RowId
  * @param  {Array} datarow
+ * @public
  */
 pear.data.DataTable.prototype.updateDataRow = function(uniqueid, datarow) {
-  this.mapIdToRow_.set(uniqueid, datarow);
-  this.dataRows_ = this.mapIdToRow_.getValues();
+  this.dataRowsMap_.set(uniqueid, datarow);
+  this.dataRows_ = this.dataRowsMap_.getValues();
 };
 
 
 /**
- * @override
+ * @inheritDoc
+ * @protected
  */
 pear.data.DataTable.prototype.disposeInternal = function() {
   this.dataColumns_ = null;
   this.dataRows_ = null;
 
-  this.mapIdToRow_.clear();
+  this.dataRowsMap_.clear();
 
-  this.mapIdToRow_ = null;
+  this.dataRowsMap_ = null;
 
   pear.data.DataTable.superClass_.disposeInternal.call(this);
 };
