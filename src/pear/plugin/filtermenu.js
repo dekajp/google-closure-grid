@@ -11,8 +11,8 @@ goog.require('pear.ui.GridHeaderCell');
 
 
 /**
- * @classdesc This plugin attaches a Fitler UI to the sliding dropdown menu of 
- * each header cell
+ * @classdesc This sample plugin creates a UI which activates on Header Cell
+ * dropdown menu click. UI reposition itself below the dropdown menu button
  * @constructor
  * @extends {pear.ui.Plugin}
  */
@@ -40,6 +40,21 @@ pear.plugin.FilterMenu.EventType = {
   CLEAR_FILTER: 'on-clear-filter'
 };
 
+
+
+
+/**
+ * Label Input for Filter 
+ * @type {goog.ui.LabelInput?}
+ */
+pear.plugin.FilterMenu.prototype.filterInput_ = null;
+
+/**
+ * list of header menu buttons
+ * @type {Array.<pear.plugin.FilterMenuButton>?}
+ * @private
+ */
+pear.plugin.FilterMenu.prototype.headerMenuBtns_ = null;
 
 /**
  * header cell
@@ -69,17 +84,6 @@ pear.plugin.FilterMenu.prototype.closeElement_ = null;
  * @private
  */
 pear.plugin.FilterMenu.prototype.element_ = null;
-
-/**
- * input label
- * @type {?goog.ui.LabelInput}
- * @private
- */
-pear.plugin.FilterMenu.prototype.filterInput_ =null;
-
-
-
-
 
 
 /**
@@ -122,6 +126,24 @@ pear.plugin.FilterMenu.prototype.disposeInternal = function() {
   });
 
   pear.plugin.FilterMenu.superClass_.disposeInternal.call(this);
+};
+
+/**
+ * Get the list of header menu button
+ * @return {Array.<pear.plugin.FilterMenuButton>?} 
+ * @public
+ */
+pear.plugin.FilterMenu.prototype.getHeaderMenuButtons = function() {
+  return this.headerMenuBtns_;
+};
+
+/**
+ * get the label input for Filter UI
+ * @return {goog.ui.LabelInput} 
+ * @public
+ */
+pear.plugin.FilterMenu.prototype.getLabelInput = function() {
+  return this.filterInput_;
 };
 
 

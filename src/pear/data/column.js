@@ -72,7 +72,7 @@ pear.data.Column.prototype.width = -1;
 
 /**
  * formatting function 
- * @type {?function}
+ * @type {function(pear.ui.GridCell)}
  * @private
  */
 pear.data.Column.prototype.formatterFn = null;
@@ -123,7 +123,7 @@ pear.data.Column.prototype.getWidth=function(){
 /**
  * Get the column formatting function - this function will be called
  * for each DataCell for the column it belong to
- * @return {{fn: function, handler: Object}} [description]
+ * @return {Object.<function(pear.ui.GridCell),Object>} [description]
  * @public
  */
 pear.data.Column.prototype.getColumnFormatter = function(){

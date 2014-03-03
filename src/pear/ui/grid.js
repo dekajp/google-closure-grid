@@ -613,6 +613,7 @@ pear.ui.Grid.prototype.getColumnById = function(id) {
       return col;
     }
   });
+  return null;
 };
 
 /**
@@ -704,7 +705,6 @@ pear.ui.Grid.prototype.getDataViewRowCount = function() {
 /**
  * Get All data rows , in case of paging enabled get all rows at current
  * page index
- * @private
  * @return {Array.<pear.data.RowView>}
  * @private
  */
@@ -1596,7 +1596,7 @@ pear.ui.Grid.prototype.indexOfGridRow = function(gridrow) {
  * @return {pear.ui.GridRow} gridrow
  */
 pear.ui.Grid.prototype.getGridRowById = function(id) {
-	return this.bodyCanvas_.getChild(id);
+	return (/** @type {pear.ui.GridRow} */ (this.bodyCanvas_.getChild(id)));
 };
 
 

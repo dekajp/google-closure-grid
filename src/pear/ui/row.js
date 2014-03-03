@@ -96,7 +96,7 @@ pear.ui.Row.prototype.addCell = function(cell, opt_render) {
  * @public
  */
 pear.ui.Row.prototype.getCellAt = function(index) {
-  return this.getChildAt(index);
+  return (/** @type {pear.ui.Cell} */ (this.getChildAt(index)));
 };
 
 

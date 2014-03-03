@@ -240,7 +240,8 @@ pear.plugin.Pager.prototype.updatePagerDropdown_ = function(index) {
   // TODO : check for boundary
   index = (index < 0) ? 0 : index;
   index = index <= this.pagerComboBox_.getItemCount() - 1 ? index : (this.pagerComboBox_.getItemCount() - 1);
-  this.pagerComboBox_.setValue(index + 1);
+  var s = ''+(index + 1);
+  this.pagerComboBox_.setValue(s);
 };
 
 /**
@@ -266,7 +267,9 @@ pear.plugin.Pager.prototype.handlePageIndexChange_ = function(ge) {
   // THIS WILL ALSO CAUSE COMBOBOX CHANGE EVENT
   // setPageIndex are fired 2 times , this could be avoided by directly calling
   // handlePageIndexChange_ from handleChange_
-  this.pagerComboBox_.setValue(index + 1);
+  
+  var s = ''+(index + 1);
+  this.pagerComboBox_.setValue(s);
 };
 
 /**
@@ -288,7 +291,8 @@ pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge) {
   }while (i * rowsPerPage < totalRows);
 
   var index = this.getGrid().getPageIndex();
-  this.pagerComboBox_.setValue(index + 1);
+  var s = ''+(index + 1);
+  this.pagerComboBox_.setValue(s);
 };
 
 /**

@@ -10,7 +10,7 @@ goog.require('pear.ui.Plugin');
 /**
  * @class  HeaderMenu
  * @classdesc
- * A very basic plugin to add Dropdown style menu at each
+ * A very basic sample plugin to add Dropdown style menu at each
  * {@link pear.ui.GridHeaderCell}
  * @constructor
  * @extends {pear.ui.Plugin} 

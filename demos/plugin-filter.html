@@ -14,7 +14,7 @@
   
   <link rel="stylesheet" href="../src/css/grid.css" />
   <link rel="stylesheet" href="../src/css/plugin/headercellmenuplugin.css" />
-   <link rel="stylesheet" href="../src/css/plugin/pagerplugin.css" />
+  <link rel="stylesheet" href="../src/css/plugin/pagerplugin.css" />
   <link rel="stylesheet" href="../src/css/plugin/footerstatusplugin.css" />
 
  <style>
@@ -114,10 +114,13 @@
       }
     }
 
-  function dateFormatter(val){
+  function dateFormatter(gridcell){
     var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
-    return fmt.format(val);
+    var text = fmt.format(gridcell.getModel());
+
+    goog.dom.setTextContent(gridcell.getElement(),text);
   };
+  
   function isChecked(id,name){
     var elem = goog.dom.getElement(id);
     return  elem.checked;
@@ -197,8 +200,6 @@
     goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.APPLY_FILTER, handleApplyFilter);
     goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.CLEAR_FILTER, handleClearFilter);
     goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, handleRowViewsChanged);
-
-
   };
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
@@ -283,6 +284,8 @@
       goog.dom.removeChildren(contentIndicatorElem);
     }
   };
+
+  load();
 
  </script>
 
