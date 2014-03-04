@@ -179,6 +179,9 @@
     //console.log('Load Time : '+diff+'ms');
     goog.events.listen(grid, GRID_EVENTS, logEvent);
 
+    var plugin = grid.getPluginByClassId('ColumnMove');
+    goog.events.listen(plugin, pear.plugin.ColumnMove.EventType.ON_COLUMN_POSITION_CHANGE, logEvent);
+
   };
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);

@@ -63,6 +63,7 @@
     }
 
     function getData(){
+      data =[];
       var limit = 500
       var temp;
       for (var i = 0; i < parseInt(limit,10); i++) {
@@ -111,7 +112,6 @@
       grid.dispose();
       grid = null;
       data = null;
-      data=[];
       clock.dispose();
     }
 

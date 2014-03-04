@@ -363,6 +363,7 @@ pear.ui.GridHeaderCell.prototype.setPosition = function() {
  * [handleMenuSlide_ description]
  * @param  {Element} el
  * @param  {Array.<number>} value
+ * @private
  */
 pear.ui.GridHeaderCell.prototype.handleMenuSlide_ = function(el, value) {
   var anim = new pear.fx.dom.HeaderMenuSlide(el, [0], value, 300);
@@ -375,6 +376,7 @@ pear.ui.GridHeaderCell.prototype.handleMenuSlide_ = function(el, value) {
 /**
  * [handleChildMouseEvents_ description]
  * @param  {goog.events.Event} ge [description]
+ * @private
  */
 pear.ui.GridHeaderCell.prototype.handleChildMouseEvents_ = function(ge) {
   ge.stopPropagation();
@@ -383,6 +385,7 @@ pear.ui.GridHeaderCell.prototype.handleChildMouseEvents_ = function(ge) {
 /**
  * [handleActive_ description]
  * @param  {goog.events.Event} ge [description]
+ * @private
  */
 pear.ui.GridHeaderCell.prototype.handleActive_ = function(ge) {
   ge.stopPropagation();
