@@ -26,6 +26,22 @@ pear.ui.GridCell = function(opt_domHelper, opt_renderer) {
 };
 goog.inherits(pear.ui.GridCell, pear.ui.Cell);
 
+/**
+ * Get Cell Data
+ * @return {*} data
+ */
+pear.ui.Cell.prototype.getCellData = function() {
+  return this.getModel();
+};
+
+
+/**
+ * Set Data
+ * @param  {*} data
+ */
+pear.ui.Cell.prototype.setCellData = function(data) {
+  this.setModel(data);
+};
 
 /**
  * Returns the text caption or DOM structure displayed in the component.
@@ -34,16 +50,15 @@ goog.inherits(pear.ui.GridCell, pear.ui.Cell);
  */
 pear.ui.GridCell.prototype.getContent = function() {
   
-  return String(this.getModel());
+  return String(this.getCellData());
 };
 
 /**
  * Returns the text caption or DOM structure displayed in the component.
- * @return {goog.ui.ControlContent} Text caption or DOM structure
- *     comprising the component's contents.
+ * @public
  */
 pear.ui.GridCell.prototype.applyFormatting = function() {
-  var columnObject = this.getColumnObject();
+  var columnObject = this.getDataColumn();
   var formatter = columnObject.getColumnFormatter();
   var handler = formatter.handler || this;
   if (formatter && formatter.fn){

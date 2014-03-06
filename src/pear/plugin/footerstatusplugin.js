@@ -39,7 +39,6 @@ pear.plugin.FooterStatus.prototype.init = function() {
  * @override
  */
 pear.plugin.FooterStatus.prototype.disposeInternal = function() {
-  this.setGrid(null);
   this.footerStatus_.dispose();
   if (this.footer_) {
     this.footer_.remove();

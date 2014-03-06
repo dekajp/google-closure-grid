@@ -156,7 +156,7 @@ pear.ui.GridRow.prototype.handleEnterItem = function(ge) {
  * @return {string}
  */
 pear.ui.GridRow.prototype.getDataRowId = function() {
-  var rowview = this.getRowView();
+  var rowview = this.getDataRowView();
   return rowview.getRowId();
 };
 

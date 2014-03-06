@@ -37,7 +37,7 @@ goog.inherits(pear.ui.Row, goog.ui.Container);
 
 /**
  * grid
- * @type {?pear.ui.Grid}
+ * @type {pear.ui.Grid?}
  * @private
  */
 pear.ui.Row.prototype.grid_ = null;
@@ -73,10 +73,18 @@ pear.ui.Row.prototype.enterDocument = function() {
 /**
  * @return {?pear.data.RowView}
  */
-pear.ui.Row.prototype.getRowView = function() {
+pear.ui.Row.prototype.getDataRowView = function() {
   return (/** @type {pear.data.RowView} */ (this.getModel()));
 };
 
+/**
+ * set Data RowView
+ * @param {pear.data.RowView} rowview 
+ */
+pear.ui.Row.prototype.setDataRowView = function(rowview) {
+  var rv = (/** @type {pear.data.RowView} */ (rowview));
+  this.setModel(rv);
+};
 
 /**
  * add Cell
@@ -109,7 +117,7 @@ pear.ui.Row.prototype.getGrid = function() {
 };
 
 /**
- * [setGrid description]
+ * setGrid
  * @param {pear.ui.Grid} grid [description]
  */
 pear.ui.Row.prototype.setGrid = function(grid) {

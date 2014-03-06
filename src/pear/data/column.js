@@ -10,7 +10,7 @@ goog.require('goog.ui.IdGenerator');
  * @example
  * new pear.data.Column("header Text",'column-id',275,pear.data.DataType.NUMBER)
  * 
- * @param {string | Object.<string,string,string,number>} content   
+ * @param {string} content   
  * @param {string=} opt_id       column id should be unique
  * @param {pear.data.DataType=} opt_datatype DataType
  * @param {number=} opt_width    width of column
@@ -72,7 +72,7 @@ pear.data.Column.prototype.width = -1;
 
 /**
  * formatting function 
- * @type {function(pear.ui.GridCell)}
+ * @type {function(pear.ui.GridCell)|null}
  * @private
  */
 pear.data.Column.prototype.formatterFn = null;
@@ -145,7 +145,7 @@ pear.data.Column.prototype.getColumnFormatter = function(){
  * ...
  * column.setColumnFormatter(myformatter);
  * 
- * @param {Function} fn    formatting function 
+ * @param {function(pear.ui.GridCell)} fn    formatting function 
  * @param {Object=} opt_scope  whose scope to call the formatter.
  * @public
  */

@@ -139,7 +139,7 @@
       assertEquals('Grid Page Index = PagerDropdown Value',grid.getPageIndex()+1,parseInt(pagerDropdown.getValue(),10));
 
       var firstrow = grid.getGridRowAt(0);
-      assertEquals('1st Row ',data[0].orderno,grid.getGridRowAt(0).getRowView().getRowData().orderno);
+      assertEquals('1st Row ',data[0].orderno,grid.getGridRowAt(0).getDataRowView().getRowData().orderno);
 
       // On Next Page Click
       var nextPage = navControl[1];
@@ -149,14 +149,14 @@
       var pageSize = grid.getPageSize();
       assertEquals('1st Row of Next page',
             data[pageIndex*pageSize].orderno,
-            grid.getGridRowAt(0).getRowView().getRowData().orderno);
+            grid.getGridRowAt(0).getDataRowView().getRowData().orderno);
 
       var objDiv = grid.getBody().getElement();
       dispatchScroll(objDiv,objDiv.scrollHeight);
 
       assertEquals('Last Row of Next page',
             data[pageIndex*pageSize+pageSize-1].orderno,
-            grid.getGridRowAt(pageSize-1).getRowView().getRowData().orderno);
+            grid.getGridRowAt(pageSize-1).getDataRowView().getRowData().orderno);
       
       assertEquals('PagerDropdown - Next Page Index',2,parseInt(pagerDropdown.getValue(),10));
       assertEquals('Grid Page Index = PagerDropdown Value',grid.getPageIndex()+1,parseInt(pagerDropdown.getValue(),10));
@@ -169,7 +169,7 @@
       var pagerDropdown = pagerplugin.getPagerDropdown();
 
       var firstrow = grid.getGridRowAt(0);
-      assertEquals('1st Row ',data[0].orderno,grid.getGridRowAt(0).getRowView().getRowData().orderno);
+      assertEquals('1st Row ',data[0].orderno,grid.getGridRowAt(0).getDataRowView().getRowData().orderno);
 
       // On Next Page Click
       var nextPage = navControl[1];
@@ -180,7 +180,7 @@
       firstrow = grid.getGridRowAt(0);
       assertEquals('1st Row ',
         data[0].orderno,
-        grid.getGridRowAt(0).getRowView().getRowData().orderno);
+        grid.getGridRowAt(0).getDataRowView().getRowData().orderno);
 
       assertEquals('PagerDropdown - Current Page Index',1,parseInt(pagerDropdown.getValue(),10));
       assertEquals('Grid Page Index = PagerDropdown Value',grid.getPageIndex()+1,parseInt(pagerDropdown.getValue(),10));

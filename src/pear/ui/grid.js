@@ -96,7 +96,9 @@ goog.inherits(pear.ui.Grid, goog.ui.Component);
 
 
 /**
+ * Scroll Direction of Grid
  * @enum
+ * @private
  */
 pear.ui.Grid.ScrollDirection = {
 	/** Scroll direction up */
@@ -113,7 +115,9 @@ pear.ui.Grid.ScrollDirection = {
 
 
 /**
+ * Sort Direction
  * @enum {number}
+ * @public
  */
 pear.ui.Grid.SortDirection = {
 	/** None - no sort */
@@ -127,6 +131,7 @@ pear.ui.Grid.SortDirection = {
 
 /**
  * @enum
+ * @private
  */
 pear.ui.Grid.RenderState_ = {
 	/** Grid is rendering */
@@ -137,7 +142,9 @@ pear.ui.Grid.RenderState_ = {
 
 
 /**
+ * Selection Mode of Grid
  * @enum {number}
+ * @public
  */
 pear.ui.Grid.SelectionMode = {
 	/** No Selection Mode */
@@ -152,7 +159,7 @@ pear.ui.Grid.SelectionMode = {
 
 
 /**
- * @type {Object.<string,null|number|boolean|pear.ui.Grid.SelectionMode>}
+ * @type {Object}
  * @private
  */
 pear.ui.Grid.prototype.Configuration_ = {
@@ -269,6 +276,7 @@ pear.ui.Grid.prototype.body_ = null;
 /**
  * Body Canvas 
  * @type {pear.ui.BodyCanvas?}
+ * @private
  */
 pear.ui.Grid.prototype.bodyCanvas_ = null;
 
@@ -1149,7 +1157,7 @@ pear.ui.Grid.prototype.createHeaderCells_ = function() {
 	goog.array.forEach(columns, function(column, index) {
 		// create header cells here
 		var headerCell = new pear.ui.GridHeaderCell();
-		headerCell.setModel(column);
+		headerCell.setDataColumn(column);
 		headerCell.setCellIndex(index);
 		this.headerRow_.addCell(headerCell, true);
 		var evt = new pear.ui.Grid.GridHeaderCellEvent(
@@ -1273,9 +1281,9 @@ pear.ui.Grid.prototype.prepareGridRows_ = function() {
 
 	this.setGridRows_([]);
 
-	goog.array.forEach(rows, function(value, index) {
+	goog.array.forEach(rows, function(rowview, index) {
 		var row = new pear.ui.GridRow(this, this.Configuration_.RowHeight);
-		row.setModel(value);
+		row.setDataRowView(rowview);
 		row.setHeight(this.Configuration_.RowHeight)
 		row.setRowPosition(index);
 		if (this.Configuration_.AllowPaging) {
@@ -1327,16 +1335,17 @@ pear.ui.Grid.prototype.restoreSelectedRows_ = function() {
  * @param {pear.ui.Row} row
  */
 pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
-	var rowview = row.getRowView();
+	var rowview = row.getDataRowView();
 	var model = rowview.getRowData();
 	var columns = this.getColumns_();
 	if (row.getChildCount() > 0) {
 		row.removeChildren(true);
 	}
 
-	goog.array.forEach(columns, function(value, index) {
+	goog.array.forEach(columns, function(datacolumn, index) {
 		var c = new pear.ui.GridCell();
-		c.setModel(model[value.getId()]);
+		c.setDataColumn(datacolumn);
+		c.setCellData(model[datacolumn.getId()]);
 		c.setCellIndex(index);
 		row.addCell(c, true);
 	},this);
@@ -1399,8 +1408,9 @@ pear.ui.Grid.prototype.refreshRenderRows_ = function() {
 };
 
 /**
- * [bodyCanvasRender_ description]
+ * Render Body Canvas 
  * @param  {boolean=} opt_redraw [description]
+ * @private
  */
 pear.ui.Grid.prototype.bodyCanvasRender_ = function(opt_redraw) {
 
@@ -1751,7 +1761,7 @@ pear.ui.Grid.prototype.highlightHelper = function(fn, startIndex) {
  * Returns whether the given gridrow can be highlighted.
  * @param {pear.ui.GridRow} gridrow The item to check.
  * @return {boolean} Whether the item can be highlighted.
- * @protected
+ * @public
  */
 pear.ui.Grid.prototype.canHighlightGridRow = function(gridrow) {
 	return gridrow.isVisible() && gridrow.isEnabled();

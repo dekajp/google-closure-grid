@@ -104,7 +104,7 @@ pear.plugin.HeaderMenu.prototype.getCSSClassName = function() {
 pear.plugin.HeaderMenu.prototype.handleMenuEvent_ = function(ge) {
   var menuBtn = (/** @type {pear.plugin.HeaderMenuButton} */ (ge.currentTarget));
   var headercell = menuBtn.getHeaderCell();
-  var headercellTitle = headercell.getCellData()['headerText'];
+  var headercellTitle = headercell.getDataColumn()['headerText'];
   // alert(be.target.getContent() + ' clicked on ' + headercellTitle + ' column.');
   alert(' clicked on ' + headercellTitle + ' column.');
 };

@@ -22,7 +22,7 @@
     var grid;
     var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
     var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
-
+    var data = [];
     var columns = [
       new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
       new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
@@ -33,7 +33,7 @@
       new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
     ];
     function getData(){
-      var data = [];
+      data = [];
       var limit = 500
       var temp;
       for (var i = 0; i < parseInt(limit,10); i++) {
@@ -66,9 +66,21 @@
       grid.setDataRows(getData());
       grid.render(goog.dom.getElement('target1'));
     }
+
     function tearDown() {
       grid.dispose();
       grid = null;
+      data=null;
+    }
+
+    function dispatchScroll(target,newScrollTop) {
+      target.scrollTop = newScrollTop;
+      var e = document.createEvent("UIEvents");
+      // creates a scroll event that bubbles, can be cancelled,
+      // and with its view and detail property initialized to window and 1,
+      // respectively
+      e.initUIEvent("scroll", true, true, window, 1);
+      target.dispatchEvent(e);
     }
 
     function testConstructor() {
@@ -128,7 +140,7 @@
       assertNotNull('AllowColumnResize:true ,Resizable handle exists',resizableHandle);
     }
 
-    function testWidth(){
+    function testConfigWidth(){
        var config = {
         Width: 800
       };
@@ -141,7 +153,7 @@
       assertEquals('Width ',800,bound.width);
     }
 
-    function testHeight(){
+    function testConfigHeight(){
        var config = {
         Height: 400
       };
@@ -154,7 +166,7 @@
       assertEquals('Width ',400,bound.height);
     };
 
-    function testRowHeight(){
+    function testConfigRowHeight(){
       var config = {
         RowHeight: 30
       };
@@ -168,7 +180,7 @@
       assertEquals('Config: RowHeight ',30,bound.height);
     }
 
-    function testRowHeaderHeight(){
+    function testConfigRowHeaderHeight(){
       var config = {
         RowHeaderHeight: 40
       };
@@ -180,6 +192,38 @@
       var bound = goog.style.getContentBoxSize(row.getElement());
 
       assertEquals('Config: RowHeaderHeight ',40,bound.height);
+    }
+
+    function testConfigHeaderMenu(){
+      var config = {
+        AllowColumnHeaderMenu: true
+      };
+     
+      setConfiguration(config);
+      renderGrid();
+      // TODO check if column menu is visible
+    }
+
+    function testConfigAllowSorting(){
+      var config = {
+        AllowSorting: true
+      };
+     
+      setConfiguration(config);
+      renderGrid();
+
+      var headerRow = grid.getHeaderRow();
+      var targetHeaderCell = headerRow.getChildAt(3);
+      var sortDirection = pear.ui.Grid.SortDirection.DESC;
+
+      goog.events.listen(grid,pear.ui.Grid.EventType.SORT,function(ge){
+        assertEquals("sort column id ",ge.sortCell.getColumnId(),targetHeaderCell.getColumnId());
+        assertEquals("Sort Direction ",sortDirection,ge.sortDirection);
+      });
+
+      goog.testing.events.fireClickSequence(targetHeaderCell.getElement());
+      sortDirection = pear.ui.Grid.SortDirection.ASC;
+      goog.testing.events.fireClickSequence(targetHeaderCell.getElement());
     }
 
     function testColumnWidth(){
@@ -201,7 +245,15 @@
       renderGrid();
 
       var firstrow = grid.getGridRowAt(0);
-      
+      var lastrow = grid.getGridRowAt(data.length-1);
+
+      assertEvaluatesToTrue("firstrow inDocument",firstrow.isInDocument());
+      assertEvaluatesToFalse("lastrow inDocument",lastrow.isInDocument());
+
+      var objDiv = grid.getBody().getElement();
+      dispatchScroll(objDiv,objDiv.scrollHeight);
+      assertEvaluatesToFalse("firstrow inDocument after full scroll",firstrow.isInDocument());
+      assertEvaluatesToTrue("lastrow inDocument after full scroll",lastrow.isInDocument());
     }
   </script>
 </body>

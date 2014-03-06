@@ -72,16 +72,18 @@ pear.ui.GridHeaderCell.prototype.getResizable = function() {
 /**
  * get Sort Direction {@link pear.ui.Grid.SortDirection}
  * @return {pear.ui.Grid.SortDirection}
+ * @public
  */
 pear.ui.GridHeaderCell.prototype.getSortDirection = function() {
   this.sortDirection_ = this.sortDirection_ || pear.ui.Grid.SortDirection.NONE;
-  return this.sortDirection_;
+  return (/** @type {pear.ui.Grid.SortDirection} */ (this.sortDirection_));
 };
 
 
 /**
- * [setsortDirection description]
+ * setSortDirection of Column
  * @param  {?pear.ui.Grid.SortDirection} value
+ * @private
  */
 pear.ui.GridHeaderCell.prototype.setsortDirection = function(value) {
   this.sortDirection_ = value || pear.ui.Grid.SortDirection.NONE;
@@ -89,8 +91,9 @@ pear.ui.GridHeaderCell.prototype.setsortDirection = function(value) {
 
 
 /**
- * [getMenuControl description]
+ * Get Menu Control Container
  * @return {goog.ui.Control}
+ * @public
  */
 pear.ui.GridHeaderCell.prototype.getMenuControl = function() {
   return this.headerMenuContainer_;
@@ -98,12 +101,14 @@ pear.ui.GridHeaderCell.prototype.getMenuControl = function() {
 
 
 /**
- * [setMenuState description]
- * @param {boolean} open
+ * set state of Sliding Menu Container 
+ * @param {boolean} open , true is visible
+ * @public
  */
 pear.ui.GridHeaderCell.prototype.setMenuState = function(open) {
   this.keepSlideMenuOpen_ = open;
 };
+
 
 
 /**
@@ -118,8 +123,9 @@ pear.ui.GridHeaderCell.prototype.getContent = function() {
 
 
 /**
- * [getContentCell description]
+ * Get the Content Cell
  * @return {?Element}
+ * @public
  */
 pear.ui.GridHeaderCell.prototype.getContentCell = function() {
   return this.contentCell_;
@@ -127,36 +133,31 @@ pear.ui.GridHeaderCell.prototype.getContentCell = function() {
 
 
 /**
- * [getContentText description]
+ * Get Content Text - Header Text
  * @return {string}
+ * @public
  */
 pear.ui.GridHeaderCell.prototype.getContentText = function() {
-  return this.getModel()['headerText'];
+  return this.getDataColumn()['headerText'];
 };
 
 
-/**
- * [getCellData description]
- * @return {Object}
- */
-pear.ui.GridHeaderCell.prototype.getCellData = function() {
-  var columnData = (/** @type {Object} */ (this.getModel()));
-  return columnData;
-};
-
 
 /**
- * [getColumnId description]
+ * Get Column Id 
  * @return {string}
+ * @public
  */
 pear.ui.GridHeaderCell.prototype.getColumnId = function() {
-  return this.getCellData()['id'];
+  return this.getDataColumn()['id'];
 };
 
 
 /**
- * [getContentIndicatorElement description]
+ * Get Indicator Element Container - this suppose to hold indicators
+ * for sort , filter .
  * @return {Element}
+ * @public
  */
 pear.ui.GridHeaderCell.prototype.getContentIndicatorElement = function() {
   return this.contentIndicator_;

@@ -89,6 +89,7 @@ pear.plugin.ColumnMove.prototype.makeColumnsDraggable = function() {
  * @private
  */
 pear.plugin.ColumnMove.prototype.handleDragStartEvent_ = function(ge) {
+  var grid = this.getGrid();
   var headerRow = grid.getHeaderRow();
   var currentDragItem = ge.currDragItem;
   var id = currentDragItem.getAttribute('id');
@@ -117,7 +118,7 @@ pear.plugin.ColumnMove.prototype.handleDragEvent_ = function(ge) {
   var columnsNodes = goog.dom.getChildren(headerRow.getElement());
   goog.array.forEach(columnsNodes, function(node, index) {
     var id = node.getAttribute('id');
-    newColumns[index] = headerRow.getChild(id).getCellData();
+    newColumns[index] = headerRow.getChild(id).getDataColumn();
   },this);
 
   grid.setColumns(newColumns);

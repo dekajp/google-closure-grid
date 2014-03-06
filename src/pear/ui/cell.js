@@ -52,6 +52,13 @@ goog.ui.Component.prototype.columnIndex_ = -1;
 
 
 /**
+ * @type {pear.data.Column?}
+ * @private
+ */
+goog.ui.Component.prototype.datacolumn_ = null;
+
+
+/**
  * @type {number}
  * @private
  */
@@ -77,7 +84,8 @@ goog.ui.Component.prototype.grid_ = null;
 pear.ui.Cell.prototype.disposeInternal = function() {
   this.grid_ = null;
   this.row_ = null;
-
+  this.datacolumn_ = null;
+  
   pear.ui.Cell.superClass_.disposeInternal.call(this);
 };
 
@@ -135,15 +143,24 @@ pear.ui.Cell.prototype.getCellIndex = function() {
 };
 
 /**
- * [getColumnObject description]
- * @return {Object} [description]
+ * Get Data Column Associated with the Cell
+ * @return {pear.data.Column} Data Column
  */
-pear.ui.Cell.prototype.getColumnObject = function() {
-  var grid = this.getGrid();
-  var columns = grid.getDataView().getColumns();
-  return columns[this.getCellIndex()];
+pear.ui.Cell.prototype.getDataColumn = function() {
+  // var column = ( /** @type {pear.data.Column} */ (this.getModel()));
+  return this.datacolumn_;
 };
 
+
+/**
+ * Set Data Column
+ * @param  {pear.data.Column} datacolumn 
+ */
+pear.ui.Cell.prototype.setDataColumn = function(datacolumn) {
+  // var data = ( /** @type {pear.data.Column} */ (datacolumn));
+  // this.setModel(data);
+  this.datacolumn_ = datacolumn;
+};
 
 /**
  * @return  {number}
@@ -264,5 +281,3 @@ pear.ui.Cell.prototype.draw = function() {
   this.setSize_();
   this.setPosition();
 };
-
-
