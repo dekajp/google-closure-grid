@@ -62,7 +62,7 @@ goog.ui.Component.prototype.datacolumn_ = null;
  * @type {number}
  * @private
  */
-goog.ui.Component.prototype.columnWidth_ = 0;
+// goog.ui.Component.prototype.columnWidth_ = 0;
 
 
 /**
@@ -85,7 +85,7 @@ pear.ui.Cell.prototype.disposeInternal = function() {
   this.grid_ = null;
   this.row_ = null;
   this.datacolumn_ = null;
-  
+
   pear.ui.Cell.superClass_.disposeInternal.call(this);
 };
 
@@ -174,12 +174,12 @@ pear.ui.Cell.prototype.getRowPosition = function() {
  * @public
  * @param {number} width
  */
-pear.ui.Cell.prototype.setCellWidth = function(width, opt_render) {
+/*pear.ui.Cell.prototype.setCellWidth = function(width, opt_render) {
   this.columnWidth_ = width;
   if (opt_render) {
     this.draw();
   }
-};
+};*/
 
 
 /**
@@ -187,10 +187,12 @@ pear.ui.Cell.prototype.setCellWidth = function(width, opt_render) {
  * @return  {number}
  */
 pear.ui.Cell.prototype.getCellWidth = function() {
-  this.columnWidth_ = this.columnWidth_ ||
+  /*this.columnWidth_ = this.columnWidth_ ||
       this.getGrid().getColumnWidthAt(this.getCellIndex()) ||
       this.getGrid().getConfiguration().ColumnWidth;
-  return this.columnWidth_;
+  return this.columnWidth_;*/
+
+  return this.getDataColumn().getWidth();
 };
 
 pear.ui.Cell.prototype.getCellComputedWidth = function() {

@@ -120,6 +120,16 @@ pear.ui.GridRow.prototype.setSelect = function(select) {
 
 
 /**
+ * For each child @link {pear.ui.GridCell} update size
+ * @public
+ */
+pear.ui.GridRow.prototype.repositionCells = function() {
+  this.forEachChild(function(child) {
+    child.draw();
+  },this);
+};
+
+/**
  * @override
  *
  */

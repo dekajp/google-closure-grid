@@ -97,7 +97,7 @@ goog.inherits(pear.ui.Grid, goog.ui.Component);
 
 /**
  * Scroll Direction of Grid
- * @enum
+ * @enum {number}
  * @private
  */
 pear.ui.Grid.ScrollDirection = {
@@ -130,7 +130,7 @@ pear.ui.Grid.SortDirection = {
 
 
 /**
- * @enum
+ * @enum {number}
  * @private
  */
 pear.ui.Grid.RenderState_ = {
@@ -538,7 +538,7 @@ pear.ui.Grid.prototype.applyColumnWidth_ = function(index, width, opt_render) {
 	coldata[index]['width'] = width || this.Configuration_.ColumnWidth;
 	var headerCell = this.headerRow_.getChildAt(index);
 	if (opt_render && headerCell) {
-		headerCell.setCellWidth(width);
+//		headerCell.setCellWidth(width);
 		headerCell.draw();
 	}
 };
@@ -1427,6 +1427,14 @@ pear.ui.Grid.prototype.bodyCanvasRender_ = function(opt_redraw) {
 	this.renderedGridRows_ = [];
 };
 
+/**
+ * Reclaculate width of Each GridRow
+ */
+pear.ui.Grid.prototype.updateWidthOfGridRows = function(){
+	goog.array.forEach(this.gridRows_, function(gridrow) {
+		gridrow.repositionCells();
+	},this);
+};
 
 /**
  * draw the grid (this is more of redraw)
@@ -1449,9 +1457,20 @@ pear.ui.Grid.prototype.refreshHeader = function() {
 	this.createHeaderCells_();
 };
 
+/**
+ * On columns width changed
+ * @private
+ */
+pear.ui.Grid.prototype.refreshOnColumnResize = function() {
+	this.updateWidthOfGridRows();
+};
 
 /**
  * refresh grid , technically complete repaint
+ * Clear the Rendered Grid Row Cache , Clear the Rendered Grid
+ * Prepare Grid Rows from the DataSource
+ * Set the height of canvas and cache Rendered Rows
+ * Restore Highlight Rows and Restore Selected Rows
  *
  */
 pear.ui.Grid.prototype.refresh = function() {

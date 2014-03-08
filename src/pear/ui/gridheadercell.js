@@ -457,7 +457,7 @@ pear.ui.GridHeaderCell.prototype.handleResize_ = function(ge) {
 pear.ui.GridHeaderCell.prototype.handleResizeEnd_ = function(ge) {
   ge.stopPropagation();
   var grid = this.getGrid();
-  grid.refresh();
+  grid.refreshOnColumnResize();
 };
 
 
