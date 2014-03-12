@@ -115,7 +115,7 @@ pear.plugin.Pager.prototype.createPager_ = function() {
 pear.plugin.Pager.prototype.disposeInternal = function() {
   this.pagerComboBox_.dispose();
   this.pagerComboBox_ = null;
-  this.footer_.remove();
+  // this.footer_.remove();
   this.footer_ = null;
   goog.array.forEach(this.navControl_, function(nav) {
     nav.dispose();
@@ -143,10 +143,10 @@ pear.plugin.Pager.prototype.createFooter_ = function() {
   var grid = this.getGrid();
   var parentElem = grid.getElement();
   this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
-  if (this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer')) {
+  if (this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer-panel')) {
 
   }else {
-    this.footer_ = goog.dom.createDom('div', 'pear-grid-footer');
+    this.footer_ = goog.dom.createDom('div', 'pear-grid-footer-panel');
     goog.dom.insertSiblingAfter(this.footer_, parentElem);
   }
 

@@ -125,7 +125,7 @@ pear.ui.GridRow.prototype.setSelect = function(select) {
  */
 pear.ui.GridRow.prototype.repositionCells = function() {
   this.forEachChild(function(child) {
-    child.draw();
+    child.updateSizeAndPosition();
   },this);
 };
 

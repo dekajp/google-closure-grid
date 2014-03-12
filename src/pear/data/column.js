@@ -156,6 +156,16 @@ pear.data.Column.prototype.setColumnFormatter = function(fn,opt_scope){
   }
 };
 
+
+pear.data.Column.prototype.setColumnFooterAggregatesFn = function(fn){
+  this.fnFooterAggregate_ = fn;
+};
+
+pear.data.Column.prototype.getColumnFooterAggregatesFn = function(fn){
+  return this.fnFooterAggregate_;
+};
+
+
 /**
  * Deletes or nulls out any references to COM objects, DOM nodes, or other
  * disposable objects

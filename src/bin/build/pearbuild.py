@@ -17,6 +17,7 @@ _DEPSWRITER = str(_ROOTDIR +
                       '/lib/closure-library/closure/bin/build/depswriter.py')
 _CLOSUREBUILDER = str(_ROOTDIR +
                   '/lib/closure-library/closure/bin/build/closurebuilder.py')
+_WWWSITE = str('/Users/dekajp/Sites/google-closure-grid')
 
 print _ROOTDIR
 def ScanTree(root, path_filter=None, ignore_hidden=True):
@@ -101,7 +102,28 @@ subprocess.call(['python',_CLOSUREBUILDER,
                     str(_ROOTDIR + '/src/bin/release/pear.grid.js')
                 ],stdout=f2)
 
+subprocess.call(['jsdoc','-r',
+    str(_ROOTDIR + '/src/pear'),
+    str(_ROOTDIR + '/README.md')])
 
+shutil.rmtree(str(_WWWSITE+'/src/bin/release'))
+shutil.copytree(str(_ROOTDIR + '/src/bin/release'), str(_WWWSITE+'/src/bin/release'))
+
+shutil.rmtree(str(_WWWSITE+'/src/css'))
+shutil.copytree(str(_ROOTDIR + '/src/css'), str(_WWWSITE+'/src/css'))
+
+shutil.rmtree(str(_WWWSITE+'/src/pear'))
+shutil.copytree(str(_ROOTDIR + '/src/pear'), str(_WWWSITE+'/src/pear'))
+
+shutil.rmtree(str(_WWWSITE+'/demos'))
+shutil.copytree(str(_ROOTDIR + '/demos'), str(_WWWSITE+'/demos'))
+
+os.rename(str(_ROOTDIR + '/out/pear.ui.html#Grid'), str(_ROOTDIR + '/out/pear.ui.html'))
+shutil.rmtree(str(_WWWSITE+'/docs'))
+shutil.copytree(str(_ROOTDIR + '/out'), str(_WWWSITE+'/docs'))
+
+shutil.copyfile(str(_ROOTDIR + '/src/pearalltests.html'),str(_WWWSITE+'/src/pearalltests.html'))
+shutil.copyfile(str(_ROOTDIR + '/src/pearalltests.js'),str(_WWWSITE+'/src/pearalltests.js'))
 
 f3 = open(str(_ROOTDIR + '/src/bin/release/pear.grid.min.js.log'), "w") 
 subprocess.call(['python',_CLOSUREBUILDER,

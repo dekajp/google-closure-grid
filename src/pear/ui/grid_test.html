@@ -180,9 +180,9 @@
       assertEquals('Config: RowHeight ',30,bound.height);
     }
 
-    function testConfigRowHeaderHeight(){
+    function testConfigHeaderRowHeight(){
       var config = {
-        RowHeaderHeight: 40
+        HeaderRowHeight: 40
       };
      
       setConfiguration(config);
@@ -191,7 +191,7 @@
       var row = grid.getHeaderRow();
       var bound = goog.style.getContentBoxSize(row.getElement());
 
-      assertEquals('Config: RowHeaderHeight ',40,bound.height);
+      assertEquals('Config: HeaderRowHeight ',40,bound.height);
     }
 
     function testConfigHeaderMenu(){

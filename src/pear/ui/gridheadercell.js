@@ -344,6 +344,7 @@ pear.ui.GridHeaderCell.prototype.slideMenuOpen = function(display) {
 
 /**
  * @override
+ * Header and Footer row - Postion is Relative 
  */
 pear.ui.GridHeaderCell.prototype.setPosition = function() {
   var left, top;

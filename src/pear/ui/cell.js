@@ -101,8 +101,7 @@ pear.ui.Cell.prototype.enterDocument = function() {
 
   pear.ui.Cell.superClass_.
       enterDocument.call(this);
-  this.draw();
-
+  this.updateSizeAndPosition();
 };
 
 
@@ -279,7 +278,7 @@ pear.ui.Cell.prototype.setSize_ = function() {
  * @private
  *
  */
-pear.ui.Cell.prototype.draw = function() {
+pear.ui.Cell.prototype.updateSizeAndPosition = function() {
   this.setSize_();
   this.setPosition();
 };

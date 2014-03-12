@@ -29,7 +29,7 @@ pear.ui.Row = function(grid, height, opt_orientation,
 
   // To avoid Blur Event on Header cells
   this.setFocusable(false);
-  
+  this.setHeight(height);
   this.setGrid(grid);
 };
 goog.inherits(pear.ui.Row, goog.ui.Container);

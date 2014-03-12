@@ -142,6 +142,23 @@
     new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
   ];
 
+  var fnAggregate = function (datacolumn,dataview){
+    if (datacolumn.id === 'total' || datacolumn.id === 'quantity' ){
+      var total =0;
+      goog.array.forEach(dataview.getDataRowViews(),function(row){
+        total = total + row.getRowData()[datacolumn.id];
+      });
+
+      return total;
+    }
+    if (datacolumn.id === 'orderno' ){
+      return 'Total';
+    }
+    
+
+    return '';
+  };
+
   var load = function () {
     if (grid){
       grid.dispose();
@@ -174,6 +191,7 @@
       AllowColumnHeaderMenu: true,
       AllowPaging:true,
       PageSize:50,
+      RowFooterHeight:35,
       AllowAlternateRowHighlight: true
     };
     config = grid.setConfiguration(config);
@@ -181,10 +199,17 @@
     grid.setWidth(800);
     grid.setHeight(400);
     grid.setDataView(dv);
+    grid.showFooterRow(true);
 
     var filterPlugin = new pear.plugin.FilterMenu();
     grid.registerPlugin( filterPlugin);
     grid.registerPlugin( new pear.plugin.Pager());
+
+
+    goog.array.forEach(columns,function(column){
+      column.setColumnFooterAggregatesFn(fnAggregate);
+    },this);
+
 
     grid.render(goog.dom.getElement('target1'));
 
@@ -211,7 +236,7 @@
     var filterText = ge.filterText;
     var dv = grid.getDataView();
 
-    dv.addColumnFilter(headercell.getCellData(),filterText);
+    dv.addColumnFilter(headercell.getDataColumn(),filterText);
 
     var filteredRows = dv.applyFilter(filterfn,this);
     console.dir(filteredRows);
@@ -226,7 +251,7 @@
     var filterText = ge.filterText;
     var dv = grid.getDataView();
 
-    dv.clearColumnFilter(headercell.getCellData());
+    dv.clearColumnFilter(headercell.getDataColumn());
     var filteredRows = dv.applyFilter(filterfn,this);
     console.dir(filteredRows);
     dv.setDataRowViews(filteredRows);
@@ -237,6 +262,8 @@
   var handleRowViewsChanged = function (ge){
     grid.setPageIndex(0);
     grid.refresh();
+
+    grid.refreshFooterRow();
   }
 
 

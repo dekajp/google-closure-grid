@@ -55,9 +55,11 @@ goog.require('pear.ui.BodyCanvas');
 goog.require('pear.ui.GridCell');
 goog.require('pear.ui.GridFooterRow');
 goog.require('pear.ui.GridHeaderCell');
+goog.require('pear.ui.GridFooterCell');
 goog.require('pear.ui.GridHeaderRow');
 goog.require('pear.ui.GridRow');
 goog.require('pear.ui.Header');
+goog.require('pear.ui.Footer');
 goog.require('pear.ui.Plugin');
 
 
@@ -71,6 +73,7 @@ goog.require('pear.ui.Plugin');
  *   <li> Sorting , Column Resizing , Header Cell Menu , Paging  </li>
  *   <li> Column Formatting , Keyboard Navigation , Data Filter </li>
  *   <li> Column Move </li>
+ *   <li> Footer Row </li>
  * </ul>
  *
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper.
@@ -182,12 +185,12 @@ pear.ui.Grid.prototype.Configuration_ = {
 	 * Header Row Height , defaulted to 30px
 	 * @type {number}
 	 */
-	RowHeaderHeight: 30,
+	HeaderRowHeight: 30,
 	/** 
 	 * Footer Row Height , defaulted to 30px
 	 * @type {number}
 	 */
-	RowFooterHeight: 20,
+	FooterRowHeight: 30,
 	/** 
 	 * Default column width , if not supplied , defaulted to 125px
 	 * @type {number}
@@ -254,7 +257,6 @@ pear.ui.Grid.EventType = {
 	GRIDROW_UNSELECT: 'on-gridrow-unselect',
 	RENDERED: 'rendered',
 	HEADER_CELL_MENU_CLICK: 'header-cell-menu-click'
-
 };
 
 
@@ -343,6 +345,13 @@ pear.ui.Grid.prototype.highligtedCellIndex_ = -1;
  * @type {Array?}
  */
 pear.ui.Grid.prototype.selectedGridRowsIds_ = null;
+
+/**
+ * flag to show footer row
+ * @private
+ * @type { boolean }
+ */
+pear.ui.Grid.prototype.showFooter_ = false;
 
 
 /**
@@ -538,8 +547,7 @@ pear.ui.Grid.prototype.applyColumnWidth_ = function(index, width, opt_render) {
 	coldata[index]['width'] = width || this.Configuration_.ColumnWidth;
 	var headerCell = this.headerRow_.getChildAt(index);
 	if (opt_render && headerCell) {
-//		headerCell.setCellWidth(width);
-		headerCell.draw();
+		headerCell.updateSizeAndPosition();
 	}
 };
 
@@ -556,7 +564,7 @@ pear.ui.Grid.prototype.setColumnWidth = function(index, width) {
 	this.applyColumnWidth_(index, coldata[index]['width'] + diff, true);
 
 	this.updateWidthOfHeaderRow_();
-	this.syncWidth_();
+	this.adjustWidthOfCanvas_();
 };
 
 
@@ -741,6 +749,14 @@ pear.ui.Grid.prototype.getPagedDataRowViews = function() {
 
 };
 
+/**
+ * Show Footer Row
+ * @param  {boolean} display true : shows footer row\
+ * @public
+ */
+pear.ui.Grid.prototype.showFooterRow = function(display) {
+	this.showFooter_ = true;
+};
 
 /**
  * add a single row , this dispatch DATAROW_CHANGE and DATASOURCE_CHANGE
@@ -1083,8 +1099,12 @@ pear.ui.Grid.prototype.enterDocument = function() {
 
 
 /**
- *
- * Series of Steps to Render Grid
+ * Render Grid 
+ * Sets Height and Width of Grid , render header row
+ * then prepare Grid Body and Set Canvas Height 
+ * Transform datasource/dataview to GridRows
+ * Draw all the GridRows - based on position of ScrollTop of Canvas
+ * Restore selectedRows and Highlighted Rows
  * @private
  */
 pear.ui.Grid.prototype.renderGrid_ = function() {
@@ -1092,17 +1112,25 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
 	goog.style.setWidth(this.getElement(), this.width_);
 
 	this.renderHeader_();
+
+	// Render Body and BodyCanvas -  Set the Height of Canvas
 	this.renderBody_();
-	this.prepareGridRows_();
+	this.renderBodyCanvas_();
+
+	if (this.showFooter_){
+		this.renderFooter_();
+	}
+
+	this.setBodySize_();
+
+	this.transformDataRowsToGridRows_();
 	if (this.Configuration_.AllowPaging) {
 		this.setPageIndex(0);
-		//this.getDataView().setPageSize(this.Configuration_.PageSize);
 	}
-	this.setCanvasHeight_();
-	//this.renderfooterRow_();
+	this.updateBodyCanvasHeight_();
 	this.updateWidthOfHeaderRow_();
-	this.syncWidth_();
-	this.draw_();
+	this.adjustWidthOfCanvas_();
+	this.updateViewport_();
 	this.restoreHighlightedRow_();
 	this.restoreSelectedRows_();
 	this.dispatchGridRenderedEvent_();
@@ -1136,11 +1164,11 @@ pear.ui.Grid.prototype.renderHeader_ = function() {
 pear.ui.Grid.prototype.createSingleRowHeader_ = function() {
 	this.headerRow_ = this.headerRow_ ||
 			new pear.ui.GridHeaderRow(this,
-			this.Configuration_.RowHeaderHeight);
+			this.Configuration_.HeaderRowHeight);
 	this.header_.addChild(this.headerRow_, true);
-	this.headerRow_.setHeight(this.Configuration_.RowHeaderHeight);
+	this.headerRow_.setHeight(this.Configuration_.HeaderRowHeight);
 	goog.style.setHeight(this.headerRow_.getElement(),
-			this.Configuration_.RowHeaderHeight);
+			this.Configuration_.HeaderRowHeight);
 
 	// render header
 	this.createHeaderCells_();
@@ -1179,14 +1207,66 @@ pear.ui.Grid.prototype.createHeaderCells_ = function() {
  * Render footer row
  * @private
  */
-/*pear.ui.Grid.prototype.renderfooterRow_ = function() {
-	this.footerRow_ = this.footerRow_ || new pear.ui.GridFooterRow(this,
-			this.Configuration_.RowFooterHeight);
-	this.addChild(this.footerRow_, true);
-
-	this.registerEventsOnFooterRow_();
+pear.ui.Grid.prototype.renderFooter_ = function() {
+	this.footer_ = new pear.ui.Footer();
+	this.addChild(this.footer_, true);
+	goog.style.setWidth(this.footer_.getElement(), this.width_);
+	this.createFooterRow_();
 };
-*/
+
+/**
+ * Create Footer Row 
+ * @private
+ */
+pear.ui.Grid.prototype.createFooterRow_ = function() {
+	this.footerRow_ = this.footerRow_ || new pear.ui.GridFooterRow(this,
+			this.Configuration_.FooterRowHeight);
+	this.footer_.addChild(this.footerRow_, true);
+	goog.style.setWidth(this.footerRow_.getElement(), this.width_);
+
+	this.createFooterCells_();
+};
+
+/**
+ * Create Footer Cells 
+ * @private
+ */
+pear.ui.Grid.prototype.createFooterCells_ = function() {
+	var columns = this.getColumns_();
+	goog.array.forEach(columns, function(column, index) {
+		// Create Footer Cells
+		var footerCell = new pear.ui.GridFooterCell();
+		footerCell.setDataColumn(column);
+		footerCell.setCellIndex(index);
+		this.footerRow_.addCell(footerCell, true);
+	}, this);
+};
+
+
+/**
+ * get the height of Body
+ * @return {number} [description]
+ */
+pear.ui.Grid.prototype.calculateBodyHeight_ = function(){
+	var bodyHeight = this.height_;
+	bodyHeight = bodyHeight- this.headerRow_.getHeight();
+
+	if (this.showFooter_){
+		bodyHeight = bodyHeight - this.footerRow_.getHeight();
+	}
+
+	return bodyHeight;
+};
+
+
+/**
+ * get the height of Body
+ * @return {number} [description]
+ */
+pear.ui.Grid.prototype.setBodySize_ = function(){
+	goog.style.setHeight(this.body_.getElement(), this.calculateBodyHeight_());
+	goog.style.setWidth(this.body_.getElement(), this.width_);
+};
 
 
 /**
@@ -1196,24 +1276,29 @@ pear.ui.Grid.prototype.createHeaderCells_ = function() {
 pear.ui.Grid.prototype.renderBody_ = function() {
 	this.body_ = new pear.ui.Body();
 	this.addChild(this.body_, true);
-	goog.style.setHeight(this.body_.getElement(), this.height_ - this.headerRow_.getHeight());
-	goog.style.setWidth(this.body_.getElement(), this.width_);
+  
+	this.registerEventsOnBody_();
+};
 
+
+/**
+ * Render body Canvas
+ * @private
+ */
+pear.ui.Grid.prototype.renderBodyCanvas_ = function() {
 	this.bodyCanvas_ = new pear.ui.BodyCanvas();
 	this.body_.addChild(this.bodyCanvas_, true);
 
-	this.setCanvasHeight_();
-
-	this.registerEventsOnBody_();
 	this.registerEventsOnBodyCanvas_();
 };
+
 
 
 /**
  * Set height of Body Canvas
  * @private
  */
-pear.ui.Grid.prototype.setCanvasHeight_ = function() {
+pear.ui.Grid.prototype.updateBodyCanvasHeight_ = function() {
 	var height = 0;
 	var pagesize = this.getPageSize();
 	if (this.Configuration_.AllowPaging) {
@@ -1237,12 +1322,23 @@ pear.ui.Grid.prototype.updateWidthOfHeaderRow_ = function() {
 	goog.style.setWidth(this.headerRow_.getElement(), rowWidth);
 };
 
-
 /**
- * Synchronize width header, body and footer
+ * update width of footer Row
  * @private
  */
-pear.ui.Grid.prototype.syncWidth_ = function() {
+pear.ui.Grid.prototype.updateWidthOfFooterRow_ = function() {
+	var rowWidth = 0;
+	this.footerRow_.forEachChild(function(footerCell) {
+		rowWidth = rowWidth + goog.style.getSize(footerCell.getElement()).width;
+	});
+	goog.style.setWidth(this.footerRow_.getElement(), rowWidth);
+};
+
+/**
+ * Adjust width of Canvas - take account of Scrollbar Width
+ * @private
+ */
+pear.ui.Grid.prototype.adjustWidthOfCanvas_ = function() {
 	var headerWidth = goog.style.getSize(this.headerRow_.getElement()).width;
 	var bounds = goog.style.getSize(this.getElement());
 	var width = (headerWidth > bounds.width) ? headerWidth : bounds.width;
@@ -1252,15 +1348,58 @@ pear.ui.Grid.prototype.syncWidth_ = function() {
 	goog.style.setWidth(this.bodyCanvas_.getElement(), canvasWidth);
 };
 
-
 /**
- * Synchronize Scroll positions on body and header
+ * Adjust Scrollbar Width on - Width of Footer and Header Row
  * @private
  */
-pear.ui.Grid.prototype.syncScrollOnHeaderRow_ = function() {
-	this.header_.getElement().scrollLeft = this.body_.getElement().scrollLeft;
+pear.ui.Grid.prototype.adjustScrollbarWidthOnFooter_ = function() {
+	var footerWidth = goog.style.getSize(this.footerRow_.getElement()).width;
+	var bounds = goog.style.getSize(this.getElement());
+	var width = (footerWidth > bounds.width) ? footerWidth : bounds.width;
+	// Take care of scrollbar width
+	goog.style.setWidth(this.footerRow_.getElement(), width + this.getScrollbarWidth());
 };
 
+
+/**
+ * get Scrollleft of Body
+ * @return {number} [description]
+ */
+pear.ui.Grid.prototype.getScrollLeftOfBody_ = function() { 
+	return  (/** @type {number} */ (this.body_.getElement().scrollLeft));
+};
+
+/**
+ * Set ScrollLeft on Header
+ * @param  {number} scrollLeft 
+ * @private
+ */
+pear.ui.Grid.prototype.setScrollOnHeaderRow_ = function(scrollLeft) {
+	this.header_.getElement().scrollLeft = scrollLeft ;//this.body_.getElement().scrollLeft;
+};
+
+/**
+ * Set Scrolleft on Footer
+ * @param  {number} scrollLeft [description]
+ * @private
+ */
+pear.ui.Grid.prototype.setScrollOnFooterRow_ = function(scrollLeft) {
+	this.footer_.getElement().scrollLeft = scrollLeft; 
+};
+
+
+/**
+ * Set Scrolleft on Footer
+ * @param  {number} scrollLeft [description]
+ * @private
+ */
+pear.ui.Grid.prototype.syncScrollLeft_ = function() {
+	var scrollLeft = this.getScrollLeftOfBody_();
+	this.setScrollOnHeaderRow_(scrollLeft);
+	if ( this. showFooter_){
+		this.setScrollOnFooterRow_(scrollLeft);
+	}
+};
 
 /**
  * Key Event Target
@@ -1272,10 +1411,10 @@ pear.ui.Grid.prototype.getKeyEventTarget = function() {
 
 
 /**
- * prepare grid rows
+ * Transform Data-RowView to GridRows
  * @private
  */
-pear.ui.Grid.prototype.prepareGridRows_ = function() {
+pear.ui.Grid.prototype.transformDataRowsToGridRows_ = function() {
 	var rows = this.getDataRowsGrid_();
 	var pagesize = this.getPageSize();
 
@@ -1370,9 +1509,10 @@ pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
 
 
 /**
+ * Calculatre Viewport Area and then Cache GridRows to be rendered , in ViewPort.
  * @private
  */
-pear.ui.Grid.prototype.refreshRenderRows_ = function() {
+pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
 	var rowCount = this.getDataViewRowCount();
 	var canvasVisibleBeginPx = (this.body_.getElement().scrollTop >
 			(this.Configuration_.RowHeight * 10))
@@ -1408,11 +1548,11 @@ pear.ui.Grid.prototype.refreshRenderRows_ = function() {
 };
 
 /**
- * Render Body Canvas 
+ * Render Cached GridRows for Viewport in BodyCanvas Element 
  * @param  {boolean=} opt_redraw [description]
  * @private
  */
-pear.ui.Grid.prototype.bodyCanvasRender_ = function(opt_redraw) {
+pear.ui.Grid.prototype.renderCachedGridRowsInBodyCanvas_ = function(opt_redraw) {
 
 	// var dv = this.getDataView();
 	if (opt_redraw && this.bodyCanvas_.getChildCount() > 0) {
@@ -1428,28 +1568,43 @@ pear.ui.Grid.prototype.bodyCanvasRender_ = function(opt_redraw) {
 };
 
 /**
- * Reclaculate width of Each GridRow
+ * Reposition each GridRow cells
+ * @private
  */
 pear.ui.Grid.prototype.updateWidthOfGridRows = function(){
 	goog.array.forEach(this.gridRows_, function(gridrow) {
-		gridrow.repositionCells();
+		if (gridrow.isInDocument()){
+			gridrow.repositionCells();
+			gridrow.setPosition();
+		}
 	},this);
 };
 
+
 /**
- * draw the grid (this is more of redraw)
+ * update width of each Footer Row Cells
  * @private
  */
-pear.ui.Grid.prototype.draw_ = function() {
-	this.refreshRenderRows_();
-	this.bodyCanvasRender_();
+pear.ui.Grid.prototype.updateWidthOfFooterRow = function(){
+	this.footerRow_.repositionCells();
+	this.footerRow_.setPosition();
+};
+
+
+/**
+ * update the Viewable area of the Body Canvas element
+ * @private
+ */
+pear.ui.Grid.prototype.updateViewport_ = function() {
+	this.cacheGridRowsReadyForViewport_();
+	this.renderCachedGridRowsInBodyCanvas_();
 	this.restoreHighlightedRow_();
 	this.restoreSelectedRows_();
 };
 
 
 /**
- * refresh the header
+ * refresh header row
  * 
  */
 pear.ui.Grid.prototype.refreshHeader = function() {
@@ -1457,12 +1612,27 @@ pear.ui.Grid.prototype.refreshHeader = function() {
 	this.createHeaderCells_();
 };
 
+
+/**
+ * refresh footer row
+ * 
+ */
+pear.ui.Grid.prototype.refreshFooterRow = function() {
+	this.footerRow_.removeChildren(true);
+	this.createFooterCells_();
+};
+
+
 /**
  * On columns width changed
  * @private
  */
 pear.ui.Grid.prototype.refreshOnColumnResize = function() {
 	this.updateWidthOfGridRows();
+	if (this.showFooter_){
+		this.updateWidthOfFooterRow();
+		this.adjustScrollbarWidthOnFooter_();
+	}
 };
 
 /**
@@ -1476,10 +1646,10 @@ pear.ui.Grid.prototype.refreshOnColumnResize = function() {
 pear.ui.Grid.prototype.refresh = function() {
 	this.renderedGridRowsCache_ = [];
 	this.renderedGridRows_ = [];
-	this.prepareGridRows_();
-	this.setCanvasHeight_();
-	this.refreshRenderRows_();
-	this.bodyCanvasRender_(true);
+	this.transformDataRowsToGridRows_();
+	this.updateBodyCanvasHeight_();
+	this.cacheGridRowsReadyForViewport_();
+	this.renderCachedGridRowsInBodyCanvas_(true);
 	this.restoreHighlightedRow_();
 	this.restoreSelectedRows_();
 };
@@ -1973,7 +2143,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll_ = function(e) {
 	if (this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.DOWN ||
 			this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.UP
 	) {
-		this.draw_();
+		this.updateViewport_();
 	}
 
 	if (this.previousScrollLeft_ <= this.body_.getElement().scrollLeft) {
@@ -1985,7 +2155,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll_ = function(e) {
 	if (this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.LEFT ||
 			this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.RIGHT
 	) {
-		this.syncScrollOnHeaderRow_();
+		this.syncScrollLeft_();
 	}
 
 	this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.NONE;
@@ -2105,7 +2275,7 @@ pear.ui.Grid.prototype.handleKeyEvent = function(e) {
 		e.stopPropagation();
 
 		this.scrollViewIntoGridRow(this.getHighlightedGridRow());
-		this.draw_();
+		this.updateViewport_();
 		return true;
 	}
 	return false;

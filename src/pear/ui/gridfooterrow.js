@@ -28,10 +28,22 @@ pear.ui.GridFooterRow = function(grid, height, opt_orientation, opt_renderer, op
 };
 goog.inherits(pear.ui.GridFooterRow, pear.ui.Row);
 
-pear.ui.GridFooterRow.prototype.pager_ = null;
 
-pear.ui.GridFooterRow.prototype.getPager = function() {
-  return this.pager_;
+/**
+ * @inheritDoc
+ */
+pear.ui.GridFooterRow.prototype.addCell = function(cell, opt_render) {
+  pear.ui.GridFooterRow.superClass_.addCell.call(this, cell, true);
+};
+
+/**
+ * For each child @link {pear.ui.GridFooterCell} update size
+ * @public
+ */
+pear.ui.GridFooterRow.prototype.repositionCells = function() {
+  this.forEachChild(function(child) {
+    child.updateSizeAndPosition();
+  },this);
 };
 
 /**
@@ -52,12 +64,6 @@ pear.ui.GridFooterRow.prototype.disposeInternal = function() {
  */
 pear.ui.GridFooterRow.prototype.enterDocument = function() {
   pear.ui.GridFooterRow.superClass_.enterDocument.call(this);
-  var config = this.getGrid().getConfiguration();
-  this.setHeight(5);
-  var elem = this.getElement();
-  this.setPosition();
-  goog.style.setSize(elem, this.getGrid().getWidth(),
-      this.getHeight());
-
+  
 };
 
