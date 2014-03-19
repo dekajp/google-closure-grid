@@ -134,11 +134,17 @@ pear.ui.GridCell.prototype.isMouseEventWithinElement_ = function(e, elem) {
  * @inheritDoc
  */
 pear.ui.GridCell.prototype.handleMouseOver = function(be) {
+  if (this.getGrid().isTrackingMouseOver()){
+    //logger.info('handleMouseOver :'+this.getId());
+  }else{
+    be.stopPropagation();
+    return;
+  }
   if (!this.isMouseEventWithinElement_(be, this.getElement()) &&
       (this.dispatchEvent(goog.ui.Component.EventType.ENTER) &&
       (this.isEnabled() &&
           this.isAutoState(goog.ui.Component.State.HOVER))
-      )
+      ) 
   ) {
     // Cell Highlight
     this.setHighlighted(true);
@@ -149,8 +155,15 @@ pear.ui.GridCell.prototype.handleMouseOver = function(be) {
  * @inheritDoc
  */
 pear.ui.GridCell.prototype.handleMouseOut = function(be) {
+  if (this.getGrid().isTrackingMouseOver()){
+    //logger.info('handleMouseOut :'+this.getId());
+  }else{
+    be.stopPropagation();
+    return;
+  }
+
   if (!this.isMouseEventWithinElement_(be, this.getElement()) &&
-       this.dispatchEvent(goog.ui.Component.EventType.LEAVE)) {
+       this.dispatchEvent(goog.ui.Component.EventType.LEAVE) ) {
     if (this.isAutoState(goog.ui.Component.State.ACTIVE)) {
       // Cell Active
       this.setActive(false);

@@ -353,6 +353,13 @@ pear.ui.Grid.prototype.selectedGridRowsIds_ = null;
  */
 pear.ui.Grid.prototype.showFooter_ = false;
 
+/**
+ * flag to tell if grid is scrolling due to Key events
+ * @private
+ * @type { boolean }
+ */
+pear.ui.Grid.prototype.trackMouseOver_ = true;
+
 
 /**
  * Logging object.
@@ -1058,6 +1065,19 @@ pear.ui.Grid.prototype.isVisible = function() {
 	return true;
 };
 
+
+/**
+ *  @return {boolean} true always
+ */
+pear.ui.Grid.prototype.isTrackingMouseOver = function() {
+	return this.trackMouseOver_;
+};
+
+
+pear.ui.Grid.prototype.setMouseTracking = function(enable) {
+	this.trackMouseOver_ = enable;
+	logger.info('mousetracking : '+this.trackMouseOver_);
+};
 
 /**
  *
@@ -1840,7 +1860,6 @@ pear.ui.Grid.prototype.setHighlighted = function(gridrow, highlight) {
 	if (highlight) {
 		evt = new pear.ui.Grid.GridRowEvent(pear.ui.Grid.EventType.GRIDROW_HIGHLIGHT,
 				this, gridrow, index);
-
 	}else {
 		evt = new pear.ui.Grid.GridRowEvent(pear.ui.Grid.EventType.GRIDROW_UNHIGHLIGHT,
 				this, gridrow, index);
@@ -1876,7 +1895,7 @@ pear.ui.Grid.prototype.highlightLastRow = function() {
  */
 pear.ui.Grid.prototype.highlightNextRow = function() {
 	this.highlightHelper(function(index, max) {
-		return (index + 1) % max;
+		return ((index + 1) % max)===0 ? index : ((index + 1) % max);
 	}, this.getHighlightedGridRowIndex());
 };
 
@@ -2126,8 +2145,14 @@ pear.ui.Grid.prototype.registerEventsOnBody_ = function() {
 
 pear.ui.Grid.prototype.registerEventsOnBodyCanvas_ = function() {
 	this.enableFocusHandling_(true);
+	this.getHandler().
+			listen(this.bodyCanvas_.getElement(), goog.events.EventType.MOUSEOVER,
+					this.handleBodyCanvasMouseOver_);
 };
 
+pear.ui.Grid.prototype.handleBodyCanvasMouseOver_ = function(e) {
+	this.setMouseTracking(true);
+};
 
 /**
  * @private
@@ -2289,6 +2314,8 @@ pear.ui.Grid.prototype.handleKeyEvent = function(e) {
  */
 pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 
+	this.setMouseTracking(false);
+
 	// Do not handle the key event if any modifier key is pressed.
 	if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) {
 		return false;
@@ -2360,7 +2387,10 @@ pear.ui.Grid.prototype.handleCanvasMouseLeave_ = function(ge) {
 pear.ui.Grid.prototype.handleGridRowMouseOver_ = function(ge) {
 	var cell = ( /** @type {pear.ui.GridCell} */(ge.target));
 	var gridrow = cell.getParent();
-	this.setHighlightedGridRow(gridrow);
+	if (this.isTrackingMouseOver()){
+		this.setHighlightedGridRow(gridrow);
+		logger.info('handleGridRowMouseOver_ :'+gridrow.getId());
+	}
 };
 
 
@@ -2369,7 +2399,10 @@ pear.ui.Grid.prototype.handleGridRowMouseOver_ = function(ge) {
  * @private
  */
 pear.ui.Grid.prototype.handleGridRowMouseOut_ = function(ge) {
-	this.setHighlightedGridRowIndex(-1);
+	if (this.isTrackingMouseOver()){
+		this.setHighlightedGridRowIndex(-1);
+		logger.info('handleGridRowMouseOut_ :'+ge.target.getParent().getId());
+	}
 };
 
 
