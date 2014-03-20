@@ -1712,6 +1712,7 @@ pear.ui.Grid.prototype.scrollViewIntoGridRow = function(gridrow) {
 // Row Selection
 
 
+
 /**
  * Select highlighted GridRow
  */
@@ -1726,6 +1727,7 @@ pear.ui.Grid.prototype.selectGridRow = function() {
 		if (this.getConfiguration().SelectionMode
 						=== pear.ui.Grid.SelectionMode.MULTIPLE_ROW) {
 			gridrow.setSelect(false);
+			goog.array.remove(this.selectedGridRowsIds_,gridrow.getId()) ;
 			this.dispatchGridRowUnselectEvent_(gridrow);
 		}
 	}else {

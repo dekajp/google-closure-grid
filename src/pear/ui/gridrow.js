@@ -113,7 +113,9 @@ pear.ui.GridRow.prototype.setSelect = function(select) {
     goog.dom.classes.add(this.getElement(), 'pear-grid-row-select');
   }else {
     goog.dom.classes.remove(this.getElement(), 'pear-grid-row-select');
-    this.setHighlightedIndex(-1);
+    // No need to removing highlight cell - current focus cell should always
+    // be highlighted as a part of navigation
+    // this.setHighlightedIndex(-1);
     this.selected_ = false;
   }
 };
