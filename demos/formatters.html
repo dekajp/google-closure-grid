@@ -130,15 +130,29 @@
 
   function processedFormatter(gridcell){
     var text = gridcell.getModel();
+    var gridrow = gridcell.getRow();
     goog.dom.setTextContent(gridcell.getElement(),'');
-    var enable = new goog.ui.Checkbox();
+    var cb = new goog.ui.Checkbox();
     if (text){
-      enable.setChecked(true);
+      cb.setChecked(true);
+      gridrow.setSelect(true);
     }else{
-      enable.setChecked(false);
+      cb.setChecked(false);
+      gridrow.setSelect(false);
     }
     
-    enable.render(gridcell.getElement());
+    cb.render(gridcell.getElement());
+
+    goog.events.listen(cb,goog.ui.Component.EventType.CHANGE, function(ge){
+      
+      var cbtarget = ge.target;
+      if (cbtarget.isChecked()){
+        gridrow.setSelect(true);
+      }else{
+        gridrow.setSelect(false);
+      }
+      ge.stopPropagation();
+    });
   };
 
   var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
@@ -189,7 +203,8 @@
 
     grid = new pear.ui.Grid();
     var config = {
-      AllowColumnResize:true
+      AllowColumnResize:true,
+      AllowRowHighlight:false
     };
     config = grid.setConfiguration(config);
 
