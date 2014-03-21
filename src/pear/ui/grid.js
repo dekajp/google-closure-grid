@@ -1506,6 +1506,12 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
 		c.setDataColumn(datacolumn);
 		c.setCellData(model[datacolumn.getId()]);
 		c.setCellIndex(index);
+
+		if (this.getConfiguration().SelectionMode ===
+				 pear.ui.Grid.SelectionMode.NONE){
+			c.setSupportedState(goog.ui.Component.State.HOVER, false);
+		}
+
 		row.addCell(c, true);
 	},this);
 	this.registerEventsOnGridRow_(row);
@@ -2123,11 +2129,16 @@ pear.ui.Grid.prototype.registerEventsOnGridRow_ = function(row) {
 	var self = this;
 	row.getHandler().
 			listenWithScope(row, goog.ui.Component.EventType.ACTION,
-			this.handleDataCellClick_, false, self).
+			this.handleDataCellClick_, false, self);
+	if ( this.getConfiguration().SelectionMode !==
+				 pear.ui.Grid.SelectionMode.NONE){
+		row.getHandler().
 			listenWithScope(row, goog.ui.Component.EventType.ENTER,
 			this.handleGridRowMouseOver_, false, self).
 			listenWithScope(row, goog.ui.Component.EventType.LEAVE,
 			this.handleGridRowMouseOut_, false, self);
+	}
+			
 };
 
 /*pear.ui.Grid.prototype.registerEventsOnFooterRow_ = function() {
@@ -2317,6 +2328,11 @@ pear.ui.Grid.prototype.handleKeyEvent = function(e) {
 pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 
 	this.setMouseTracking(false);
+
+	if ( this.getConfiguration().SelectionMode ===
+									 pear.ui.Grid.SelectionMode.NONE){
+		return false;
+	}
 
 	// Do not handle the key event if any modifier key is pressed.
 	if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) {
