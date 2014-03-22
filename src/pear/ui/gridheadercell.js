@@ -163,6 +163,16 @@ pear.ui.GridHeaderCell.prototype.getContentIndicatorElement = function() {
   return this.contentIndicator_;
 };
 
+/**
+ * clear header cell content
+ * @public
+ *
+ */
+pear.ui.GridHeaderCell.prototype.clearContent = function() {
+  // Header Cell Content
+  this.contentCell_.innerHTML = "";
+};
+
 
 /**
  * Configures the component after its DOM has been rendered, and sets up event

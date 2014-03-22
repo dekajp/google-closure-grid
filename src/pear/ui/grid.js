@@ -631,12 +631,12 @@ pear.ui.Grid.prototype.getColumns = function() {
  */
 pear.ui.Grid.prototype.getColumnById = function(id) {
 	var columns = this.getColumns_();
-  goog.array.forEach(columns,function(col){
+  var col = goog.array.find(columns,function(col){
     if (col.getId()=== id){
-      return col;
+      return true;
     }
   });
-  return null;
+  return col;
 };
 
 /**

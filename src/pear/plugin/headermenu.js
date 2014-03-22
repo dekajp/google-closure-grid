@@ -103,10 +103,11 @@ pear.plugin.HeaderMenu.prototype.getCSSClassName = function() {
  */
 pear.plugin.HeaderMenu.prototype.handleMenuEvent_ = function(ge) {
   var menuBtn = (/** @type {pear.plugin.HeaderMenuButton} */ (ge.currentTarget));
+  var menuItem = (/** @type {goog.ui.MenuItem} */ (ge.target));
   var headercell = menuBtn.getHeaderCell();
   var headercellTitle = headercell.getDataColumn()['headerText'];
   // alert(be.target.getContent() + ' clicked on ' + headercellTitle + ' column.');
-  alert(' clicked on ' + headercellTitle + ' column.');
+  alert( "["+menuItem.getCaption() +'] clicked on [' + headercellTitle + '] column.');
 };
 
 /**

@@ -14,6 +14,7 @@ goog.addDependency('../../../../src/pear/ui/body.js', ['pear.ui.Body'], ['goog.u
 goog.addDependency('../../../../src/pear/ui/bodycanvas.js', ['pear.ui.BodyCanvas'], ['goog.ui.Component', 'goog.ui.ContainerRenderer']);
 goog.addDependency('../../../../src/pear/ui/cell.js', ['pear.ui.Cell'], ['goog.ui.Control', 'pear.ui.CellRenderer']);
 goog.addDependency('../../../../src/pear/ui/cellrenderer.js', ['pear.ui.CellRenderer'], ['goog.ui.Component', 'goog.ui.ControlRenderer']);
+goog.addDependency('../../../../src/pear/ui/editor/editorbase.js', ['pear.ui.editor.EditorBase'], ['goog.events.EventTarget']);
 goog.addDependency('../../../../src/pear/ui/footer.js', ['pear.ui.Footer'], ['goog.ui.Component']);
 goog.addDependency('../../../../src/pear/ui/grid.js', ['pear.ui.Grid', 'pear.ui.Grid.GridDataCellEvent', 'pear.ui.Grid.GridHeaderCellEvent'], ['goog.Timer', 'goog.array', 'goog.dom', 'goog.events', 'goog.events.EventType', 'goog.events.KeyCodes', 'goog.events.KeyHandler', 'goog.log', 'goog.object', 'pear.data.Column', 'pear.data.DataTable', 'pear.data.DataView', 'pear.plugin.ColumnMove', 'pear.plugin.FilterMenu', 'pear.plugin.FooterStatus', 'pear.plugin.HeaderMenu', 'pear.plugin.Pager', 'pear.ui.Body', 'pear.ui.BodyCanvas', 'pear.ui.Footer', 'pear.ui.GridCell', 'pear.ui.GridFooterCell', 'pear.ui.GridFooterRow', 'pear.ui.GridHeaderCell', 'pear.ui.GridHeaderRow', 'pear.ui.GridRow', 'pear.ui.Header', 'pear.ui.Plugin']);
 goog.addDependency('../../../../src/pear/ui/gridcell.js', ['pear.ui.GridCell'], ['pear.ui.Cell', 'pear.ui.GridCellRenderer']);

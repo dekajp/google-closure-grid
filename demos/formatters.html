@@ -49,6 +49,7 @@
     <legend>Formatters</legend>
     <div id="">
       <li>Format Data - Currency Formatter , Number Format and Date Format </li>
+      <li>Format Header Cell - add Select ALL feature at Header Cell </li>
     </div>
   </fieldset>
   <fieldset class="goog-debug-panel">
@@ -155,26 +156,51 @@
     });
   };
 
+  function createSelectAll (ge){
+    var headerCell = ge.cell;
+    var grid = headerCell.getGrid();
+    var contentCell = headerCell.getContentCell();
+
+    if (headerCell.getColumnId() === "processed"){
+      headerCell.clearContent();
+      var cb = new goog.ui.Checkbox();
+      cb.render(contentCell);
+
+      goog.events.listen(cb,goog.ui.Component.EventType.CHANGE, function(ge){
+        var cbtarget = ge.target;
+        var ds = grid.getDataRows();
+        if (cbtarget.isChecked()){
+          goog.array.forEach(ds,function(value){
+            value["processed"]=true;
+          });
+        }else{
+          goog.array.forEach(ds,function(value){
+            value["processed"]=false;
+          });
+        }
+
+        grid.setDataRows(ds);
+        grid.refresh();
+
+        ge.stopPropagation();
+      });
+    }
+  };
+
   var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
   var unitprice = [1.01,2.25,3.45,4.97,5.0,6.0,7.0,8.2,9.5,10];
 
   
   var grid;
   var columns = [
+    new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN),
     new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
     new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
     new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
     new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
     new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME),
-    new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
+    new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME)
   ];
-
-  columns[2].setColumnFormatter(currencyFormatter,this);
-  columns[3].setColumnFormatter(numberFormatter,this);
-  columns[4].setColumnFormatter(currencyFormatter,this);
-  columns[5].setColumnFormatter(dateFormatter,this);
-  columns[6].setColumnFormatter(processedFormatter,this);
 
   var load = function () {
     if (grid){
@@ -213,11 +239,20 @@
     grid.setColumns(columns);
     grid.setDataRows(data);
 
+    grid.getColumnById("unitprice").setColumnFormatter(currencyFormatter,this);
+    grid.getColumnById("quantity").setColumnFormatter(numberFormatter,this);
+    grid.getColumnById("total").setColumnFormatter(currencyFormatter,this);
+    grid.getColumnById("created").setColumnFormatter(dateFormatter,this);
+    grid.getColumnById("processed").setColumnFormatter(processedFormatter,this);
+    
+    goog.events.listen(grid, pear.ui.Grid.EventType.AFTER_HEADERCELL_RENDER, createSelectAll);
+
     grid.render(goog.dom.getElement('target1'));
     var end =  +new Date();  
     var diff = end - start;
     console.log('Load Time : '+diff+'ms');
     
+   
     goog.events.listen(grid, GRID_EVENTS, logEvent);
   };
 
