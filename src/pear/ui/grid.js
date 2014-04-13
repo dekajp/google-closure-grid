@@ -39,6 +39,7 @@ goog.require('goog.dom');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
 goog.require('goog.events.KeyCodes');
+goog.require('goog.events.FocusHandler');
 goog.require('goog.events.KeyHandler');
 goog.require('goog.log');
 goog.require('goog.object');
@@ -63,7 +64,6 @@ goog.require('pear.ui.Footer');
 goog.require('pear.ui.Plugin');
 
 
-
 /**
  * @classdesc 
  * Table/Grid built in Google Closure
@@ -84,13 +84,29 @@ pear.ui.Grid = function(opt_domHelper) {
 	goog.ui.Component.call(this);
 	this.dom_ = opt_domHelper || goog.dom.getDomHelper();
 
+	/**
+	 * @type {number?}
+	 * @private
+	 */
 	this.previousScrollTop_ = 0;
+	/**
+	 * @type {Array.<pear.ui.GridRow>}
+	 * @private
+	 */
 	this.renderedGridRows_ = [];
+	/**
+	 * @type {Array.<pear.ui.GridRow>}
+	 * @private
+	 */
 	this.renderedGridRowsCache_ = [];
+	/**
+	 * @type {number}
+	 * @private
+	 */
 	this.scrollbarWidth_ = goog.style.getScrollbarWidth();
 	/**
 	 * Map of class id to registered plugin.
-	 * @type {Object.<string,pear.ui.Plugin>}
+	 * @type {Object.<string,pear.ui.Plugin>?}
 	 * @private
 	 */
 	this.plugins_ = {};
@@ -152,7 +168,7 @@ pear.ui.Grid.RenderState_ = {
 pear.ui.Grid.SelectionMode = {
 	/** No Selection Mode */
 	NONE: 0,
-	/** Cell can be selected - CURRENTLY NOT SUPPORTED */
+	/** Cell can be selected */
 	CELL: 1,
 	/** Single Row Selection */
 	ROW: 2,
@@ -226,6 +242,13 @@ pear.ui.Grid.prototype.Configuration_ = {
 	 * @type {boolean}
 	 */
 	AllowAlternateRowHighlight: false,
+
+	/** 
+	 * On True, Each Cell will be shown with Border
+	 * @type {boolean}
+	 */
+	ShowCellBorder: true,
+
 	/** 
 	 * Selection Mode , Default is NONE
 	 * @type {pear.ui.Grid.SelectionMode}
@@ -244,8 +267,8 @@ pear.ui.Grid.EventType = {
 	SORT: 'on-sort',
 	PAGE_INDEX_CHANGED: 'on-page-index-change',
 	PAGE_SIZE_CHANGED: 'on-page-size-change',
-	DATACELL_BEFORE_CLICK: 'datacell-before-click',
-	DATACELL_AFTER_CLICK: 'datacell-after-click',
+	DATACELL_BEFORE_ACTION: 'datacell-before-action',
+	DATACELL_AFTER_ACTION: 'datacell-after-action',
 	HEADERCELLS_RENDERED: 'headercells-rendered',
 	AFTER_HEADERCELL_RENDER: 'after-headercell-render',
 	DATAROWS_CHANGED: 'on-grid-datarows-changed',
@@ -336,7 +359,7 @@ pear.ui.Grid.prototype.highlightedGridRowIndex_ = -1;
  * @private
  * @type {number}
  */
-pear.ui.Grid.prototype.highligtedCellIndex_ = -1;
+pear.ui.Grid.prototype.highlightedCellIndex_ = -1;
 
 
 /**
@@ -552,10 +575,10 @@ pear.ui.Grid.prototype.getColumnWidthAt = function(index) {
 pear.ui.Grid.prototype.applyColumnWidth_ = function(index, width, opt_render) {
 	var coldata = this.getColumns_();
 	coldata[index]['width'] = width || this.Configuration_.ColumnWidth;
-	var headerCell = this.headerRow_.getChildAt(index);
-	if (opt_render && headerCell) {
-		headerCell.updateSizeAndPosition();
-	}
+	// var headerCell = this.headerRow_.getChildAt(index);
+	// if (opt_render && headerCell) {
+	// 	headerCell.updateSizeAndPosition();
+	// }
 };
 
 
@@ -570,8 +593,8 @@ pear.ui.Grid.prototype.setColumnWidth = function(index, width) {
 	var diff = width - coldata[index]['width'];
 	this.applyColumnWidth_(index, coldata[index]['width'] + diff, true);
 
-	this.updateWidthOfHeaderRow_();
-	this.adjustWidthOfCanvas_();
+	// this.updateWidthOfHeaderRow_();
+	// this.adjustWidthOfCanvas_();
 };
 
 
@@ -583,6 +606,64 @@ pear.ui.Grid.prototype.getScrollbarWidth = function() {
 	return this.scrollbarWidth_;
 };
 
+/**
+ * Get Cell Border Box , this will create a Cell in Document
+ * and will store the value of BorderBox and then remove the cell
+ * @param  {string} uniqClass unique css class for this instance of pear grid
+ * @return {goog.math.Box}   
+ */
+pear.ui.Grid.prototype.getCellBorderBox = function(uniqClass) {
+	if (!this.cellBorderBox_){
+		var outerDiv = goog.dom.createElement('div');
+    outerDiv.className = uniqClass;
+  	outerDiv.style.cssText = 'overflow:auto;' +
+      'position:absolute;top:0;width:100px;height:100px';
+  	var innerDiv = goog.dom.createElement('div');
+  	innerDiv.className = 'pear-grid-cell';
+  	goog.style.setSize(innerDiv, '200px', '200px');
+  	outerDiv.appendChild(innerDiv);
+  	goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
+		
+  	this.cellBorderBox_ = goog.style.getBorderBox(innerDiv);
+  	goog.dom.removeNode(outerDiv);
+	}
+  
+  return this.cellBorderBox_;
+};
+
+/**
+ * Get Cell Content Padding Box , this will create a temporary Cell Content  
+ * in Document  will store the value of PaddingBox and then remove the Element
+ * @param  {string} uniqClass unique css class for this instance of pear grid
+ * @return {goog.math.Box}  
+ * TODO : store the border box also - Cell Content shows border on Hover 
+ */
+pear.ui.Grid.prototype.getCellContentPaddingBox = function(uniqClass) {
+	if (!this.contentCellPaddingBox_){
+		var outerDiv = goog.dom.createElement('div');
+    outerDiv.className = uniqClass;
+  	outerDiv.style.cssText = 'overflow:auto;' +
+      'position:absolute;top:0;width:30px;height:30px';
+  	// Cell
+  	var innerDiv = goog.dom.createElement('div');
+  	innerDiv.className = 'pear-grid-cell-data pear-grid-cell ';
+  	goog.style.setSize(innerDiv, '25px', '25px');
+  	outerDiv.appendChild(innerDiv);
+  	goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
+		
+		// Cell Content
+		var cellContentDiv = goog.dom.createElement('div');
+  	cellContentDiv.className = 'pear-grid-cell-data-content';
+  	goog.style.setSize(innerDiv, '20px', '20px');
+  	innerDiv.appendChild(cellContentDiv);
+  	goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
+
+  	this.contentCellPaddingBox_ = goog.style.getPaddingBox(cellContentDiv);
+  	goog.dom.removeNode(outerDiv);
+	}
+  
+  return this.contentCellPaddingBox_;
+};
 
 /**
  * DataView associated with this Grid. All data is encapsulated with in DataView
@@ -635,6 +716,7 @@ pear.ui.Grid.prototype.getColumnById = function(id) {
     if (col.getId()=== id){
       return true;
     }
+    return false;
   });
   return col;
 };
@@ -677,7 +759,7 @@ pear.ui.Grid.prototype.setColumns = function(cols) {
  */
 pear.ui.Grid.prototype.setDataRows = function(data) {
 	this.getDataView().setDataRows(goog.array.clone(data));
-	this.dispatchDataSourceChangeEvent_();
+	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATASOURCE_CHANGED);
 };
 
 
@@ -766,7 +848,7 @@ pear.ui.Grid.prototype.showFooterRow = function(display) {
 };
 
 /**
- * add a single row , this dispatch DATAROW_CHANGE and DATASOURCE_CHANGE
+ * add a single row , this dispatch DATAROW_CHANGE and DATASOURCE_CHANGED
  * event. this will also dispatch events from DataView
  * @public
  * @param {Array} datarow
@@ -775,8 +857,8 @@ pear.ui.Grid.prototype.addDataRow = function(datarow) {
 	this.getDataView().addDataRow(datarow);
 	// assume there is undefined row - hence adding row means undefined to
 	// defined row
-	this.dispatchDataRowChangeEvent_();
-	this.dispatchDataSourceChangeEvent_();
+	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATAROWS_CHANGED);
+	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATASOURCE_CHANGED);
 	this.refresh();
 };
 
@@ -789,7 +871,7 @@ pear.ui.Grid.prototype.addDataRow = function(datarow) {
  */
 pear.ui.Grid.prototype.removeDataRow = function(rowid) {
 	this.dataview_.removeDataRow(rowid);
-	this.dispatchDataSourceChangeEvent_();
+	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATASOURCE_CHANGED);
 };
 
 
@@ -802,7 +884,7 @@ pear.ui.Grid.prototype.removeDataRow = function(rowid) {
  */
 pear.ui.Grid.prototype.updateDataRow = function(rowid, row) {
 	this.dataview_.updateDataRow(rowid, row);
-	this.dispatchDataRowChangeEvent_();
+	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATAROWS_CHANGED);
 };
 
 
@@ -989,13 +1071,16 @@ pear.ui.Grid.prototype.getSelectedGridRowsIds = function() {
  * @public
  */
 pear.ui.Grid.prototype.clearSelectedGridRows = function() {
-	this.getDataView().clearSelectedRowViews();
+	
 	goog.array.forEach(this.getSelectedGridRowsIds(), function(id) {
 		var gridrow = this.getGridRowById(id);
 		if (gridrow){
 			gridrow.setSelect(false);
+			var rowview = ( /** @type {pear.data.RowView} */(gridrow.getModel()));
+			this.getDataView().selectRowView(rowview,false);
+
+			this.dispatchGridRowEvent_(gridrow,pear.ui.Grid.EventType.GRIDROW_UNSELECT);
 		}
-		this.dispatchGridRowUnselectEvent_(gridrow);
 	},this);
 	this.selectedGridRowsIds_ = [];
 };
@@ -1069,14 +1154,13 @@ pear.ui.Grid.prototype.isVisible = function() {
 /**
  *  @return {boolean} true always
  */
-pear.ui.Grid.prototype.isTrackingMouseOver = function() {
+pear.ui.Grid.prototype.isMouseOverTrackingEnabled = function() {
 	return this.trackMouseOver_;
 };
 
 
-pear.ui.Grid.prototype.setMouseTracking = function(enable) {
+pear.ui.Grid.prototype.setMouseOverTracking = function(enable) {
 	this.trackMouseOver_ = enable;
-	logger.info('mousetracking : '+this.trackMouseOver_);
 };
 
 /**
@@ -1096,7 +1180,6 @@ pear.ui.Grid.prototype.createDom = function() {
 	pear.ui.Grid.superClass_.createDom.call(this);
 	var elem = this.getElement();
 
-	goog.dom.classes.set(elem, 'pear-grid');
 };
 
 
@@ -1105,6 +1188,24 @@ pear.ui.Grid.prototype.createDom = function() {
  */
 pear.ui.Grid.prototype.enterDocument = function() {
 	pear.ui.Grid.superClass_.enterDocument.call(this);
+
+	// Assign Unique ID to Grid
+	var uid = goog.getUid(this);
+	this.getDomHelper().setProperties(this.getElement(),{id:this.getId()});
+
+	// Focus element
+	var domHelper = this.getDomHelper();
+	var focusElem= domHelper.createDom("div",{style:"position:fixed;width:0;height:0;top:0;left:0;outline:0;"});
+	focusElem.setAttribute("tabindex",0);
+	focusElem.setAttribute("hidefocus",'');
+	domHelper.appendChild(this.getElement(),focusElem);
+	this.focusElem_ = focusElem;
+
+	// Prepare the CSS Style
+	this.prepareCSSStyle_();
+
+	// Register Events on Grid (this)
+	this.registerEventsOnGrid_();
 
 	// Grid Rendering Started
 	this.renderGrid_();
@@ -1117,6 +1218,150 @@ pear.ui.Grid.prototype.enterDocument = function() {
 	}
 };
 
+/**
+ * Return the Unique CSS Root Style
+ * @return {string} [description]
+ */
+pear.ui.Grid.prototype.getUniqueRootCss_ = function() {
+	var prefix = "peargrid";
+	var uniqCssId = prefix+goog.getUid(this);
+	return uniqCssId;
+};
+
+/**
+ * Create the Style Element for this instance of Grid
+ * @return {!Element} Style Element
+ */
+pear.ui.Grid.prototype.createStyleElement_ = function() {
+	var domHelper = this.getDomHelper();
+	var uniqCssId = this.getUniqueRootCss_();
+	return domHelper.createDom("style",{id: uniqCssId , type:"text/css", rel:"stylesheet"});
+};
+
+/**
+ * Get the Style Element
+ * @return {!Element} Style Node
+ */
+pear.ui.Grid.prototype.getStyleElement = function() {
+	this.styleElem_ = this.styleElem_ || this.createStyleElement_()  ;
+	return this.styleElem_;
+};
+
+
+/**
+ * Prepare CSS style for grid
+ * @private
+ */
+pear.ui.Grid.prototype.prepareCSSStyle_ = function() {
+	var domHelper = this.getDomHelper();
+	var element = this.getElement();
+	var uniqCssId = this.getUniqueRootCss_();
+	var cssText = '';
+	
+	// Style Node
+	var styleElem = this.getStyleElement();
+	domHelper.appendChild(this.getElement().parentNode,styleElem);
+	
+	goog.dom.classes.add(element, uniqCssId) ;
+	goog.dom.classes.add(element, 'pear-grid');
+	goog.dom.classes.add(element, 'unselectable');
+
+	// Row Selection
+	if (this.isSelectionModeOn()){
+		if (this.getConfiguration().SelectionMode
+										=== pear.ui.Grid.SelectionMode.MULTIPLE_ROW ||
+									this.getConfiguration().SelectionMode
+										=== pear.ui.Grid.SelectionMode.ROW){
+
+			goog.dom.classes.add(element, 'highlight-row');
+		}
+		if (this.getConfiguration().SelectionMode
+										=== pear.ui.Grid.SelectionMode.CELL ){
+			goog.dom.classes.add(element, 'highlight-cell');
+		}
+	}
+	
+
+	// pear-grid
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid { width: "+this.getWidth()+"px; height: "+this.getHeight()+"px; }");
+	
+	// pear-grid-header and footer
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-header  { width: "+this.getWidth()+"px; height: "+this.Configuration_.HeaderRowHeight+"px; }");
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-footer  { width: "+this.getWidth()+"px; height: "+this.Configuration_.FooterRowHeight+"px; }");
+
+	// pear-grid-body
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-body  { width: "+this.getWidth()+"px; }");
+	//domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-body-canvas  { width: "+this.getWidth()+"px; }");
+	
+	
+	// pear-grid-cell
+	
+	if (this.getConfiguration().ShowCellBorder){
+		domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-cell { border-bottom-color: silver;border-bottom-width: 1px;border-bottom-style: solid;}");
+	}else{
+		cssText = "."+uniqCssId + " .pear-grid-cell {border: 1px solid transparent;}";
+		domHelper.append(styleElem,cssText);
+	}
+
+	var cellBorderBox = this.getCellBorderBox(uniqCssId);
+	var contentPaddingBox = this.getCellContentPaddingBox(uniqCssId);
+
+
+		// pear-grid-cell-header
+	var cellHeight = this.getConfiguration().HeaderRowHeight-cellBorderBox.top-cellBorderBox.bottom;
+	cssText = "."+uniqCssId + " .pear-grid-cell-header { height:"+cellHeight+"px;}";
+	domHelper.append(styleElem,cssText);
+	cssText = "."+uniqCssId + " .pear-grid-cell-footer { height:"+cellHeight+"px;}";
+	domHelper.append(styleElem,cssText);
+
+	// pear-grid-cell-data
+	cellHeight = this.getConfiguration().RowHeight;
+	cssText = "."+uniqCssId + " .pear-grid-cell-data { height:"+cellHeight+"px;}";
+	domHelper.append(styleElem,cssText);
+
+	// pear-grid-cell-data
+	// TODO : get the border calculation
+	cellHeight = this.getConfiguration().RowHeight-contentPaddingBox.top-contentPaddingBox.bottom - 2;
+	cssText = "."+uniqCssId + " .pear-grid-cell-data-content { height:"+cellHeight+"px;}";
+	domHelper.append(styleElem,cssText);
+
+	var left =0;
+	var totalWidth=0;
+	var totalRowWidth=0;
+	goog.array.forEach(this.getColumns_(),function(col,index){
+		var width = col.getWidth();
+		totalWidth=totalWidth+width;
+		
+		cssText = "."+uniqCssId + " .col"+index+" { width:"+width+"px; left:"+left+"px; }";
+		domHelper.append(styleElem,cssText);
+		left = left + width +cellBorderBox.left +cellBorderBox.right;
+		totalRowWidth = totalRowWidth +  width + cellBorderBox.left +cellBorderBox.right;
+	},this);
+
+  
+	var maxWidth  = (totalRowWidth +this.getScrollbarWidth()) > this.getWidth() ? totalRowWidth+this.getScrollbarWidth():this.getWidth();
+
+  // pear-grid-row
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-data { width: "+totalRowWidth+"px; height: "+this.getCalculatedRowHeight()+"px; }");
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-data pear-grid-row-even { }");
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-data pear-grid-row-odd { }");
+
+
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-header { width:"+maxWidth+"px; height: "+this.Configuration_.HeaderRowHeight+"px; }");
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-footer { width: "+totalRowWidth+"px; height: "+this.Configuration_.HeaderRowHeight+"px; }");
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-body-canvas { width:"+totalRowWidth+"px; }");
+
+};
+
+/**
+ * 
+ * @private
+ */
+pear.ui.Grid.prototype.refreshCssStyle = function() {
+	var styleElem = this.getStyleElement();
+	this.getDomHelper().setTextContent(styleElem,"");
+	this.prepareCSSStyle_();
+};
 
 /**
  * Render Grid 
@@ -1148,12 +1393,12 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
 		this.setPageIndex(0);
 	}
 	this.updateBodyCanvasHeight_();
-	this.updateWidthOfHeaderRow_();
-	this.adjustWidthOfCanvas_();
+	// this.updateWidthOfHeaderRow_();
+	// this.adjustWidthOfCanvas_();
 	this.updateViewport_();
 	this.restoreHighlightedRow_();
 	this.restoreSelectedRows_();
-	this.dispatchGridRenderedEvent_();
+	this.dispatchGridEvent_(pear.ui.Grid.EventType.RENDERED);
 };
 
 
@@ -1165,14 +1410,9 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
 pear.ui.Grid.prototype.renderHeader_ = function() {
 	this.header_ = new pear.ui.Header();
 	this.addChild(this.header_, true);
-	goog.style.setWidth(this.header_.getElement(), this.width_);
-
-
+	
 	this.createSingleRowHeader_();
 	this.registerEventsOnHeaderRow_();
-
-	goog.style.setWidth(this.headerRow_.getElement(),
-			this.headerRow_.getWidth());
 };
 
 
@@ -1187,9 +1427,7 @@ pear.ui.Grid.prototype.createSingleRowHeader_ = function() {
 			this.Configuration_.HeaderRowHeight);
 	this.header_.addChild(this.headerRow_, true);
 	this.headerRow_.setHeight(this.Configuration_.HeaderRowHeight);
-	goog.style.setHeight(this.headerRow_.getElement(),
-			this.Configuration_.HeaderRowHeight);
-
+	
 	// render header
 	this.createHeaderCells_();
 };
@@ -1208,6 +1446,7 @@ pear.ui.Grid.prototype.createHeaderCells_ = function() {
 		headerCell.setDataColumn(column);
 		headerCell.setCellIndex(index);
 		this.headerRow_.addCell(headerCell, true);
+		
 		var evt = new pear.ui.Grid.GridHeaderCellEvent(
 										pear.ui.Grid.EventType.AFTER_HEADERCELL_RENDER,
 										this, 
@@ -1230,7 +1469,7 @@ pear.ui.Grid.prototype.createHeaderCells_ = function() {
 pear.ui.Grid.prototype.renderFooter_ = function() {
 	this.footer_ = new pear.ui.Footer();
 	this.addChild(this.footer_, true);
-	goog.style.setWidth(this.footer_.getElement(), this.width_);
+	
 	this.createFooterRow_();
 };
 
@@ -1242,8 +1481,7 @@ pear.ui.Grid.prototype.createFooterRow_ = function() {
 	this.footerRow_ = this.footerRow_ || new pear.ui.GridFooterRow(this,
 			this.Configuration_.FooterRowHeight);
 	this.footer_.addChild(this.footerRow_, true);
-	goog.style.setWidth(this.footerRow_.getElement(), this.width_);
-
+	
 	this.createFooterCells_();
 };
 
@@ -1280,12 +1518,12 @@ pear.ui.Grid.prototype.calculateBodyHeight_ = function(){
 
 
 /**
- * get the height of Body
- * @return {number} [description]
+ * Set height and Width of Body Element
  */
 pear.ui.Grid.prototype.setBodySize_ = function(){
-	goog.style.setHeight(this.body_.getElement(), this.calculateBodyHeight_());
-	goog.style.setWidth(this.body_.getElement(), this.width_);
+	var element = this.body_.getElement();
+	goog.style.setHeight(element, this.calculateBodyHeight_());
+	goog.dom.classes.add(element, 'pear-grid-body');
 };
 
 
@@ -1308,7 +1546,6 @@ pear.ui.Grid.prototype.renderBody_ = function() {
 pear.ui.Grid.prototype.renderBodyCanvas_ = function() {
 	this.bodyCanvas_ = new pear.ui.BodyCanvas();
 	this.body_.addChild(this.bodyCanvas_, true);
-
 	this.registerEventsOnBodyCanvas_();
 };
 
@@ -1321,63 +1558,14 @@ pear.ui.Grid.prototype.renderBodyCanvas_ = function() {
 pear.ui.Grid.prototype.updateBodyCanvasHeight_ = function() {
 	var height = 0;
 	var pagesize = this.getPageSize();
+	var rowHeight = this.getCalculatedRowHeight();
+
 	if (this.Configuration_.AllowPaging) {
-		height = (this.getGridRowsCount_() * this.Configuration_.RowHeight);
+		height = (this.getGridRowsCount_() * rowHeight);
 	}else {
-		height = this.getDataViewRowCount() * this.Configuration_.RowHeight;
+		height = (this.getDataViewRowCount() * rowHeight);
 	}
 	goog.style.setHeight(this.bodyCanvas_.getElement(), height);
-};
-
-
-/**
- * update width of header Row
- * @private
- */
-pear.ui.Grid.prototype.updateWidthOfHeaderRow_ = function() {
-	var rowWidth = 0;
-	this.headerRow_.forEachChild(function(headerCell) {
-		rowWidth = rowWidth + goog.style.getSize(headerCell.getElement()).width;
-	});
-	goog.style.setWidth(this.headerRow_.getElement(), rowWidth);
-};
-
-/**
- * update width of footer Row
- * @private
- */
-pear.ui.Grid.prototype.updateWidthOfFooterRow_ = function() {
-	var rowWidth = 0;
-	this.footerRow_.forEachChild(function(footerCell) {
-		rowWidth = rowWidth + goog.style.getSize(footerCell.getElement()).width;
-	});
-	goog.style.setWidth(this.footerRow_.getElement(), rowWidth);
-};
-
-/**
- * Adjust width of Canvas - take account of Scrollbar Width
- * @private
- */
-pear.ui.Grid.prototype.adjustWidthOfCanvas_ = function() {
-	var headerWidth = goog.style.getSize(this.headerRow_.getElement()).width;
-	var bounds = goog.style.getSize(this.getElement());
-	var width = (headerWidth > bounds.width) ? headerWidth : bounds.width;
-	// Take care of scrollbar width
-	goog.style.setWidth(this.headerRow_.getElement(), width + this.getScrollbarWidth());
-	var canvasWidth = (headerWidth < width) ? width - this.getScrollbarWidth() : width;
-	goog.style.setWidth(this.bodyCanvas_.getElement(), canvasWidth);
-};
-
-/**
- * Adjust Scrollbar Width on - Width of Footer and Header Row
- * @private
- */
-pear.ui.Grid.prototype.adjustScrollbarWidthOnFooter_ = function() {
-	var footerWidth = goog.style.getSize(this.footerRow_.getElement()).width;
-	var bounds = goog.style.getSize(this.getElement());
-	var width = (footerWidth > bounds.width) ? footerWidth : bounds.width;
-	// Take care of scrollbar width
-	goog.style.setWidth(this.footerRow_.getElement(), width + this.getScrollbarWidth());
 };
 
 
@@ -1395,7 +1583,7 @@ pear.ui.Grid.prototype.getScrollLeftOfBody_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.setScrollOnHeaderRow_ = function(scrollLeft) {
-	this.header_.getElement().scrollLeft = scrollLeft ;//this.body_.getElement().scrollLeft;
+	this.header_.getElement().scrollLeft = scrollLeft ;
 };
 
 /**
@@ -1410,7 +1598,6 @@ pear.ui.Grid.prototype.setScrollOnFooterRow_ = function(scrollLeft) {
 
 /**
  * Set Scrolleft on Footer
- * @param  {number} scrollLeft [description]
  * @private
  */
 pear.ui.Grid.prototype.syncScrollLeft_ = function() {
@@ -1426,9 +1613,27 @@ pear.ui.Grid.prototype.syncScrollLeft_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.getKeyEventTarget = function() {
-	return this.getElement();
+	return this.focusElem_;
 };
 
+/**
+ * Focus Event Targer
+ * @private
+ */
+pear.ui.Grid.prototype.getFocusEventTarget = function() {
+	return this.focusElem_;
+};
+
+
+
+pear.ui.Grid.prototype.getCalculatedRowHeight = function() {
+	var rootCss = this.getUniqueRootCss_();
+	var cellBorderBox = this.getCellBorderBox(rootCss);
+	if (!this.calculatedRowHeight_){
+		this.calculatedRowHeight_ = this.Configuration_.RowHeight +cellBorderBox.top+cellBorderBox.bottom;
+	}
+	return this.calculatedRowHeight_;
+};
 
 /**
  * Transform Data-RowView to GridRows
@@ -1437,18 +1642,19 @@ pear.ui.Grid.prototype.getKeyEventTarget = function() {
 pear.ui.Grid.prototype.transformDataRowsToGridRows_ = function() {
 	var rows = this.getDataRowsGrid_();
 	var pagesize = this.getPageSize();
+	var rowHeight = this.getCalculatedRowHeight();
 
 	this.setGridRows_([]);
 
 	goog.array.forEach(rows, function(rowview, index) {
-		var row = new pear.ui.GridRow(this, this.Configuration_.RowHeight);
+		var row = new pear.ui.GridRow(this, rowHeight);
 		row.setDataRowView(rowview);
-		row.setHeight(this.Configuration_.RowHeight)
+		row.setHeight(rowHeight)
 		row.setRowPosition(index);
 		if (this.Configuration_.AllowPaging) {
-			row.setLocationTop((index % pagesize) * this.Configuration_.RowHeight);
+			row.setLocationTop((index % pagesize) * rowHeight);
 		}else {
-			row.setLocationTop(index * this.Configuration_.RowHeight);
+			row.setLocationTop(index * rowHeight);
 		}
 		this.addGridRows_(row);
 		//can not create cells here - performance delay
@@ -1466,8 +1672,8 @@ pear.ui.Grid.prototype.restoreHighlightedRow_ = function() {
 			this.highlightedGridRowIndex_ < this.getGridRowsCount_() &&
 			this.getGridRowsCount_() > 0) {
 		var gridrow = this.getGridRowAt(this.highlightedGridRowIndex_);
-		gridrow.setHighlight(true);
-		gridrow.getElement().focus();
+		this.setHighlighted(gridrow,true,false);
+		this.setHighlightedCellIndex(this.highlightedCellIndex_)
 	}
 };
 
@@ -1491,7 +1697,7 @@ pear.ui.Grid.prototype.restoreSelectedRows_ = function() {
 /**
  * render the GridRow cells
  * @private
- * @param {pear.ui.Row} row
+ * @param {pear.ui.GridRow} row
  */
 pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
 	var rowview = row.getDataRowView();
@@ -1506,12 +1712,6 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
 		c.setDataColumn(datacolumn);
 		c.setCellData(model[datacolumn.getId()]);
 		c.setCellIndex(index);
-
-		if (this.getConfiguration().SelectionMode ===
-				 pear.ui.Grid.SelectionMode.NONE){
-			c.setSupportedState(goog.ui.Component.State.HOVER, false);
-		}
-
 		row.addCell(c, true);
 	},this);
 	this.registerEventsOnGridRow_(row);
@@ -1533,34 +1733,40 @@ pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
 	}
 };
 
-
+pear.ui.Grid.prototype.debugRendering_ = function(start, end) {
+	logger.info ('Rendering Rows '+start+ ' To '+end);
+	if (document.activeElement){
+		logger.info ('Focus Element '+document.activeElement.id);
+	}
+};
 /**
  * Calculatre Viewport Area and then Cache GridRows to be rendered , in ViewPort.
  * @private
  */
 pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
 	var rowCount = this.getDataViewRowCount();
+	var rowHeight = this.getCalculatedRowHeight();
 	var canvasVisibleBeginPx = (this.body_.getElement().scrollTop >
-			(this.Configuration_.RowHeight * 10))
+			(rowHeight * 10))
 															? (this.body_.getElement().scrollTop -
-			(this.Configuration_.RowHeight * 10))
+			(rowHeight * 10))
 															: 0;
 
 	var size = goog.style.getSize(this.body_.getElement());
 	var canvasSize = goog.style.getSize(this.bodyCanvas_.getElement());
 
-	var modulo = canvasVisibleBeginPx % this.Configuration_.RowHeight;
+	var modulo = canvasVisibleBeginPx % rowHeight;
 	canvasVisibleBeginPx = canvasVisibleBeginPx - modulo;
 	var canvasVisibleEndPx = canvasVisibleBeginPx + size.height +
-			(this.Configuration_.RowHeight * 30);
+			(rowHeight * 30);
 	canvasVisibleEndPx = (canvasVisibleEndPx > canvasSize.height) ?
 			canvasSize.height : canvasVisibleEndPx;
 
 	var startIndex = 0 , endIndex = 0;
-	startIndex = parseInt(canvasVisibleBeginPx / this.Configuration_.RowHeight, 10);
+	startIndex = parseInt(canvasVisibleBeginPx / rowHeight, 10);
 	startIndex = (startIndex < 0) ? 0 : startIndex;
 
-	endIndex = parseInt(canvasVisibleEndPx / this.Configuration_.RowHeight, 10);
+	endIndex = parseInt(canvasVisibleEndPx / rowHeight, 10);
 	endIndex = (endIndex > rowCount) ? rowCount : endIndex;
 
 	var i = 0;
@@ -1571,6 +1777,7 @@ pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
 		}
 	}
 	this.removeRowsFromRowModelCache_(startIndex, endIndex);
+	this.debugRendering_(startIndex,endIndex);
 };
 
 /**
@@ -1579,7 +1786,6 @@ pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.renderCachedGridRowsInBodyCanvas_ = function(opt_redraw) {
-
 	// var dv = this.getDataView();
 	if (opt_redraw && this.bodyCanvas_.getChildCount() > 0) {
 		this.bodyCanvas_.removeChildren(true);
@@ -1651,14 +1857,10 @@ pear.ui.Grid.prototype.refreshFooterRow = function() {
 
 /**
  * On columns width changed
- * @private
+ * 
  */
 pear.ui.Grid.prototype.refreshOnColumnResize = function() {
-	this.updateWidthOfGridRows();
-	if (this.showFooter_){
-		this.updateWidthOfFooterRow();
-		this.adjustScrollbarWidthOnFooter_();
-	}
+	this.refreshCssStyle();
 };
 
 /**
@@ -1682,6 +1884,18 @@ pear.ui.Grid.prototype.refresh = function() {
 
 
 /**
+ * Get Top visible row in the Viewport
+ * @return {number} Index of GridRow
+ */
+pear.ui.Grid.prototype.getViewportTopRowIndex = function(){
+	var scrollTopBody = this.getBody().getElement().scrollTop;
+	var height = this.getCalculatedRowHeight();
+
+	var index = Math.floor(scrollTopBody / height );
+	return index;
+};
+
+/**
  * bring gridrow in to view if hiding and bring the active cell into the view
  * @param {pear.ui.GridRow} gridrow
  */
@@ -1703,6 +1917,8 @@ pear.ui.Grid.prototype.scrollViewIntoGridRow = function(gridrow) {
 		scrollTopBody = positionRow.y + boundRow.height - boundBody.height;
 	}else if ((positionRow.y + boundRow.height) <= scrollTopBody) {
 		scrollTopBody = positionRow.y;
+	}else if ((positionRow.y ) <= scrollTopBody) {
+		scrollTopBody = positionRow.y;
 	}
 
 	if ((positionCell.x + boundCell.width) >= (boundBody.width + scrollLeftBody)) {
@@ -1717,39 +1933,47 @@ pear.ui.Grid.prototype.scrollViewIntoGridRow = function(gridrow) {
 
 // Row Selection
 
-
+/**
+ * Is Selection Mode is On
+ * @return {boolean} true , if selection mode is on
+ */
+pear.ui.Grid.prototype.isSelectionModeOn = function(){
+	return !(this.getConfiguration().SelectionMode 
+		=== pear.ui.Grid.SelectionMode.NONE)
+};
 
 /**
  * Select highlighted GridRow
  */
 pear.ui.Grid.prototype.selectGridRow = function() {
 	var gridrow = this.getHighlightedGridRow();
-
 	if (gridrow.isSelected()) {
-		if (this.getConfiguration().SelectionMode
-						=== pear.ui.Grid.SelectionMode.ROW) {
-			this.clearSelectedGridRows();
-		}
-		if (this.getConfiguration().SelectionMode
-						=== pear.ui.Grid.SelectionMode.MULTIPLE_ROW) {
-			gridrow.setSelect(false);
-			goog.array.remove(this.selectedGridRowsIds_,gridrow.getId()) ;
-			this.dispatchGridRowUnselectEvent_(gridrow);
-		}
-	}else {
-		if (this.getConfiguration().SelectionMode
-						=== pear.ui.Grid.SelectionMode.ROW) {
-			this.clearSelectedGridRows();
-		}
-		var rowview = ( /** @type {pear.data.RowView} */(gridrow.getModel()));
-		this.getDataView().selectRowView(rowview,true);
-		gridrow.setSelect(true);
+			if (this.getConfiguration().SelectionMode
+							=== pear.ui.Grid.SelectionMode.ROW || 
+				 this.getConfiguration().SelectionMode
+							=== pear.ui.Grid.SelectionMode.MULTIPLE_ROW) {
 
-		this.selectedGridRowsIds_ = this.selectedGridRowsIds_ || [];
-		this.selectedGridRowsIds_.push(gridrow.getId());
+				var rowview = ( /** @type {pear.data.RowView} */(gridrow.getModel()));
+				this.getDataView().selectRowView(rowview,false);
 
-		this.dispatchGridRowSelectEvent_(gridrow);
-	}
+				gridrow.setSelect(false);
+				goog.array.remove(this.selectedGridRowsIds_,gridrow.getId()) ;
+				this.dispatchGridRowEvent_(gridrow,pear.ui.Grid.EventType.GRIDROW_UNSELECT);
+			}
+		}else {
+			if (this.getConfiguration().SelectionMode
+							=== pear.ui.Grid.SelectionMode.ROW) {
+				this.clearSelectedGridRows();
+			}
+			var rowview = ( /** @type {pear.data.RowView} */(gridrow.getModel()));
+			this.getDataView().selectRowView(rowview,true);
+			gridrow.setSelect(true);
+
+			this.selectedGridRowsIds_ = this.selectedGridRowsIds_ || [];
+			this.selectedGridRowsIds_.push(gridrow.getId());
+
+			this.dispatchGridRowEvent_(gridrow,pear.ui.Grid.EventType.GRIDROW_SELECT);
+		}
 };
 
 // Key Handling - Highlight Management
@@ -1769,7 +1993,7 @@ pear.ui.Grid.prototype.getHighlightedGridRow = function() {
  * @return {number} Index of the currently highlighted item.
  */
 pear.ui.Grid.prototype.getHighlightedGridRowIndex = function() {
-	return this.highlightedGridRowIndex_ || 0;
+	return this.highlightedGridRowIndex_ ;
 };
 
 
@@ -1779,7 +2003,11 @@ pear.ui.Grid.prototype.getHighlightedGridRowIndex = function() {
  */
 pear.ui.Grid.prototype.getHighlightedCellIndex = function() {
 	var gridrow = this.getHighlightedGridRow();
-	return gridrow.getHighlightedIndex();
+	if (gridrow) {
+		return gridrow.getHighlightedIndex();
+	}else{
+		return 0;
+	}
 };
 
 
@@ -1791,17 +2019,7 @@ pear.ui.Grid.prototype.setHighlightedCellIndex = function(index) {
 	var gridrow = (/** @type {goog.ui.Container} */
 									(this.getHighlightedGridRow()));
 	gridrow.setHighlightedIndex(index);
-};
-
-
-/**
- * Returns the index of the currently highlighted item (-1 if none).
- * @param {number} index of the currently highlighted item.
- * @return {pear.ui.GridCell}
- */
-pear.ui.Grid.prototype.getHighlightedCell = function(index) {
-	var gridrow = this.getHighlightedGridRow();
-	return  (/** @type {pear.ui.GridCell} */ (gridrow.getHighlighted()));
+	this.highlightedCellIndex_ = index;
 };
 
 
@@ -1837,44 +2055,71 @@ pear.ui.Grid.prototype.setHighlightedGridRowIndex = function(index) {
 	if (this.highlightedGridRowIndex_ > -1 &&
 			this.highlightedGridRowIndex_ < this.getGridRowsCount_() &&
 			this.getGridRowsCount_() > 0) {
-		this.setHighlighted(this.getHighlightedGridRow(), false);
+		this.setHighlighted(this.getHighlightedGridRow(), false,true);
 	}
 
 	var gridRow = this.getGridRowAt(index);
 	if (gridRow) {
-		this.setHighlighted(gridRow, true);
-		this.highlightedGridRowIndex_ = index;
-	}else{
+		this.setHighlighted(gridRow, true,true);
 		this.highlightedGridRowIndex_ = index;
 	}
 };
 
-pear.ui.Grid.prototype.setHighlightedGridRow = function(gridrow) {
+/**
+ * Highlight GridRow and Set Highlighted Index
+ * @param {pear.ui.GridRow?} gridrow [description]
+ */
+pear.ui.Grid.prototype.highlightGridRow = function(gridrow) {
 	var highlightIndex = this.indexOfGridRow(gridrow);
 	this.setHighlightedGridRowIndex(highlightIndex);
 };
 
 
 /**
- * Highlights the given item if it exists and is a child of the container;
- * otherwise un-highlights the currently highlighted item.
+ * Highlights/UnHihighlight the GridRow and dispatch events
  * @param {pear.ui.GridRow} gridrow Item to highlight.
  * @param {boolean} highlight
+ * @private
  */
-pear.ui.Grid.prototype.setHighlighted = function(gridrow, highlight) {
+pear.ui.Grid.prototype.setHighlighted = function(gridrow, highlight,dispatch) {
 	var evt;
 	gridrow.setHighlight(highlight);
+
+	this.setFocusOnGridRow(gridrow);
+
 	var index = this.indexOfGridRow(gridrow);
 	if (highlight) {
-		evt = new pear.ui.Grid.GridRowEvent(pear.ui.Grid.EventType.GRIDROW_HIGHLIGHT,
-				this, gridrow, index);
+			evt = new pear.ui.Grid.GridRowEvent(pear.ui.Grid.EventType.GRIDROW_HIGHLIGHT,
+					this, gridrow, index);
 	}else {
 		evt = new pear.ui.Grid.GridRowEvent(pear.ui.Grid.EventType.GRIDROW_UNHIGHLIGHT,
-				this, gridrow, index);
+					this, gridrow, index);
 	}
-	this.dispatchEvent(evt);
+	if (dispatch){
+		this.dispatchEvent(evt);
+	}
 };
 
+
+
+/**
+ * set Focus on grid
+ */
+pear.ui.Grid.prototype.setFocusOnGrid = function() {
+	//this.focusElem_.focus();
+};
+
+/**
+ * set Focus on Grid Row 
+ * @param {pear.ui.GridRow} gridrow Item to highlight.
+ */
+pear.ui.Grid.prototype.setFocusOnGridRow = function(gridrow) {
+	/*var aTop = this.body_.getElement().scrollTop;
+	var aLeft = this.body_.getElement().scrollLeft;
+	gridrow.getElement().focus();
+	this.body_.getElement().scrollTop = aTop;
+	this.body_.getElement().scrollLeft = aLeft;*/
+};
 
 /**
  * Highlights the first highlightable item in the container
@@ -1921,29 +2166,6 @@ pear.ui.Grid.prototype.highlightPreviousRow = function() {
 
 
 /**
- * Highlights the next highlightable item (or the first if nothing is currently
- * highlighted).
- */
-//pear.ui.Grid.prototype.highlightNextCell = function() {
-//  this.highlightHelper(function(index, max) {
-//    return (index + 1) % max;
-//  }, this.getHighlightedGridRowIndex());
-//};
-
-
-/**
- * Highlights the previous highlightable item (or the last if nothing is
- * currently highlighted).
- */
-//pear.ui.Grid.prototype.highlightPreviousCell = function() {
-//  this.highlightHelper(function(index, max) {
-//    index--;
-//    return index < 0 ? 0 : index;
-//  }, this.getHighlightedGridRowIndex());
-//};
-
-
-/**
  * Helper function that manages the details of moving the highlight among
  * child controls in response to keyboard events.
  * @param {function(number, number) : number} fn Function that accepts the
@@ -1955,19 +2177,19 @@ pear.ui.Grid.prototype.highlightPreviousRow = function() {
 pear.ui.Grid.prototype.highlightHelper = function(fn, startIndex) {
 	var curIndex = startIndex < 0 ? 0 : startIndex;
 	var numItems = this.getGridRowsCount_();
-
 	curIndex = fn.call(this, curIndex, numItems);
-	this.highligtedCellIndex_ = this.getHighlightedCellIndex();
+	this.highligtedCellIndex_ = this.getHighlightedCellIndex() ;
+	this.highligtedCellIndex_ = this.highligtedCellIndex_  < 0 ? 0 : this.highligtedCellIndex_;
 	var visited = 0;
 	while (visited <= numItems) {
 		var gridrow = this.getGridRowAt(curIndex);
 		if (gridrow && this.canHighlightGridRow(gridrow)) {
+
 			this.setHighlightedIndexFromKeyEvent(curIndex);
 			this.setHighlightedCellIndex(this.highligtedCellIndex_);
 			return true;
 		}
 		visited++;
-		curIndex = fn.call(this, curIndex, numItems);
 	}
 	return false;
 };
@@ -1975,13 +2197,17 @@ pear.ui.Grid.prototype.highlightHelper = function(fn, startIndex) {
 
 /**
  * Returns whether the given gridrow can be highlighted.
- * @param {pear.ui.GridRow} gridrow The item to check.
+ * @param {pear.ui.GridRow?} gridrow The item to check.
  * @return {boolean} Whether the item can be highlighted.
  * @public
  */
 pear.ui.Grid.prototype.canHighlightGridRow = function(gridrow) {
-	return gridrow.isVisible() && gridrow.isEnabled();
+	if (gridrow){
+		return gridrow.isVisible() && gridrow.isEnabled() ;
+	}
+	return false;
 };
+
 
 
 /**
@@ -1997,36 +2223,23 @@ pear.ui.Grid.prototype.setHighlightedIndexFromKeyEvent = function(index) {
 };
 
 
-
-pear.ui.Grid.prototype.dispatchGridRowSelectEvent_ = function(gridrow) {
+/**
+ * Dispatch GridRow Event 
+ * @param  {pear.ui.GridRow} gridrow 
+ * @param  {string} eventName [description]   
+ */
+pear.ui.Grid.prototype.dispatchGridRowEvent_ = function(gridrow,eventName) {
 	var index = this.indexOfGridRow(gridrow);
-	var evt = new pear.ui.Grid.GridRowEvent(pear.ui.Grid.EventType.GRIDROW_SELECT,
-			this, gridrow, index);
+	var evt = new pear.ui.Grid.GridRowEvent(eventName,this, gridrow, index);
 	this.dispatchEvent(evt);
 };
 
-pear.ui.Grid.prototype.dispatchGridRowUnselectEvent_ = function(gridrow) {
-	var index = this.indexOfGridRow(gridrow);
-	var evt = new pear.ui.Grid.GridRowEvent(
-			pear.ui.Grid.EventType.GRIDROW_UNSELECT, this, gridrow, index);
-	this.dispatchEvent(evt);
-};
-
-pear.ui.Grid.prototype.dispatchDataRowChangeEvent_ = function() {
-	var evt = new goog.events.Event(pear.ui.Grid.EventType.DATAROWS_CHANGED,
-			this);
-	this.dispatchEvent(evt);
-};
-
-pear.ui.Grid.prototype.dispatchDataSourceChangeEvent_ = function() {
-	var evt = new goog.events.Event(pear.ui.Grid.EventType.DATASOURCE_CHANGED,
-			this);
-	this.dispatchEvent(evt);
-};
-
-pear.ui.Grid.prototype.dispatchGridRenderedEvent_ = function() {
-	var evt = new goog.events.Event(pear.ui.Grid.EventType.RENDERED,
-			this);
+/**
+ * Dispatch Grid Events
+ * @param  {string} eventName [description]
+ */
+pear.ui.Grid.prototype.dispatchGridEvent_ = function(eventName) {
+	var evt = new goog.events.Event(eventName,this);
 	this.dispatchEvent(evt);
 };
 
@@ -2044,79 +2257,43 @@ pear.ui.Grid.prototype.getKeyHandler = function() {
 
 
 /**
- * Sets up listening for events applicable to focusable grid.
- * @param {boolean} enable Whether to enable or disable focus handling.
- * @private
+ * Returns the keyboard event handler for this grid, lazily created the
+ * first time this method is called.  The keyboard event handler listens for
+ * keyboard events on the grid canvas
+ * @return {goog.events.KeyHandler} Keyboard event handler for this container.
  */
-pear.ui.Grid.prototype.enableFocusHandling_ = function(enable) {
-	var handler = this.getHandler();
-	var keyTarget = this.getKeyEventTarget();
-	if (enable) {
-		handler.
-				listenWithScope(keyTarget,
-					goog.events.EventType.FOCUS, this.handleFocus, false, this).
-				listenWithScope(keyTarget,
-					goog.events.EventType.BLUR, this.handleBlur, false, this).
-				listenWithScope(this.getKeyHandler(),
-					goog.events.KeyHandler.EventType.KEY,
-						this.handleKeyEvent, false, this);
-	} else {
-		handler.
-				unlisten(keyTarget,
-					goog.events.EventType.FOCUS, this.handleFocus, false, this).
-				unlisten(keyTarget,
-					goog.events.EventType.BLUR, this.handleBlur, false, this).
-				unlisten(this.getKeyHandler(),
-					goog.events.KeyHandler.EventType.KEY,
-						this.handleKeyEvent, false, this);
-	}
+pear.ui.Grid.prototype.getFocusHandler = function() {
+	return this.focusHandler_ ||
+			(this.focusHandler_ 
+					=  new goog.events.FocusHandler(this.getFocusEventTarget()));
 };
 
 
+
 /**
- * Sets up listening for events applicable to focusable grid.
- * @param {boolean} enable Whether to enable or disable focus handling.
+ * Register events on Grid
  * @private
  */
-pear.ui.Grid.prototype.enableGridRowMouseHandling_ = function(enable) {
+pear.ui.Grid.prototype.registerEventsOnGrid_ = function(){
 	var handler = this.getHandler();
-	var keyTarget = this.bodyCanvas_;
-	if (enable) {
-		handler.
-				listenWithScope(keyTarget, goog.ui.Component.EventType.ENTER,
-								this.handleCanvasMouseEnter_,
-							 	false,
-							 	this).
-				listenWithScope(keyTarget,
-								goog.ui.Component.EventType.LEAVE,
-								this.handleCanvasMouseLeave_,
-								false,
-								this);
-	} else {
-		handler.
-				unlisten(keyTarget,
-									goog.ui.Component.EventType.ENTER,
-									this.handleCanvasMouseEnter_,
-									false,
-									this).
-				unlisten(keyTarget,
-									goog.ui.Component.EventType.LEAVE,
-									this.handleCanvasMouseLeave_,
-									false,
-									this);
-	}
+	var fh = this.getFocusHandler();
+	
+	this.getHandler().
+      listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSOUT,
+      		 this.handleBlur_, false, this).
+      listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSIN,
+      	 this.handleFocus_, false, this);
 };
 
-
 /**
- *
- *
+ * Register Event on Grid Header Row
+ * @private
  */
 pear.ui.Grid.prototype.registerEventsOnHeaderRow_ = function() {
 	this.forEachChild(function(cell) {
 		if (this.Configuration_.AllowSorting) {
 			this.getHandler().
-					listenWithScope(cell, pear.ui.Cell.EventType.CLICK,
+					listenWithScope(cell, goog.ui.Component.EventType.ACTION,
 					this.handleHeaderCellClick_, false, this);
 		}
 		this.getHandler().
@@ -2125,53 +2302,79 @@ pear.ui.Grid.prototype.registerEventsOnHeaderRow_ = function() {
 	}, this);
 };
 
+/**
+ * Register Event on Grid Row
+ * @param  {pear.ui.GridRow} row 
+ * @private
+ */
 pear.ui.Grid.prototype.registerEventsOnGridRow_ = function(row) {
 	var self = this;
-	row.getHandler().
-			listenWithScope(row, goog.ui.Component.EventType.ACTION,
-			this.handleDataCellClick_, false, self);
-	if ( this.getConfiguration().SelectionMode !==
-				 pear.ui.Grid.SelectionMode.NONE){
-		row.getHandler().
-			listenWithScope(row, goog.ui.Component.EventType.ENTER,
-			this.handleGridRowMouseOver_, false, self).
-			listenWithScope(row, goog.ui.Component.EventType.LEAVE,
-			this.handleGridRowMouseOut_, false, self);
-	}
-			
+
+	// Avoid Events on GridRow
 };
 
-/*pear.ui.Grid.prototype.registerEventsOnFooterRow_ = function() {
-	var pager = this.footerRow_.getPager();
-	if (pager) {
-		this.getHandler().
-				listen(pager, pear.ui.Pager.EventType.CHANGE, this.handlePageChange_, false, this);
-	}
-};*/
 
+/**
+ * Register events on Event Body
+ * @private
+ */
 pear.ui.Grid.prototype.registerEventsOnBody_ = function() {
 	// Capture Scroll Event on the Body Canvas Element for Virtualization
 	this.getHandler().
-			listen(this.body_.getElement(), goog.events.EventType.SCROLL,
-					this.handleBodyCanvasScroll_);
+			listenWithScope(this.body_.getElement(), goog.events.EventType.SCROLL,
+					this.handleBodyCanvasScroll_,false,this);
 };
 
+/**
+ * Register events on Event Body
+ * @private
+ */
 pear.ui.Grid.prototype.registerEventsOnBodyCanvas_ = function() {
-	this.enableFocusHandling_(true);
+	var self = this;
 	this.getHandler().
-			listen(this.bodyCanvas_.getElement(), goog.events.EventType.MOUSEOVER,
-					this.handleBodyCanvasMouseOver_);
+      listenWithScope(this.getKeyHandler(),
+					goog.events.KeyHandler.EventType.KEY,
+						this.handleKeyEventOnBodyCanvas_, false, this).
+			listenWithScope(this.bodyCanvas_, goog.ui.Component.EventType.ACTION,
+				this.handleAction_, false, self);
 };
 
-pear.ui.Grid.prototype.handleBodyCanvasMouseOver_ = function(e) {
-	this.setMouseTracking(true);
+/**
+ * [description]
+ * @param  {goog.events.BrowserEvent} ge [description]
+ */
+pear.ui.Grid.prototype.handleBlur_ =  function(ge) {
 };
+
+
+/**
+ * Handles focus events raised when the key event target receives
+ * keyboard focus.
+ * @param {goog.events.BrowserEvent} ge Focus event to handle.
+ */
+pear.ui.Grid.prototype.handleFocus_ = function(ge) {
+	logger.info( 'Received event ' + ge.type);
+	this.debugRendering_();
+	var gridrow = this.getHighlightedGridRow();
+  var cellIndex = -1;
+	if (gridrow){
+		cellIndex = this.getHighlightedCellIndex();
+	}else{
+		this.setHighlightedGridRowIndex(this.getViewportTopRowIndex());
+		gridrow = this.getHighlightedGridRow();
+	}
+	gridrow.setHighlightedIndex((cellIndex > 0 ? cellIndex :0) );
+	this.scrollViewIntoGridRow(gridrow);
+};
+
+
 
 /**
  * @private
  * @param {goog.events.BrowserEvent} e
  */
 pear.ui.Grid.prototype.handleBodyCanvasScroll_ = function(e) {
+	logger.info( 'Received event ' + e.type);
 	if (this.previousScrollTop_ <= this.body_.getElement().scrollTop) {
 		this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.DOWN;
 	}else {
@@ -2210,6 +2413,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll_ = function(e) {
  * @private
  */
 pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
+	logger.info( 'Received event ' + ge.type);
 	ge.stopPropagation();
 
 	var headerCell = ( /** @type {pear.ui.GridHeaderCell} */ (ge.target));
@@ -2245,6 +2449,7 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
  * @private
  */
 pear.ui.Grid.prototype.handleHeaderCellOptionClick_ = function(ge) {
+	logger.info( 'Received event ' + ge.type);
 	ge.stopPropagation();
 	var headerCell = ( /** @type {pear.ui.GridHeaderCell} */ (ge.target));
 	var evt = new pear.ui.Grid.GridHeaderCellEvent(
@@ -2253,58 +2458,57 @@ pear.ui.Grid.prototype.handleHeaderCellOptionClick_ = function(ge) {
 };
 
 /**
- * [handleDataCellClick_ description]
+ * [handleAction_ description]
  * @param  {goog.events.Event} ge [description]
  * @private
  */
-pear.ui.Grid.prototype.handleDataCellClick_ = function(ge) {
+pear.ui.Grid.prototype.handleAction_ = function(ge) {
+	logger.info( 'Received event ' + ge.type);
 	ge.stopPropagation();
 	var cell = ( /** @type {pear.ui.GridCell} */(ge.target));
-	var gridrow = ge.currentTarget;
+	this.handleDataCellAction_(cell);
+};
 
+/**
+ * [handleDataCellAction_ description]
+ * @param  {pear.ui.GridCell} cell 
+ * @private
+ */
+pear.ui.Grid.prototype.handleDataCellAction_ = function(cell) {
+	var gridrow = ( /** @type {pear.ui.GridRow} */ (cell.getParent()));
+
+	this.setMouseOverTracking(true);
 	var evt = new pear.ui.Grid.GridDataCellEvent(
-			pear.ui.Grid.EventType.DATACELL_BEFORE_CLICK, this, cell);
+			pear.ui.Grid.EventType.DATACELL_BEFORE_ACTION, this, cell);
 	this.dispatchEvent(evt);
 
+	// Highlight
+	this.highlightGridRow(gridrow);
+	gridrow.setHighlighted(cell);
+	this.setHighlightedCellIndex(gridrow.indexOfChild(cell));
+
+	// Set Focus to Focus Elem
+	this.focusElem_.focus();
+
 	// Select Row or Cell - depend on Selection Mode
-	if (this.getConfiguration().SelectionMode
-						=== pear.ui.Grid.SelectionMode.MULTIPLE_ROW ||
-					this.getConfiguration().SelectionMode
-						=== pear.ui.Grid.SelectionMode.ROW) {
+	if (this.isSelectionModeOn()) {
 		this.selectGridRow();
 	}
 
 	evt = new pear.ui.Grid.GridDataCellEvent(
-			pear.ui.Grid.EventType.DATACELL_AFTER_CLICK, this, cell);
+			pear.ui.Grid.EventType.DATACELL_AFTER_ACTION, this, cell);
 	this.dispatchEvent(evt);
 };
 
-
-/**
- * Handles focus events raised when the key event target receives
- * keyboard focus.
- * @param {goog.events.BrowserEvent} e Focus event to handle.
- */
-pear.ui.Grid.prototype.handleFocus = function(e) {
-	console.dir(e);
+pear.ui.Grid.prototype.handleKeyEventOnBodyCanvas_ = function(e) {
+	logger.info( 'Received event ' + e.type);
+	return this.handleKeyEvent_(e);
 };
 
 
-/**
- * Handles blur events raised when grid  loses keyboard focus.
- * @param {goog.events.BrowserEvent} e Blur event to handle.
- */
-pear.ui.Grid.prototype.handleBlur = function(e) {
-	logger.info('handle blur');
-};
+pear.ui.Grid.prototype.handleKeyEvent_ = function(e) {
+	logger.info( 'Received event ' + e.type);
 
-
-/**
- * Handle Keyboard Events
- * @param {goog.events.KeyEvent} e Key event to handle.
- * @return {boolean} Whether the key event was handled.
- */
-pear.ui.Grid.prototype.handleKeyEvent = function(e) {
 	if (this.isEnabled() &&
 			this.getGridRowsCount_() != 0 &&
 			this.handleKeyEventInternal(e))
@@ -2319,20 +2523,12 @@ pear.ui.Grid.prototype.handleKeyEvent = function(e) {
 	return false;
 };
 
-
 /**
  * @param {goog.events.KeyEvent} e Key event to handle.
  * @return {boolean} Whether the event was handled by the container (or one of
  *     its children).
  */
 pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
-
-	this.setMouseTracking(false);
-
-	if ( this.getConfiguration().SelectionMode ===
-									 pear.ui.Grid.SelectionMode.NONE){
-		return false;
-	}
 
 	// Do not handle the key event if any modifier key is pressed.
 	if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) {
@@ -2359,17 +2555,17 @@ pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 			this.highlightPreviousRow();
 			break;
 		case goog.events.KeyCodes.DOWN:
+		case goog.events.KeyCodes.TAB:
 			this.highlightNextRow();
 			break;
 		case goog.events.KeyCodes.RIGHT:
 		case goog.events.KeyCodes.LEFT:
-			return this.getHighlightedGridRow().handleKeyEvent(e);
+				this.getHighlightedGridRow().handleKeyEvent(e);
+				this.setHighlightedCellIndex(this.getHighlightedGridRow().getHighlightedIndex());
+				return true;
 			break;
 		case goog.events.KeyCodes.ENTER:
-			if (this.getConfiguration().SelectionMode
-						=== pear.ui.Grid.SelectionMode.MULTIPLE_ROW ||
-					this.getConfiguration().SelectionMode
-						=== pear.ui.Grid.SelectionMode.ROW) {
+			if (this.isSelectionModeOn()) {
 				this.selectGridRow();
 			}
 			break;
@@ -2380,48 +2576,7 @@ pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 };
 
 
-/**
- * @param {goog.events.Event} ge
- * @private
- */
-pear.ui.Grid.prototype.handleCanvasMouseEnter_ = function(ge) {
-	console.dir(ge);
-};
 
-
-/**
- * @param {goog.events.Event} ge
- * @private
- */
-pear.ui.Grid.prototype.handleCanvasMouseLeave_ = function(ge) {
-	console.dir(ge);
-};
-
-
-/**
- * @param {goog.events.Event} ge
- * @private
- */
-pear.ui.Grid.prototype.handleGridRowMouseOver_ = function(ge) {
-	var cell = ( /** @type {pear.ui.GridCell} */(ge.target));
-	var gridrow = cell.getParent();
-	if (this.isTrackingMouseOver()){
-		this.setHighlightedGridRow(gridrow);
-		logger.info('handleGridRowMouseOver_ :'+gridrow.getId());
-	}
-};
-
-
-/**
- * @param {goog.events.Event} ge
- * @private
- */
-pear.ui.Grid.prototype.handleGridRowMouseOut_ = function(ge) {
-	if (this.isTrackingMouseOver()){
-		this.setHighlightedGridRowIndex(-1);
-		logger.info('handleGridRowMouseOut_ :'+ge.target.getParent().getId());
-	}
-};
 
 
 /**
@@ -2429,19 +2584,13 @@ pear.ui.Grid.prototype.handleGridRowMouseOut_ = function(ge) {
  */
 pear.ui.Grid.prototype.disposeInternal = function() {
 
-	// Instance
-	this.previousScrollTop_ = null;
-	this.renderedGridRows_ = null;
-	this.renderedGridRowsCache_ = null;
-
-	// TODO : better dispose needs to be done
-	// call dispose on each child
-
 	for (var classId in this.plugins_) {
 		var plugin = this.plugins_[classId];
 		plugin.dispose();
 	}
 	delete(this.plugins_);
+	//TODO
+	this.plugins_ = {};
 
 	if(this.headerRow_){
 		this.headerRow_.dispose();
@@ -2473,18 +2622,30 @@ pear.ui.Grid.prototype.disposeInternal = function() {
 		this.dataview_.dispose();
 	}
 
-	/**
-	 * Map of class id to registered plugin.
-	 * @type {Object}
-	 * @private
-	 */
-	this.plugins_ = {};
+	// goog.math.Box does not inherit goog.disposable
+	this.contentCellPaddingBox_=null;
+	this.cellBorderBox_=null;
+
+	if (this.focusElem_) {
+		this.focusElem_.remove();
+	}
+	this.focusElem_ = null;
+
+	if (this.styleElem_) {
+		this.styleElem_.remove();
+	}
+	this.styleElem_ = null;
+
+	this.keyHandler_.dispose();
+  this.keyHandler_ = null;
+  this.focusHandler_.dispose();
+  this.focusHandler_ = null;
 
 	delete this.width_;
 	delete this.height_;
 	delete this.sortColumnId_;
 	delete this.currentPageIndex_;
-	this.previousScrollTop_ = null;
+	
 	this.bodyScrollTriggerDirection_ = null;
 	this.previousScrollLeft_ = null;
 

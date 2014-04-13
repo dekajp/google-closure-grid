@@ -45,3 +45,16 @@ pear.ui.RowRenderer.prototype.getCssClass = function() {
 pear.ui.RowRenderer.prototype.getDefaultOrientation = function() {
   return goog.ui.Container.Orientation.HORIZONTAL;
 };
+
+pear.ui.RowRenderer.prototype.initializeDom = function(container) {
+  var elem = container.getElement();
+  goog.asserts.assert(elem, "The container DOM element cannot be null.");
+  // goog.style.setUnselectable(elem, true, goog.userAgent.GECKO);
+  if (goog.userAgent.IE) {
+    elem.hideFocus = true;
+  }
+  var ariaRole = this.getAriaRole();
+  if (ariaRole) {
+    goog.a11y.aria.setRole(elem, ariaRole);
+  }
+};

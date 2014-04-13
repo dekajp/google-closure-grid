@@ -52,4 +52,17 @@ pear.ui.CellRenderer.prototype.createDom = function(cellControl) {
 };
 
 
+/**
+ * Allows or disallows text selection within the control's DOM.
+ * @param {Element} element The control's root element.
+ * @param {boolean} allow Whether the element should allow text selection.
+ */
+pear.ui.CellRenderer.prototype.setAllowTextSelection = function(element,
+    allow) {
+  
+  // Do not do anything - refer to this link for details
+  // The renderer is assumed to create selectable elements.  Since making
+  // elements unselectable is expensive, only do it if needed (bug 1037090).
+};
+
 

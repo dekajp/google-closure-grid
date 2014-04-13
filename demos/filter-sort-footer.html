@@ -52,10 +52,12 @@
 </head>
 <body>
    <fieldset class="goog-debug-panel">
-    <legend>Plugin - Filters on Column</legend>
+    <legend>Filter Plugin , Footer Row (Aggregates), Paging Plugin and Sorting Working Toghether</legend>
     <div id="">
       <li>Basic Filter plugin - does a String.indexOf search for each column</li>
       <li>Paging is enabled and Pager Plugin reacts to Filter</li>
+      <li>Basic String Sorting </li>
+      <li>Footer Row with Aggregates </li>
     </div>
   </fieldset>
 
@@ -119,7 +121,7 @@
     var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
     var text = fmt.format(gridcell.getModel());
 
-    goog.dom.setTextContent(gridcell.getElement(),text);
+    goog.dom.setTextContent(gridcell.getContentElement(),text);
   };
   
   function isChecked(id,name){
@@ -160,75 +162,6 @@
     return '';
   };
 
-  var load = function () {
-    if (grid){
-      grid.dispose();
-    }
-    var data = [];
-    var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
-    var temp;
-    var start = new Date(2013,12,31);
-    for (var i = 0; i < parseInt(limit,10); i++) {
-      data[i] = {
-        orderno:  i +1
-      };
-      temp = Math.round(Math.random() * 9);
-     
-      data[i].item = item[temp];
-      data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 100);
-      data[i].total = data[i].unitprice * data[i].quantity;
-      data[i].processed= (i % 5 === 0);
-      data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
-    }
-
-    var start = +new Date();  // log start timestamp
-
-
-    grid = new pear.ui.Grid();
-    dv = new pear.data.DataView(columns,data);
-    var config = {
-      AllowColumnResize: true,
-      AllowColumnHeaderMenu: true,
-      AllowPaging:true,
-      PageSize:50,
-      RowFooterHeight:35,
-      AllowAlternateRowHighlight: true
-    };
-    config = grid.setConfiguration(config);
-
-    grid.setWidth(800);
-    grid.setHeight(400);
-    grid.setDataView(dv);
-    grid.showFooterRow(true);
-
-    var filterPlugin = new pear.plugin.FilterMenu();
-    grid.registerPlugin( filterPlugin);
-    grid.registerPlugin( new pear.plugin.Pager());
-
-
-    goog.array.forEach(columns,function(column){
-      column.setColumnFooterAggregatesFn(fnAggregate);
-    },this);
-
-
-    grid.render(goog.dom.getElement('target1'));
-
-
-    var end =  +new Date();  
-    var diff = end - start;
-    console.log('Load Time : '+diff+'ms');
-    
-    goog.events.listen(grid, GRID_EVENTS, logEvent);
-    goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
-    goog.events.listen(filterPlugin, FILTERPLUGIN_EVENTS, logEvent);
-
-    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.APPLY_FILTER, handleApplyFilter);
-    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.CLEAR_FILTER, handleClearFilter);
-    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, handleRowViewsChanged);
-  };
-
-  goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
   
 
   var handleApplyFilter = function (ge){
@@ -312,6 +245,132 @@
       goog.dom.removeChildren(contentIndicatorElem);
     }
   };
+
+
+  // Sorting Code
+
+  function SortedDataView (datacolumns,datarows) {
+    pear.data.DataView.call(this,datacolumns,datarows);
+  };
+  goog.inherits(SortedDataView, pear.data.DataView);
+
+  var prevSortColumn = null;
+
+  SortedDataView.prototype.handleSort = function (ge){
+    var headerCell = ge.sortCell;
+    var grid = ge.target;
+    var sortDirection =ge.sortDirection;
+    
+    var sortedData = this.sort_(headerCell,headerCell.getColumnId(),ge.sortDirection);
+
+    prevSortColumn = headerCell;
+    this.setDataRowViews(sortedData);
+  };
+
+  SortedDataView.prototype.sort_ = function(sortCell,sortField,sortDirection) {
+    var rv = this.getDataRowViews();
+    var sortFn = function (column){
+      var fn =goog.partial(this.defaultCompare,sortField,sortDirection);
+      return fn;
+    };
+    
+    return rv.sort(sortFn.call(this,sortCell.getDataColumn()));
+    
+  };
+
+
+  SortedDataView.prototype.defaultCompare = function(sortfield,sortDirection,value1,value2) {
+    
+    if (sortDirection === 1){
+      temp = value1;
+      value1=value2;
+      value2 = temp;
+    }
+    if (value1.getRowData()[sortfield]>value2.getRowData()[sortfield]){
+      return 1;
+    }
+
+    if (value1.getRowData()[sortfield]<value2.getRowData()[sortfield]){
+      return -1;
+    }
+
+    return 0;
+  };
+
+  
+  var load = function () {
+    if (grid){
+      grid.dispose();
+    }
+    var data = [];
+    var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
+    var temp;
+    var start = new Date(2013,12,31);
+    for (var i = 0; i < parseInt(limit,10); i++) {
+      data[i] = {
+        orderno:  i +1
+      };
+      temp = Math.round(Math.random() * 9);
+     
+      data[i].item = item[temp];
+      data[i].unitprice = unitprice[temp];
+      data[i].quantity = Math.round(Math.random() * 100);
+      data[i].total = data[i].unitprice * data[i].quantity;
+      data[i].processed= (i % 5 === 0);
+      data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
+    }
+
+    var start = +new Date();  // log start timestamp
+
+
+    grid = new pear.ui.Grid();
+    dv = new pear.data.DataView(columns,data);
+    var config = {
+      AllowColumnResize: true,
+      AllowColumnHeaderMenu: true,
+      AllowPaging:true,
+      PageSize:50,
+      RowFooterHeight:35,
+      AllowAlternateRowHighlight: true,
+      AllowSorting:true,
+    };
+    config = grid.setConfiguration(config);
+
+    grid.setWidth(800);
+    grid.setHeight(400);
+    grid.setDataView( new SortedDataView(columns,data));
+    grid.showFooterRow(true);
+
+    var filterPlugin = new pear.plugin.FilterMenu();
+    grid.registerPlugin( filterPlugin);
+    grid.registerPlugin( new pear.plugin.Pager());
+
+
+    goog.array.forEach(columns,function(column){
+      column.setColumnFooterAggregatesFn(fnAggregate);
+    },this);
+
+
+    grid.render(goog.dom.getElement('target1'));
+
+
+    var end =  +new Date();  
+    var diff = end - start;
+    console.log('Load Time : '+diff+'ms');
+    
+    goog.events.listen(grid, GRID_EVENTS, logEvent);
+    goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
+    goog.events.listen(filterPlugin, FILTERPLUGIN_EVENTS, logEvent);
+
+    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.APPLY_FILTER, handleApplyFilter);
+    goog.events.listen(filterPlugin, pear.plugin.FilterMenu.EventType.CLEAR_FILTER, handleClearFilter);
+    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, handleRowViewsChanged);
+
+    goog.events.listen(grid, pear.ui.Grid.EventType.SORT, grid.getDataView().handleSort ,false ,grid.getDataView());
+  };
+
+  goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
+  
 
   load();
 

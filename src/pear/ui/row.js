@@ -223,10 +223,7 @@ pear.ui.Row.prototype.setPosition = function() {
   top = 0;
   left = 0;
   top = this.getLocationTop();
-  //top = this.getModel().getLocationTop();
-
   goog.style.setPosition(this.getElement(), left, top);
-  goog.style.setSize(this.getElement(), this.getWidth(), this.getHeight());
 };
 
 

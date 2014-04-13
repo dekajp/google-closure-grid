@@ -104,7 +104,7 @@ pear.data.Column.prototype.getId=function(){
 
 /**
  * Get DataType of Column
- * @return {pear.data.DataType} [description]
+ * @return {pear.data.DataType} DataType of Column
  * @public
  */
 pear.data.Column.prototype.getDataType=function(){
@@ -157,11 +157,19 @@ pear.data.Column.prototype.setColumnFormatter = function(fn,opt_scope){
 };
 
 
+/**
+ * set the Callback function for Footer Aggregates Calculation
+ * @param {Function} fn [description]
+ */
 pear.data.Column.prototype.setColumnFooterAggregatesFn = function(fn){
   this.fnFooterAggregate_ = fn;
 };
 
-pear.data.Column.prototype.getColumnFooterAggregatesFn = function(fn){
+/**
+ * get the Aggregate function
+ * @return {Function} Callback function
+ */
+pear.data.Column.prototype.getColumnFooterAggregatesFn = function(){
   return this.fnFooterAggregate_;
 };
 

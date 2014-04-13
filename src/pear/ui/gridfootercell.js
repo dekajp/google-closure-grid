@@ -72,13 +72,6 @@ pear.ui.GridFooterCell.prototype.applyFooterAggregrates = function() {
  * @override
  */
 pear.ui.GridFooterCell.prototype.enterDocument = function() {
-  /* if (this.getGrid().getConfiguration().SelectionMode ===
-    pear.ui.Grid.SelectionMode.CELL){
-    this.setSupportedState(goog.ui.Component.State.ACTIVE, true);
-  }else{
-    this.setSupportedState(goog.ui.Component.State.ACTIVE, false);
-  }
-  */
   pear.ui.GridFooterCell.superClass_.enterDocument.call(this);
 };
 
@@ -128,66 +121,6 @@ pear.ui.GridFooterCell.prototype.isMouseEventWithinElement_ = function(e, elem) 
   return !!e.relatedTarget && goog.dom.contains(elem, e.relatedTarget);
 };
 
-/**
- * @override
- * Header and Footer row - Postion is Relative 
- */
-pear.ui.GridFooterCell.prototype.setPosition = function() {
-  var left, top;
-  left = 0;
-  top = 0;
-  left = 0;
-  top = 0;
-  var i = 0;
-  ////for (;i<this.getCellIndex();i++ ){
-  //  left = left + this.getRow().getCellWidth(i);
-  //}
-
-  goog.style.setPosition(this.getElement(), left, top);
-};
-
-/**
- * @private
- *
- */
-pear.ui.GridFooterCell.prototype.setSize_ = function() {
-  pear.ui.GridFooterCell.superClass_.setSize_.call(this);
-  var height;
-  height = this.getCellHeightOffset_();
-  goog.style.setStyle(this.getElement(),"line-height",height+'px');
-};
-
-/**
- * @inheritDoc
- */
-pear.ui.GridFooterCell.prototype.handleMouseOver = function(be) {
-  if (!this.isMouseEventWithinElement_(be, this.getElement()) &&
-      (this.dispatchEvent(goog.ui.Component.EventType.ENTER) &&
-      (this.isEnabled() &&
-          this.isAutoState(goog.ui.Component.State.HOVER))
-      )
-  ) {
-    // Cell Highlight
-    this.setHighlighted(true);
-  }
-};
-
-/**
- * @inheritDoc
- */
-pear.ui.GridFooterCell.prototype.handleMouseOut = function(be) {
-  if (!this.isMouseEventWithinElement_(be, this.getElement()) &&
-       this.dispatchEvent(goog.ui.Component.EventType.LEAVE)) {
-    if (this.isAutoState(goog.ui.Component.State.ACTIVE)) {
-      // Cell Active
-      this.setActive(false);
-    }
-    if (this.isAutoState(goog.ui.Component.State.HOVER)) {
-      // Cell Highlight
-      this.setHighlighted(false);
-    }
-  }
-};
 
 /**
  * [disposeInternal description]

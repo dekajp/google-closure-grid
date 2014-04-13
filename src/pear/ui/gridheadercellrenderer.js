@@ -32,5 +32,25 @@ pear.ui.GridHeaderCellRenderer.CSS_CLASS =
  * @return {string} Renderer-specific CSS class name.
  */
 pear.ui.GridHeaderCellRenderer.prototype.getCssClass = function() {
-  return pear.ui.GridHeaderCellRenderer.CSS_CLASS;
+  return pear.ui.CellRenderer.CSS_CLASS;
+};
+
+
+/**
+ * Returns the control's contents wrapped in a DIV, with the renderer's own
+ * CSS class and additional state-specific classes applied to it.
+ * @param {goog.ui.Control} cellControl Control to render.
+ * @return {Element} Root element for the cell control.
+ */
+pear.ui.GridHeaderCellRenderer.prototype.createDom = function(cellControl) {
+  // Create and return DIV wrapping contents.
+  
+  cellControl.addClassName(pear.ui.GridHeaderCellRenderer.CSS_CLASS);
+  cellControl.addClassName('col'+cellControl.getCellIndex());
+
+  var element = cellControl.getDomHelper().createDom(
+      'div', this.getClassNames(cellControl).join(' '), cellControl.getContent());
+
+  this.setAriaStates(cellControl, element);
+  return element;
 };

@@ -252,8 +252,11 @@ pear.plugin.Pager.prototype.updatePagerDropdown_ = function(index) {
 pear.plugin.Pager.prototype.handleChange_ = function(ge) {
   var grid = this.getGrid();
   if (this.trigger_) {
-    var index = parseInt(this.pagerComboBox_.getValue(),10) - 1;
-    grid.setPageIndex(index);
+    var cbValue = parseInt(this.pagerComboBox_.getValue(),10);
+    if (cbValue && cbValue >0){
+      var index = parseInt(this.pagerComboBox_.getValue(),10) - 1;
+      grid.setPageIndex(index);
+    }
   }
 };
 

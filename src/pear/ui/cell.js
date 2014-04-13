@@ -29,7 +29,7 @@ pear.ui.Cell = function(opt_renderer, opt_domHelper) {
   this.setSupportedState(goog.ui.Component.State.FOCUSED, false);
   this.setSupportedState(goog.ui.Component.State.OPENED, false);
 
-  this.setAllowTextSelection(true);
+  this.setAllowTextSelection(false);
 
 };
 goog.inherits(pear.ui.Cell, goog.ui.Control);
@@ -101,7 +101,7 @@ pear.ui.Cell.prototype.enterDocument = function() {
 
   pear.ui.Cell.superClass_.
       enterDocument.call(this);
-  this.updateSizeAndPosition();
+  // this.updateSizeAndPosition();
 };
 
 
@@ -146,7 +146,6 @@ pear.ui.Cell.prototype.getCellIndex = function() {
  * @return {pear.data.Column} Data Column
  */
 pear.ui.Cell.prototype.getDataColumn = function() {
-  // var column = ( /** @type {pear.data.Column} */ (this.getModel()));
   return this.datacolumn_;
 };
 
@@ -156,9 +155,7 @@ pear.ui.Cell.prototype.getDataColumn = function() {
  * @param  {pear.data.Column} datacolumn 
  */
 pear.ui.Cell.prototype.setDataColumn = function(datacolumn) {
-  // var data = ( /** @type {pear.data.Column} */ (datacolumn));
-  // this.setModel(data);
-  this.datacolumn_ = datacolumn;
+ this.datacolumn_ = datacolumn;
 };
 
 /**
@@ -168,32 +165,18 @@ pear.ui.Cell.prototype.getRowPosition = function() {
   return this.getRow().getRowPosition();
 };
 
-
-/**
- * @public
- * @param {number} width
- */
-/*pear.ui.Cell.prototype.setCellWidth = function(width, opt_render) {
-  this.columnWidth_ = width;
-  if (opt_render) {
-    this.draw();
-  }
-};*/
-
-
 /**
  * @private
  * @return  {number}
  */
 pear.ui.Cell.prototype.getCellWidth = function() {
-  /*this.columnWidth_ = this.columnWidth_ ||
-      this.getGrid().getColumnWidthAt(this.getCellIndex()) ||
-      this.getGrid().getConfiguration().ColumnWidth;
-  return this.columnWidth_;*/
-
   return this.getDataColumn().getWidth();
 };
 
+/**
+ * @deprecated 
+ * @return {number} [description]
+ */
 pear.ui.Cell.prototype.getCellComputedWidth = function() {
   var width = this.getCellWidth();
   var paddingBox = goog.style.getPaddingBox(this.getElement());
@@ -205,7 +188,7 @@ pear.ui.Cell.prototype.getCellComputedWidth = function() {
 
 /**
  * @private
- * @return  {number}
+ * @deprecated 
  */
 pear.ui.Cell.prototype.getCellHeight_ = function() {
   return this.getRow().getHeight();
@@ -214,7 +197,7 @@ pear.ui.Cell.prototype.getCellHeight_ = function() {
 
 /**
  * @private
- * @return  {number}
+ * @deprecated 
  */
 pear.ui.Cell.prototype.getCellWidthOffset_ = function() {
   var width = this.getCellWidth();
@@ -230,6 +213,7 @@ pear.ui.Cell.prototype.getCellWidthOffset_ = function() {
 /**
  * @private
  * @return  {number}
+ * @deprecated 
  */
 pear.ui.Cell.prototype.getCellHeightOffset_ = function() {
   var height = this.getCellHeight_();
@@ -243,7 +227,7 @@ pear.ui.Cell.prototype.getCellHeightOffset_ = function() {
 
 
 /**
- * 
+ * @deprecated 
  */
 pear.ui.Cell.prototype.setPosition = function() {
   var left, top;
@@ -262,7 +246,7 @@ pear.ui.Cell.prototype.setPosition = function() {
 
 /**
  * @private
- *
+ * @deprecated 
  */
 pear.ui.Cell.prototype.setSize_ = function() {
   var width, height;
@@ -276,9 +260,9 @@ pear.ui.Cell.prototype.setSize_ = function() {
 
 /**
  * @private
- *
+ * @deprecated 
  */
 pear.ui.Cell.prototype.updateSizeAndPosition = function() {
-  this.setSize_();
-  this.setPosition();
+//  this.setSize_();
+//  this.setPosition();
 };

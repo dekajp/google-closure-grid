@@ -75,7 +75,7 @@
   </fieldset>
   <br>
   <!-- This div will have a Sample Component added to its contents. -->
-  <div id="target1" style="width:800px;height:500px">
+  <div id="target1" style="">
   </div>
   <fieldset class="goog-debug-panel">
     <legend>Event Log</legend>
@@ -113,26 +113,26 @@
   function currencyFormatter(gridcell){
     var fmt = new goog.i18n.NumberFormat (goog.i18n.NumberFormat.Format.CURRENCY);
     var text = fmt.format(gridcell.getModel());
-    goog.dom.setTextContent(gridcell.getElement(),text);
+    goog.dom.setTextContent(gridcell.getContentElement(),text);
   };
 
   function numberFormatter(gridcell){
     var fmt = new goog.i18n.NumberFormat (goog.i18n.NumberFormat.Format.DECIMAL);
     var text = fmt.format(gridcell.getModel());
-    goog.dom.setTextContent(gridcell.getElement(),text);
+    goog.dom.setTextContent(gridcell.getContentElement(),text);
   };
 
   function dateFormatter(gridcell){
     var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
     var text = fmt.format(gridcell.getModel());
 
-    goog.dom.setTextContent(gridcell.getElement(),text);
+    goog.dom.setTextContent(gridcell.getContentElement(),text);
   };
 
   function processedFormatter(gridcell){
     var text = gridcell.getModel();
     var gridrow = gridcell.getRow();
-    goog.dom.setTextContent(gridcell.getElement(),'');
+    goog.dom.setTextContent(gridcell.getContentElement(),'');
     var cb = new goog.ui.Checkbox();
     if (text){
       cb.setChecked(true);
@@ -142,7 +142,7 @@
       gridrow.setSelect(false);
     }
     
-    cb.render(gridcell.getElement());
+    cb.render(gridcell.getContentElement());
 
     goog.events.listen(cb,goog.ui.Component.EventType.CHANGE, function(ge){
       

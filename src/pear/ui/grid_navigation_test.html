@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Closure Unit Tests - pear.ui.Grid</title>
+  <link rel="stylesheet" href="../../css/grid.css" />
+  <script src="../../../lib/closure-library/closure/goog/base.js"></script>
+  <script src="../peardeps.js"></script>
+  <script>
+    goog.require('goog.dom');
+    goog.require('goog.testing.jsunit');
+    goog.require('goog.testing.events');
+    goog.require('pear.ui.Grid');
+  </script>
+</head>
+<body>
+  <div id="content">
+    <div id="target1" style="width:800px;height:500px">
+    </div>
+  </div>
+  <script>
+    var grid;
+    var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
+    var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
+    var data = [];
+    var columns = [
+      new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
+      new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
+      new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
+      new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
+      new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
+      new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME),
+      new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
+    ];
+    function getData(){
+      data = [];
+      var limit = 500
+      var temp;
+      for (var i = 0; i < parseInt(limit,10); i++) {
+        data[i] = {
+          orderno:  i +1
+        };
+        temp = Math.round(Math.random() * 9);
+       
+        data[i].item = item[temp];
+        data[i].unitprice = unitprice[temp];
+        data[i].quantity = Math.round(Math.random() * 100);
+        data[i].total = data[i].unitprice * data[i].quantity;
+        data[i].processed= (i % 5 === 0);
+        data[i].created = '11/21/2013';
+      }
+
+      return data;
+    }
+    function setUp() {
+      grid = new pear.ui.Grid();
+    }
+
+    function setConfiguration(config){
+      grid.setConfiguration(config);
+    }
+    function renderGrid(){
+      grid.setWidth(800);
+      grid.setHeight(400);
+      grid.setColumns(columns);
+      grid.setDataRows(getData());
+      grid.render(goog.dom.getElement('target1'));
+    }
+
+    function tearDown() {
+      grid.dispose();
+      grid = null;
+      data=null;
+    }
+
+    function dispatchScroll(target,newScrollTop) {
+      target.scrollTop = newScrollTop;
+      var e = document.createEvent("UIEvents");
+      // creates a scroll event that bubbles, can be cancelled,
+      // and with its view and detail property initialized to window and 1,
+      // respectively
+      e.initUIEvent("scroll", true, true, window, 1);
+      target.dispatchEvent(e);
+    }
+
+    function testIfGridIsFocusable() {
+      // Grid should be focusable
+    }
+
+    function testKeyBoardInteraction(){
+      // Test grid on highlight - should focus on Frist Row and First Cell
+      // Test Arrow Keys UP,DOWN,LEFT,RIGHT
+      // Test Highlighted Row and Cell - should not be lost on Scroll and Page 
+      // Change
+      // Test Mouse and Keyboard should play good with each other 
+      // Test Every Time a Row is Highlighted - Highligted GridRow/Unhihglight
+      // Event should be raised
+      // On ENTER key - a DataCell Action Event should be raised from the
+      // Highlighted Grid Row
+    }
+
+    function testMouseInteraction(){
+      // On Click of Data Cell - generate a DataCell Action Event
+      // On Click of Data Cell - Set Highlighted Row and Cell
+    }
+
+    
+
+  </script>
+</body>
+</html>

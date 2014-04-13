@@ -118,18 +118,13 @@
     var headerCell = ge.sortCell;
     var grid = ge.target;
     var sortDirection =ge.sortDirection;
-    setSortIndicators(prevSortColumn);
-
     var sortedData = this.sort_(headerCell,headerCell.getColumnId(),ge.sortDirection);
-
-    setSortIndicators(headerCell,sortDirection);
     prevSortColumn = headerCell;
-
-    this.setDataRows(sortedData);
+    this.setDataRowViews(sortedData);
   };
 
   SortedDataView.prototype.sort_ = function(sortCell,sortField,sortDirection) {
-    var rv = this.getDataRows();
+    var rv = this.getDataRowViews();
     var sortFn = function (column){
       
       var fn;
@@ -158,11 +153,11 @@
       value1=value2;
       value2 = temp;
     }
-    if (value1[sortfield]>value2[sortfield]){
+    if (value1.getRowData()[sortfield]>value2.getRowData()[sortfield]){
       return 1;
     }
 
-    if (value1[sortfield]<value2[sortfield]){
+    if (value1.getRowData()[sortfield]<value2.getRowData()[sortfield]){
       return -1;
     }
 
@@ -175,7 +170,7 @@
       value1=value2;
       value2 = temp;
     }
-    return value1[sortfield] - value2[sortfield];
+    return value1.getRowData()[sortfield] - value2.getRowData()[sortfield];
   };
 
   SortedDataView.prototype.dateCompare = function(sortfield,sortDirection,value1,value2) {
@@ -185,7 +180,7 @@
       value1=value2;
       value2 = temp;
     }
-    var dateA=new Date(value1[sortfield]), dateB=new Date(value2[sortfield]);
+    var dateA=new Date(value1.getRowData()[sortfield]), dateB=new Date(value2.getRowData()[sortfield]);
     return dateA-dateB; //sort by date ascending
   };
 
@@ -194,7 +189,7 @@
     var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
     var text = fmt.format(gridcell.getModel());
 
-    goog.dom.setTextContent(gridcell.getElement(),text);
+    goog.dom.setTextContent(gridcell.getContentElement(),text);
   };
 
   var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
@@ -253,8 +248,6 @@
     grid.setHeight(400);
     grid.setDataView( new SortedDataView(columns,data))
     
-    goog.events.listen(grid, pear.ui.Grid.EventType.AFTER_HEADERCELL_RENDER, createSortIndicators);
-
     goog.events.listen(grid, EVENTS2, logEvent);
     goog.events.listen(grid.getDataView(), EVENTS3, logEvent);
 
@@ -271,40 +264,9 @@
     goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, handleRowViewsChanged);
   };
 
-  var setSortIndicators = function (headerCell,sortDirection){
-    if (!headerCell) return;
-    
-    var sortNode = goog.dom.getElementByClass('pear-grid-cell-header-sort',headerCell.getContentIndicatorElement());
-    var elAsc = goog.dom.getElementByClass('fa-arrow-circle-down',sortNode);
-    var elDesc = goog.dom.getElementByClass('fa-arrow-circle-up',sortNode);
-    goog.style.showElement(elAsc,false);
-    goog.style.showElement(elDesc,false);
+  
 
-    if (sortDirection === pear.ui.Grid.SortDirection.ASC){
-      goog.style.showElement(elAsc,true);
-    }else if (sortDirection === pear.ui.Grid.SortDirection.DESC){
-      goog.style.showElement(elDesc,true);
-    }
-    
-    headerCell.adjustContentCellWidth();
-  };
-
-  var createSortIndicators = function(ge){
-    var grid = ge.target;
-    var headerCell = ge.cell;
-    var contentIndicatorElem = headerCell.getContentIndicatorElement();
-
-    sortIndicator = goog.dom.createDom('div',
-                                            'pear-grid-cell-header-sort'
-                                          );
-    goog.dom.appendChild(contentIndicatorElem, sortIndicator);
-
-    sortNode = goog.dom.createDom('div',{class : 'fa fa-arrow-circle-down' ,style:'display:none' });
-    goog.dom.appendChild(sortIndicator,sortNode);
-    sortNode = goog.dom.createDom('div',{class : 'fa fa-arrow-circle-up' ,style:'display:none' });
-    goog.dom.appendChild(sortIndicator,sortNode);
-  };
-
+  
 
   var handleRowViewsChanged = function (ge){
     var dv = ge.target;

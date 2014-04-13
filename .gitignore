@@ -3,6 +3,9 @@
 *.py
 peardeps.js
 
+build*
+src/build/pearbuild.py
+
 out/
 
 # OS generated files #

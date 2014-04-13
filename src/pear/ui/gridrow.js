@@ -127,7 +127,7 @@ pear.ui.GridRow.prototype.setSelect = function(select) {
  */
 pear.ui.GridRow.prototype.repositionCells = function() {
   this.forEachChild(function(child) {
-    child.updateSizeAndPosition();
+//    child.updateSizeAndPosition();
   },this);
 };
 
@@ -162,6 +162,21 @@ pear.ui.GridRow.prototype.handleEnterItem = function(ge) {
   return true;
 };
 
+/**
+ * Handles blur events raised when the container's key event target loses
+ * keyboard focus.  The default implementation clears the highlight index.
+ * @param {goog.events.BrowserEvent} e Blur event to handle.
+ */
+pear.ui.GridRow.prototype.handleBlur = function(e) {
+  // this.setHighlightedIndex(-1);
+  this.setMouseButtonPressed(false);
+  // If the container loses focus, and one of its children is open, close it.
+  //if (this.openItem_) {
+  //  this.openItem_.setOpen(false);
+  //}
+};
+
+
 
 /**
  * [getDataRowId description]
@@ -181,6 +196,20 @@ pear.ui.GridRow.prototype.isAllowAlternateRowHighlight = function() {
   return this.getGrid().getConfiguration().AllowAlternateRowHighlight;
 };
 
+/**
+ * 
+ */
+pear.ui.Row.prototype.setPosition = function() {
+  var left, top;
+  left = 0;
+  top = 0;
+  left = 0;
+  top = this.getLocationTop();
+  //top = this.getModel().getLocationTop();
+
+  goog.style.setPosition(this.getElement(), left, top);
+  // goog.style.setSize(this.getElement(), this.getWidth(), this.getHeight());
+};
 
 /**
  * @override

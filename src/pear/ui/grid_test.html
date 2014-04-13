@@ -107,10 +107,14 @@
       var newWidth = grid.getColumnWidthAt(0);
 
       assertEquals('After header column resize',previousWidth+100, newWidth);
-      grid.refresh();
+      goog.testing.events.fireMouseMoveEvent(resizableHandle,newCoord);
+      goog.testing.events.fireMouseUpEvent(resizableHandle);
+      //grid.refresh();
       var firstrow = grid.getGridRowAt(0);
-      bounds = goog.style.getContentBoxSize(firstrow.getCellAt(0).getElement());
-      assertEquals('All cells resize',previousWidth+100,bounds.width);
+      var firstcell = firstrow.getCellAt(0);
+      var bound = goog.style.getComputedStyle(firstcell.getElement(),'width');
+      assertEquals('All cells resize ',previousWidth+100+'px',bound);
+      
     }
 
     function testConfigAllowColumnResizeIsFalse(){
@@ -148,9 +152,9 @@
       renderGrid();
 
       var w=grid.getWidth();
-      assertEquals('Width ',w,800);
-      var bound = goog.style.getBounds(grid.getElement());
-      assertEquals('Width ',800,bound.width);
+      assertEquals('Width ',w,config.Width);
+      var bound = goog.style.getStyle(grid.getElement(),'width');
+      assertEquals('Width ',config.Width+'px',bound);
     }
 
     function testConfigHeight(){
@@ -161,9 +165,9 @@
       renderGrid();
 
       var h=grid.getHeight();
-      assertEquals('Height ',h,400);
-      var bound = goog.style.getBounds(grid.getElement());
-      assertEquals('Width ',400,bound.height);
+      assertEquals('Height ',h,config.Height);
+      var bound = goog.style.getStyle(grid.getElement(),'height');
+      assertEquals('Height ',config.Height+'px',bound);
     };
 
     function testConfigRowHeight(){
@@ -175,9 +179,9 @@
       renderGrid();
 
       var firstrow = grid.getGridRowAt(0);
-      var bound = goog.style.getContentBoxSize(firstrow.getElement());
-
-      assertEquals('Config: RowHeight ',30,bound.height);
+      var firstcell = firstrow.getChildAt(0);
+      var bound = goog.style.getComputedStyle(firstcell.getElement(),'height');
+      assertEquals('Height ',config.RowHeight+'px',bound);
     }
 
     function testConfigHeaderRowHeight(){
@@ -255,6 +259,17 @@
       assertEvaluatesToFalse("firstrow inDocument after full scroll",firstrow.isInDocument());
       assertEvaluatesToTrue("lastrow inDocument after full scroll",lastrow.isInDocument());
     }
+
+    function testStyle(){
+      // Each Grid Instance should have their own style attribute
+      // Since grid is rendered on Target Element
+      // Each Target Element will have a a Grid Element and Style element
+      // So Grid Element should have the Class , which is ID of Style Element
+      
+      // 
+    }
+
+    
   </script>
 </body>
 </html>

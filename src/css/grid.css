@@ -1,15 +1,27 @@
-
+/*
+ FOR DEBUGGING FOCUS 
+*:focus
+{
+    outline:#00FF00 dotted thick;
+}*/
 
 
 .pear-grid{
   border: 1px solid gray;
-  -moz-box-sizing: border-box;
+ /* -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
-  box-sizing: border-box;
+  box-sizing: border-box;*/
   position: relative;
   overflow:hidden;
 }
 
+.pear-grid.unselectable {
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
 .pear-grid-body{
   overflow-y:scroll;
 }
@@ -58,33 +70,31 @@
 .pear-grid-row-over .pear-grid-cell{
   background: rgb(230, 230, 230);
 }
-.pear-grid-row-data-odd .pear-grid-cell{
+.pear-grid-row-data-odd{
   background: rgb(237, 245, 255);
 }
 
-.pear-grid-row-data-odd.pear-grid-row-over .pear-grid-cell{
+.pear-grid-row-data-odd .pear-grid-row-over .pear-grid-cell{
   background: rgb(230, 230, 230);
 }
 
-.pear-grid-row-highlight .pear-grid-cell{
+.highlight-row .pear-grid-row-highlight .pear-grid-cell ,
+.highlight-cell .pear-grid-cell-data-hover .pear-grid-cell-data-content{
   background: #E0EEEE;
 }
 
-.pear-grid-row-select .pear-grid-cell{
+.pear-grid-row-select .pear-grid-cell-data{
   background: #E0E5EB;
 }
 
 .pear-grid-cell{
   position: absolute;
-  border: 1px solid transparent;
-  border-right: 1px dotted silver;
-  border-bottom-color: silver;
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
   vertical-align: middle;
   z-index: 1;
-  padding: 1px 2px 2px 1px;
+ /* padding: 1px 2px 2px 1px; */
   margin: 0;
   white-space: nowrap;
   cursor: default;
@@ -94,16 +104,16 @@
 .pear-grid-cell-header ,
 .pear-grid-cell-footer{
   display: inline-block;
-  position: relative;
-  padding-left: 4px;
-  padding-right: 4px;
+  position: absolute;
 }
 
 .pear-grid-cell-footer
 {
-  font-weight:bold;
+  font-weight: bold;
   border-top-color: silver;
-  vertical-align: middle; 
+  border-top-width: 1px;
+  border-top-style: solid;
+  vertical-align: middle;
   text-align: left;
 }
 
@@ -161,19 +171,24 @@
 .pear-grid-cell-header-hover .pear-grid-cell-header-slidemenu{
    display: inline-block;
 }
-.pear-grid-cell-data-hover{
-  border: 1px solid blue;
-}
-
-.pear-grid-cell-data-selected{
+.pear-grid-cell-data-hover .pear-grid-cell-data-content{
   border: 1px solid black;
 }
 
+.pear-grid-cell-data-selected {
+  background: #E0E5EB;
+}
+
 .pear-grid-cell-data{
-  padding-left: 4px;
-  padding-right: 4px;
   display: inline-block;
   position: absolute;
+}
+
+.pear-grid-cell-data-content , .pear-grid-cell-header-content{
+  padding-left: 4px; 
+  padding-right: 4px; 
+  padding-top: 2px;
+  padding-bottom:2px;
 }
 
 .pear-ui-resizable-handle {
@@ -181,6 +196,10 @@
   position: absolute;
   display: block;
   cursor: col-resize;
+}
+
+.pear-grid-cell{
+  border-right: 1px dotted silver;
 }
 
   .pear-ui-resizable-e {

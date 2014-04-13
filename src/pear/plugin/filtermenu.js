@@ -177,6 +177,10 @@ pear.plugin.FilterMenu.prototype.createHeaderMenuDom = function() {
   goog.array.forEach(this.headerMenuBtns_, function(mb) {
     goog.events.listen(mb, goog.ui.Component.EventType.ACTION, 
                                               this.showFilterUI_, false, this);
+    goog.events.listen(mb.getElement(), goog.events.EventType.MOUSEDOWN,function(e){
+      e.stopPropagation();
+      e.preventDefault();
+    });
   },this);
 };
 
@@ -287,7 +291,7 @@ pear.plugin.FilterMenu.prototype.handleCancelFilter_ = function(be) {
  * @private 
  */
 pear.plugin.FilterMenu.prototype.close_ = function() {
-  goog.style.showElement(this.getElement(), '');
+  goog.style.setElementShown(this.getElement(), '');
   this.headerCell_.setMenuState(false);
   this.headerCell_.slideMenuOpen(false);
 };
@@ -321,7 +325,7 @@ pear.plugin.FilterMenu.prototype.showFilterUI_ = function(ge) {
   position.reposition(this.getElement(),
       goog.positioning.Corner.TOP_START);
 
-  goog.style.showElement(this.getElement(), 'inline-block');
+  goog.style.setElementShown(this.getElement(), 'inline-block');
   this.headerCell_.setMenuState(true);
 
   // Update Content
@@ -332,6 +336,9 @@ pear.plugin.FilterMenu.prototype.showFilterUI_ = function(ge) {
 
   goog.dom.setTextContent(this.titleContent_, this.headerCell_.getContentText());
   this.filterInput_.setValue(text);
+
+  ge.stopPropagation();
+  ge.preventDefault();
 };
 
 /**

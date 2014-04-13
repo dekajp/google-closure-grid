@@ -42,7 +42,7 @@ pear.ui.GridFooterRow.prototype.addCell = function(cell, opt_render) {
  */
 pear.ui.GridFooterRow.prototype.repositionCells = function() {
   this.forEachChild(function(child) {
-    child.updateSizeAndPosition();
+//    child.updateSizeAndPosition();
   },this);
 };
 

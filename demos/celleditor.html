@@ -33,11 +33,11 @@
 </head>
 <body>
    <fieldset class="goog-debug-panel">
-    <legend>Simple Grid</legend>
+    <legend>Cell Editor</legend>
     <div id="">
-      <li> Load grid with 1000 - 1 Million random records </li>
-      <li> Use Keyboard (Arrow Keys) For Navigation </li>
-      <li> Resize Columns </li>
+      <li>  </li>
+      <li>  </li>
+      <li>  </li>
     </div>
   </fieldset>
 
@@ -52,8 +52,6 @@
              <option selected value="10000">10,000</option>
              <option value="50000">50,000</option>
              <option value="100000">100,000</option>
-             <option value="500000">500,000</option>
-             <option value="1000000">1 million</option>
            </select> 
       </div>
     </div>
@@ -67,7 +65,7 @@
   </fieldset>
   <br>
   <!-- This div will have a Sample Component added to its contents. -->
-  <div id="target1">
+  <div id="target1" style="width:800px;height:500px">
   </div>
   <fieldset class="goog-debug-panel">
     <legend>Event Log</legend>
@@ -118,6 +116,10 @@
     new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
   ];
 
+  function setupCellEditorOn(column){
+    
+  }
+
   var load = function () {
     if (grid){
       grid.dispose();
@@ -145,8 +147,7 @@
     grid = new pear.ui.Grid();
     var config = {
       AllowColumnResize: true,
-      AllowAlternateRowHighlight: false,
-      ShowCellBorder:true
+      AllowAlternateRowHighlight: true
     };
     config = grid.setConfiguration(config);
 
@@ -161,9 +162,6 @@
     var end =  +new Date();  
     var diff = end - start;
     console.log('Load Time : '+diff+'ms');
-
-    logconsole.clear();
-    goog.log.fine(logger, 'Loaded '+limit+' rows. ');
   };
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);

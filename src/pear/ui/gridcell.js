@@ -26,11 +26,35 @@ pear.ui.GridCell = function(opt_domHelper, opt_renderer) {
 };
 goog.inherits(pear.ui.GridCell, pear.ui.Cell);
 
+
+/**
+ * Element to hold content
+ * @type {Element}
+ */
+pear.ui.Cell.prototype.contentElement_ = null;
+
+
+/**
+ * set Content Element 
+ * @param {Element} element [description]
+ */
+pear.ui.Cell.prototype.setContentElement = function(element){
+  this.contentElement_=element;
+};
+
+/**
+ * get Content Element
+ * @return {Element}         [description]
+ */
+pear.ui.Cell.prototype.getContentElement = function(){
+  return this.contentElement_;
+};
+
 /**
  * Get Cell Data
  * @return {*} data
  */
-pear.ui.Cell.prototype.getCellData = function() {
+pear.ui.Cell.prototype.getCellContent = function() {
   return this.getModel();
 };
 
@@ -39,7 +63,7 @@ pear.ui.Cell.prototype.getCellData = function() {
  * Set Data
  * @param  {*} data
  */
-pear.ui.Cell.prototype.setCellData = function(data) {
+pear.ui.Cell.prototype.setCellContent = function(data) {
   this.setModel(data);
 };
 
@@ -50,7 +74,7 @@ pear.ui.Cell.prototype.setCellData = function(data) {
  */
 pear.ui.GridCell.prototype.getContent = function() {
   
-  return String(this.getCellData());
+  return String(this.getCellContent());
 };
 
 /**
@@ -72,15 +96,9 @@ pear.ui.GridCell.prototype.applyFormatting = function() {
  * @override
  */
 pear.ui.GridCell.prototype.enterDocument = function() {
-  /* if (this.getGrid().getConfiguration().SelectionMode ===
-    pear.ui.Grid.SelectionMode.CELL){
-    this.setSupportedState(goog.ui.Component.State.ACTIVE, true);
-  }else{
-    this.setSupportedState(goog.ui.Component.State.ACTIVE, false);
-  }
-  */
   pear.ui.GridCell.superClass_.enterDocument.call(this);
 
+  // Set Size of Content Element
   this.applyFormatting();
 };
 
@@ -134,12 +152,6 @@ pear.ui.GridCell.prototype.isMouseEventWithinElement_ = function(e, elem) {
  * @inheritDoc
  */
 pear.ui.GridCell.prototype.handleMouseOver = function(be) {
-  if (this.getGrid().isTrackingMouseOver()){
-    //logger.info('handleMouseOver :'+this.getId());
-  }else{
-    be.stopPropagation();
-    return;
-  }
   if (!this.isMouseEventWithinElement_(be, this.getElement()) &&
       (this.dispatchEvent(goog.ui.Component.EventType.ENTER) &&
       (this.isEnabled() &&
@@ -147,7 +159,7 @@ pear.ui.GridCell.prototype.handleMouseOver = function(be) {
       ) 
   ) {
     // Cell Highlight
-    this.setHighlighted(true);
+    // this.setHighlighted(true);
   }
 };
 
@@ -155,13 +167,6 @@ pear.ui.GridCell.prototype.handleMouseOver = function(be) {
  * @inheritDoc
  */
 pear.ui.GridCell.prototype.handleMouseOut = function(be) {
-  if (this.getGrid().isTrackingMouseOver()){
-    //logger.info('handleMouseOut :'+this.getId());
-  }else{
-    be.stopPropagation();
-    return;
-  }
-
   if (!this.isMouseEventWithinElement_(be, this.getElement()) &&
        this.dispatchEvent(goog.ui.Component.EventType.LEAVE) ) {
     if (this.isAutoState(goog.ui.Component.State.ACTIVE)) {
@@ -170,7 +175,7 @@ pear.ui.GridCell.prototype.handleMouseOut = function(be) {
     }
     if (this.isAutoState(goog.ui.Component.State.HOVER)) {
       // Cell Highlight
-      this.setHighlighted(false);
+      // this.setHighlighted(false);
     }
   }
 };
