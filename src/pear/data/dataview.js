@@ -532,6 +532,27 @@ pear.data.DataView.prototype.updateDataRowViews_ = function() {
 
 
 /**
+ * Basic Sort
+ * @param  {pear.ui.Grid.SortDirection} sortDirection SortDirection
+ * @param  {string} columnid      pear.data.Column.id
+ */
+pear.data.DataView.prototype.sort = function(sortDirection,columnid) {
+  goog.array.sort(this.dataRowViews_,
+    function (a, b) {
+      if (a.getRowData()[columnid] > b.getRowData()[columnid]){
+        return ( sortDirection === pear.ui.Grid.SortDirection.ASC ) ? -1 : 1
+      }
+      
+      if (a.getRowData()[columnid] < b.getRowData()[columnid]){
+          return ( sortDirection === pear.ui.Grid.SortDirection.ASC ) ? 1 : -1
+        }
+        // a must be equal to b
+      return 0;
+    });
+  this.setDataRowViews(this.dataRowViews_);
+};
+
+/**
  * @override
  * @protected
  */

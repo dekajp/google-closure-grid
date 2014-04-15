@@ -672,7 +672,11 @@ pear.ui.Grid.prototype.getCellContentPaddingBox = function(uniqClass) {
  * @public
  */
 pear.ui.Grid.prototype.getDataView = function() {
-	this.dataview_ = this.dataview_ || new pear.data.DataView([], []);
+	if (!this.dataview_){
+		this.dataview_ =  new pear.data.DataView([], []);
+		this.dataview_.setGrid(this);
+	}
+	
 	return this.dataview_;
 };
 
@@ -1195,7 +1199,7 @@ pear.ui.Grid.prototype.enterDocument = function() {
 
 	// Focus element
 	var domHelper = this.getDomHelper();
-	var focusElem= domHelper.createDom("div",{style:"position:fixed;width:0;height:0;top:0;left:0;outline:0;"});
+	var focusElem= domHelper.createDom("div",{style:"position:fixed;width:0;height:0;top:0;left:0;outline:0;",id:'peargrid$focus'+uid});
 	focusElem.setAttribute("tabindex",0);
 	focusElem.setAttribute("hidefocus",'');
 	domHelper.appendChild(this.getElement(),focusElem);
@@ -1742,6 +1746,8 @@ pear.ui.Grid.prototype.debugRendering_ = function(start, end) {
 /**
  * Calculatre Viewport Area and then Cache GridRows to be rendered , in ViewPort.
  * @private
+ * TODO : height of Body Canvas will be different for more than 50K rows in
+ * IE and Google Chrome
  */
 pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
 	var rowCount = this.getDataViewRowCount();
@@ -2085,8 +2091,6 @@ pear.ui.Grid.prototype.setHighlighted = function(gridrow, highlight,dispatch) {
 	var evt;
 	gridrow.setHighlight(highlight);
 
-	this.setFocusOnGridRow(gridrow);
-
 	var index = this.indexOfGridRow(gridrow);
 	if (highlight) {
 			evt = new pear.ui.Grid.GridRowEvent(pear.ui.Grid.EventType.GRIDROW_HIGHLIGHT,
@@ -2106,20 +2110,14 @@ pear.ui.Grid.prototype.setHighlighted = function(gridrow, highlight,dispatch) {
  * set Focus on grid
  */
 pear.ui.Grid.prototype.setFocusOnGrid = function() {
-	//this.focusElem_.focus();
+	this.focusElem_.focus();
 };
 
-/**
- * set Focus on Grid Row 
- * @param {pear.ui.GridRow} gridrow Item to highlight.
- */
-pear.ui.Grid.prototype.setFocusOnGridRow = function(gridrow) {
-	/*var aTop = this.body_.getElement().scrollTop;
-	var aLeft = this.body_.getElement().scrollLeft;
-	gridrow.getElement().focus();
-	this.body_.getElement().scrollTop = aTop;
-	this.body_.getElement().scrollLeft = aLeft;*/
+pear.ui.Grid.prototype.isFocusOnGrid = function() {
+	return this.focusElem_ ==
+         goog.dom.getOwnerDocument(this.focusElem_).activeElement;
 };
+
 
 /**
  * Highlights the first highlightable item in the container
@@ -2487,8 +2485,10 @@ pear.ui.Grid.prototype.handleDataCellAction_ = function(cell) {
 	gridrow.setHighlighted(cell);
 	this.setHighlightedCellIndex(gridrow.indexOfChild(cell));
 
-	// Set Focus to Focus Elem
-	this.focusElem_.focus();
+	// Focus
+	if (!this.isFocusOnGrid()){
+		this.setFocusOnGrid();
+	}
 
 	// Select Row or Cell - depend on Selection Mode
 	if (this.isSelectionModeOn()) {
@@ -2555,14 +2555,21 @@ pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 			this.highlightPreviousRow();
 			break;
 		case goog.events.KeyCodes.DOWN:
-		case goog.events.KeyCodes.TAB:
 			this.highlightNextRow();
+			break;
+		case goog.events.KeyCodes.TAB:
+			if (this.getHighlightedCellIndex() === this.getColumns().length-1){
+				this.setHighlightedCellIndex(0);
+				this.highlightNextRow();
+			}else{
+				this.getHighlightedGridRow().handleKeyEvent(e);
+				this.setHighlightedCellIndex(this.getHighlightedGridRow().getHighlightedIndex());
+			}
 			break;
 		case goog.events.KeyCodes.RIGHT:
 		case goog.events.KeyCodes.LEFT:
 				this.getHighlightedGridRow().handleKeyEvent(e);
 				this.setHighlightedCellIndex(this.getHighlightedGridRow().getHighlightedIndex());
-				return true;
 			break;
 		case goog.events.KeyCodes.ENTER:
 			if (this.isSelectionModeOn()) {
@@ -2627,18 +2634,23 @@ pear.ui.Grid.prototype.disposeInternal = function() {
 	this.cellBorderBox_=null;
 
 	if (this.focusElem_) {
-		this.focusElem_.remove();
+		goog.dom.removeNode(this.focusElem_);
 	}
 	this.focusElem_ = null;
 
 	if (this.styleElem_) {
-		this.styleElem_.remove();
+		goog.dom.removeNode(this.styleElem_);
 	}
 	this.styleElem_ = null;
 
-	this.keyHandler_.dispose();
+	if (this.keyHandler_){
+		this.keyHandler_.dispose();
+	}
   this.keyHandler_ = null;
-  this.focusHandler_.dispose();
+
+  if (this.focusHandler_){
+  	this.focusHandler_.dispose();
+  }
   this.focusHandler_ = null;
 
 	delete this.width_;

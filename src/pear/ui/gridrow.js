@@ -24,7 +24,7 @@ pear.ui.GridRow = function(grid, height, opt_orientation, opt_renderer, opt_domH
                         pear.ui.GridRowRenderer.getInstance(),
                         opt_domHelper);
 
-  this.setFocusable(true);
+  
 };
 goog.inherits(pear.ui.GridRow, pear.ui.Row);
 
@@ -205,10 +205,27 @@ pear.ui.Row.prototype.setPosition = function() {
   top = 0;
   left = 0;
   top = this.getLocationTop();
-  //top = this.getModel().getLocationTop();
 
   goog.style.setPosition(this.getElement(), left, top);
-  // goog.style.setSize(this.getElement(), this.getWidth(), this.getHeight());
+};
+
+/**
+ * @inheritDoc
+ */
+pear.ui.Row.prototype.handleKeyEventInternal = function(e) {
+  var returnResult = pear.ui.Row.superClass_.handleKeyEventInternal.call(this,e);
+  switch(e.keyCode) {
+    case goog.events.KeyCodes.TAB:
+      if (this.orientation_ == goog.ui.Container.Orientation.HORIZONTAL) {
+        this.highlightNext();
+      } else {
+        return false;
+      }
+      break;
+    default:
+      return false;
+  }
+  return true;
 };
 
 /**

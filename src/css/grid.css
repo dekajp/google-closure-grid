@@ -1,6 +1,6 @@
-/*
- FOR DEBUGGING FOCUS 
-*:focus
+
+ /*FOR DEBUGGING FOCUS */
+/**:focus
 {
     outline:#00FF00 dotted thick;
 }*/

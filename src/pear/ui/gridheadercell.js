@@ -558,17 +558,17 @@ pear.ui.GridHeaderCell.prototype.disposeInternal = function() {
   this.resizable_ = null;
 
   if (this.sortIndicator_){
-    this.sortIndicator_.remove();
+    goog.dom.removeNode(this.sortIndicator_);
   }
   this.sortIndicator_ = null;
 
   if (this.sortAscIndicator_){
-    this.sortAscIndicator_.remove();
+    goog.dom.removeNode(this.sortAscIndicator_);
   }
   this.sortAscIndicator_ = null;
 
   if (this.sortDescIndicator_){
-    this.sortDescIndicator_.remove();
+    goog.dom.removeNode(this.sortDescIndicator_);
   }
   this.sortDescIndicator_ = null;
 
@@ -578,12 +578,12 @@ pear.ui.GridHeaderCell.prototype.disposeInternal = function() {
   this.headerMenuContainer_ = null;
   
   if (this.contentIndicator_){
-    this.contentIndicator_.remove();
+    goog.dom.removeNode(this.contentIndicator_);
   }
   this.contentIndicator_=null;;
 
   if (this.contentCell_){
-    this.contentCell_.remove();
+    goog.dom.removeNode(this.contentCell_);
   }
   this.contentCell_=null;;
 
