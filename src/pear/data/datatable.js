@@ -11,7 +11,9 @@ goog.require('pear.data.Column');
  * Any operations Directly done on DataTable will
  * affect Grid expected behaviour. All operations on DataTable should be done
  * thru DataView {@link pear.data.DataView}
- * @param {Array.<pear.data.Column>} datacolumns
+ * 
+ * @param {Array.<pear.data.Column>} datacolumns -Each Column in 
+ * dataColumns must have unique id
  * @param {Array} datarows
  * @constructor
  * @extends {goog.events.EventTarget}

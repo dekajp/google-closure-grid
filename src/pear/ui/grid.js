@@ -422,6 +422,7 @@ pear.ui.Grid.prototype.getBodyCanvas = function() {
 	return this.bodyCanvas_
 };
 
+
 /**
  * Total count of gridrows. The number of rows currently grid has loaded
  * if paging is included that total rows
@@ -1209,7 +1210,7 @@ pear.ui.Grid.prototype.enterDocument = function() {
 	this.prepareCSSStyle_();
 
 	// Register Events on Grid (this)
-	this.registerEventsOnGrid_();
+	this.registerEventsOnGrid();
 
 	// Grid Rendering Started
 	this.renderGrid_();
@@ -1235,6 +1236,7 @@ pear.ui.Grid.prototype.getUniqueRootCss_ = function() {
 /**
  * Create the Style Element for this instance of Grid
  * @return {!Element} Style Element
+ * @private
  */
 pear.ui.Grid.prototype.createStyleElement_ = function() {
 	var domHelper = this.getDomHelper();
@@ -1352,7 +1354,7 @@ pear.ui.Grid.prototype.prepareCSSStyle_ = function() {
 
 
 	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-header { width:"+maxWidth+"px; height: "+this.Configuration_.HeaderRowHeight+"px; }");
-	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-footer { width: "+totalRowWidth+"px; height: "+this.Configuration_.HeaderRowHeight+"px; }");
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-footer { width: "+maxWidth+"px; height: "+this.Configuration_.HeaderRowHeight+"px; }");
 	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-body-canvas { width:"+totalRowWidth+"px; }");
 
 };
@@ -1416,7 +1418,7 @@ pear.ui.Grid.prototype.renderHeader_ = function() {
 	this.addChild(this.header_, true);
 	
 	this.createSingleRowHeader_();
-	this.registerEventsOnHeaderRow_();
+	this.registerEventsOnHeaderRow();
 };
 
 
@@ -1508,6 +1510,7 @@ pear.ui.Grid.prototype.createFooterCells_ = function() {
 /**
  * get the height of Body
  * @return {number} [description]
+ * @private
  */
 pear.ui.Grid.prototype.calculateBodyHeight_ = function(){
 	var bodyHeight = this.height_;
@@ -1523,6 +1526,7 @@ pear.ui.Grid.prototype.calculateBodyHeight_ = function(){
 
 /**
  * Set height and Width of Body Element
+ * @private
  */
 pear.ui.Grid.prototype.setBodySize_ = function(){
 	var element = this.body_.getElement();
@@ -1539,7 +1543,7 @@ pear.ui.Grid.prototype.renderBody_ = function() {
 	this.body_ = new pear.ui.Body();
 	this.addChild(this.body_, true);
   
-	this.registerEventsOnBody_();
+	this.registerEventsOnBody();
 };
 
 
@@ -1550,7 +1554,7 @@ pear.ui.Grid.prototype.renderBody_ = function() {
 pear.ui.Grid.prototype.renderBodyCanvas_ = function() {
 	this.bodyCanvas_ = new pear.ui.BodyCanvas();
 	this.body_.addChild(this.bodyCanvas_, true);
-	this.registerEventsOnBodyCanvas_();
+	this.registerEventsOnBodyCanvas();
 };
 
 
@@ -1576,6 +1580,7 @@ pear.ui.Grid.prototype.updateBodyCanvasHeight_ = function() {
 /**
  * get Scrollleft of Body
  * @return {number} [description]
+ * @private
  */
 pear.ui.Grid.prototype.getScrollLeftOfBody_ = function() { 
 	return  (/** @type {number} */ (this.body_.getElement().scrollLeft));
@@ -1629,7 +1634,10 @@ pear.ui.Grid.prototype.getFocusEventTarget = function() {
 };
 
 
-
+/**
+ * get Calculated Row Height
+ * @return {number} [description]
+ */
 pear.ui.Grid.prototype.getCalculatedRowHeight = function() {
 	var rootCss = this.getUniqueRootCss_();
 	var cellBorderBox = this.getCellBorderBox(rootCss);
@@ -1718,7 +1726,7 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
 		c.setCellIndex(index);
 		row.addCell(c, true);
 	},this);
-	this.registerEventsOnGridRow_(row);
+	this.registerEventsOnGridRow(row);
 };
 
 
@@ -1737,17 +1745,25 @@ pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
 	}
 };
 
+/**
+ * [debugRendering_ description]
+ * @param  {number} start [description]
+ * @param  {number} end   [description]
+ * @private
+ */
 pear.ui.Grid.prototype.debugRendering_ = function(start, end) {
-	logger.info ('Rendering Rows '+start+ ' To '+end);
+	//logger.info ('Rendering Rows '+start+ ' To '+end);
 	if (document.activeElement){
-		logger.info ('Focus Element '+document.activeElement.id);
+	//	logger.info ('Focus Element '+document.activeElement.id);
 	}
 };
+
 /**
  * Calculatre Viewport Area and then Cache GridRows to be rendered , in ViewPort.
- * @private
+ * 
  * TODO : height of Body Canvas will be different for more than 50K rows in
  * IE and Google Chrome
+ * @private
  */
 pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
 	var rowCount = this.getDataViewRowCount();
@@ -1902,10 +1918,31 @@ pear.ui.Grid.prototype.getViewportTopRowIndex = function(){
 };
 
 /**
- * bring gridrow in to view if hiding and bring the active cell into the view
+ * Whether Body has Vertical Scroll Visible
+ * @return {Boolean?} true , if visible
+ */
+pear.ui.Grid.prototype.isBodyHasVScroll = function(){
+	// Since Canvas height is determined by DataRows
+	var rowCount = this.getDataView().getDataRows().length;
+	var rowHeight = this.getCalculatedRowHeight();
+
+	return (this.height_ < rowCount * rowHeight);
+};
+
+/**
+ * Whether body has Horizontal Scroll Visible
+ * @return {Boolean?} true , if visible
+ */
+pear.ui.Grid.prototype.isBodyHasHScroll = function(){
+	var bound = goog.style.getBounds(this.getBodyCanvas().getElement());
+	return (bound.width > this.width_);
+};
+
+/**
+ * Bring Cell into View 
  * @param {pear.ui.GridRow} gridrow
  */
-pear.ui.Grid.prototype.scrollViewIntoGridRow = function(gridrow) {
+pear.ui.Grid.prototype.scrollCellIntoView = function(gridrow) {
 	if (!this.getGridRowsCount_() /*&& !this.getConfiguration().AllowRowSelection*/
 	) {
 		return;
@@ -1918,18 +1955,20 @@ pear.ui.Grid.prototype.scrollViewIntoGridRow = function(gridrow) {
 	var cell = gridrow.getHighlighted() || gridrow.getChildAt(0);
 	var positionCell = goog.style.getPosition(cell.getElement());
 	var boundCell = goog.style.getBorderBoxSize(cell.getElement());
+	var scrollVWidth = this.isBodyHasVScroll() ? this.getScrollbarWidth() : 0;
+	var scrollHWidth = this.isBodyHasHScroll() ? this.getScrollbarWidth() : 0;
 
-	if ((positionRow.y + boundRow.height) >= (boundBody.height + scrollTopBody)) {
-		scrollTopBody = positionRow.y + boundRow.height - boundBody.height;
-	}else if ((positionRow.y + boundRow.height) <= scrollTopBody) {
-		scrollTopBody = positionRow.y;
-	}else if ((positionRow.y ) <= scrollTopBody) {
+	if ((positionRow.y + boundRow.height ) >= (boundBody.height + scrollTopBody - scrollHWidth)) {
+		scrollTopBody = positionRow.y + boundRow.height + scrollHWidth - boundBody.height;
+	}else if (positionRow.y  <= scrollTopBody) {
 		scrollTopBody = positionRow.y;
 	}
 
-	if ((positionCell.x + boundCell.width) >= (boundBody.width + scrollLeftBody)) {
-		scrollLeftBody = positionCell.x + boundCell.width - boundBody.width;
-	}else if (positionCell.x <= scrollLeftBody) {
+	if ((positionCell.x + boundCell.width ) >= (boundBody.width + scrollLeftBody - scrollVWidth )) {
+		// Right
+		scrollLeftBody = positionCell.x + boundCell.width - boundBody.width+scrollVWidth;
+	}else if (positionCell.x  <= scrollLeftBody ) {
+		// Left
 		scrollLeftBody = positionCell.x;
 	}
 
@@ -2107,12 +2146,16 @@ pear.ui.Grid.prototype.setHighlighted = function(gridrow, highlight,dispatch) {
 
 
 /**
- * set Focus on grid
+ * Set Focus on Grid
  */
 pear.ui.Grid.prototype.setFocusOnGrid = function() {
 	this.focusElem_.focus();
 };
 
+/**
+ * Check whether Grid is in Focus
+ * @return {boolean|null} true, if grid is in focus
+ */
 pear.ui.Grid.prototype.isFocusOnGrid = function() {
 	return this.focusElem_ ==
          goog.dom.getOwnerDocument(this.focusElem_).activeElement;
@@ -2224,7 +2267,8 @@ pear.ui.Grid.prototype.setHighlightedIndexFromKeyEvent = function(index) {
 /**
  * Dispatch GridRow Event 
  * @param  {pear.ui.GridRow} gridrow 
- * @param  {string} eventName [description]   
+ * @param  {string} eventName [description]  
+ * @private 
  */
 pear.ui.Grid.prototype.dispatchGridRowEvent_ = function(gridrow,eventName) {
 	var index = this.indexOfGridRow(gridrow);
@@ -2235,6 +2279,7 @@ pear.ui.Grid.prototype.dispatchGridRowEvent_ = function(gridrow,eventName) {
 /**
  * Dispatch Grid Events
  * @param  {string} eventName [description]
+ * @private 
  */
 pear.ui.Grid.prototype.dispatchGridEvent_ = function(eventName) {
 	var evt = new goog.events.Event(eventName,this);
@@ -2269,43 +2314,44 @@ pear.ui.Grid.prototype.getFocusHandler = function() {
 
 
 /**
- * Register events on Grid
- * @private
+ * Register events on Grid - Mainly Focus and Blur Events
+ * @protected
  */
-pear.ui.Grid.prototype.registerEventsOnGrid_ = function(){
+pear.ui.Grid.prototype.registerEventsOnGrid = function(){
 	var handler = this.getHandler();
 	var fh = this.getFocusHandler();
 	
 	this.getHandler().
       listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSOUT,
-      		 this.handleBlur_, false, this).
+      		 this.handleBlur, false, this).
       listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSIN,
-      	 this.handleFocus_, false, this);
+      	 this.handleFocus, false, this);
 };
 
 /**
  * Register Event on Grid Header Row
- * @private
+ * @protected
  */
-pear.ui.Grid.prototype.registerEventsOnHeaderRow_ = function() {
+pear.ui.Grid.prototype.registerEventsOnHeaderRow = function() {
 	this.forEachChild(function(cell) {
 		if (this.Configuration_.AllowSorting) {
 			this.getHandler().
 					listenWithScope(cell, goog.ui.Component.EventType.ACTION,
-					this.handleHeaderCellClick_, false, this);
+					this.handleHeaderCellClick, false, this);
 		}
 		this.getHandler().
 				listenWithScope(cell, pear.ui.Cell.EventType.OPTION_CLICK,
-				this.handleHeaderCellOptionClick_, false, this);
+				this.handleHeaderCellOptionClick, false, this);
 	}, this);
 };
 
 /**
- * Register Event on Grid Row
+ * Register Event on Grid Row - Avoid this
+ * this can bring performance down 
  * @param  {pear.ui.GridRow} row 
- * @private
+ * @protected
  */
-pear.ui.Grid.prototype.registerEventsOnGridRow_ = function(row) {
+pear.ui.Grid.prototype.registerEventsOnGridRow = function(row) {
 	var self = this;
 
 	// Avoid Events on GridRow
@@ -2313,35 +2359,36 @@ pear.ui.Grid.prototype.registerEventsOnGridRow_ = function(row) {
 
 
 /**
- * Register events on Event Body
- * @private
+ * Register events on Event Body - Mainly Scroll Event
+ * @protected
  */
-pear.ui.Grid.prototype.registerEventsOnBody_ = function() {
+pear.ui.Grid.prototype.registerEventsOnBody = function() {
 	// Capture Scroll Event on the Body Canvas Element for Virtualization
 	this.getHandler().
 			listenWithScope(this.body_.getElement(), goog.events.EventType.SCROLL,
-					this.handleBodyCanvasScroll_,false,this);
+					this.handleBodyCanvasScroll,false,this);
 };
 
 /**
- * Register events on Event Body
- * @private
+ * Register events on Event Body 
+ * @protected
  */
-pear.ui.Grid.prototype.registerEventsOnBodyCanvas_ = function() {
+pear.ui.Grid.prototype.registerEventsOnBodyCanvas = function() {
 	var self = this;
 	this.getHandler().
       listenWithScope(this.getKeyHandler(),
 					goog.events.KeyHandler.EventType.KEY,
-						this.handleKeyEventOnBodyCanvas_, false, this).
+						this.handleKeyEventOnBodyCanvas, false, this).
 			listenWithScope(this.bodyCanvas_, goog.ui.Component.EventType.ACTION,
-				this.handleAction_, false, self);
+				this.handleAction, false, self);
 };
 
 /**
  * [description]
  * @param  {goog.events.BrowserEvent} ge [description]
+ * @protected
  */
-pear.ui.Grid.prototype.handleBlur_ =  function(ge) {
+pear.ui.Grid.prototype.handleBlur =  function(ge) {
 };
 
 
@@ -2349,8 +2396,9 @@ pear.ui.Grid.prototype.handleBlur_ =  function(ge) {
  * Handles focus events raised when the key event target receives
  * keyboard focus.
  * @param {goog.events.BrowserEvent} ge Focus event to handle.
+ * @protected
  */
-pear.ui.Grid.prototype.handleFocus_ = function(ge) {
+pear.ui.Grid.prototype.handleFocus = function(ge) {
 	logger.info( 'Received event ' + ge.type);
 	this.debugRendering_();
 	var gridrow = this.getHighlightedGridRow();
@@ -2362,16 +2410,16 @@ pear.ui.Grid.prototype.handleFocus_ = function(ge) {
 		gridrow = this.getHighlightedGridRow();
 	}
 	gridrow.setHighlightedIndex((cellIndex > 0 ? cellIndex :0) );
-	this.scrollViewIntoGridRow(gridrow);
+	this.scrollCellIntoView(gridrow);
 };
 
 
 
 /**
- * @private
+ * @protected
  * @param {goog.events.BrowserEvent} e
  */
-pear.ui.Grid.prototype.handleBodyCanvasScroll_ = function(e) {
+pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
 	logger.info( 'Received event ' + e.type);
 	if (this.previousScrollTop_ <= this.body_.getElement().scrollTop) {
 		this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.DOWN;
@@ -2406,13 +2454,14 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll_ = function(e) {
 };
 
 /**
- * [handleHeaderCellClick_ description]
+ * Handle Header Cell Action ( Click) Event 
+ * this will dispatch BEFORE_HEADER_CELL_CLICK,SORT,AFTER_HEADER_CELL_CLICK 
  * @param  {goog.events.Event} ge [description]
- * @private
+ * @protected
  */
-pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
+pear.ui.Grid.prototype.handleHeaderCellClick = function(ge) {
 	logger.info( 'Received event ' + ge.type);
-	ge.stopPropagation();
+	
 
 	var headerCell = ( /** @type {pear.ui.GridHeaderCell} */ (ge.target));
 	var grid = ge.currentTarget;
@@ -2439,40 +2488,49 @@ pear.ui.Grid.prototype.handleHeaderCellClick_ = function(ge) {
 	evt = new pear.ui.Grid.GridHeaderCellEvent(
 			pear.ui.Grid.EventType.AFTER_HEADER_CELL_CLICK, this, headerCell);
 	this.dispatchEvent(evt);
+
+	ge.stopPropagation();
 };
 
 /**
- * [handleHeaderCellOptionClick_ description]
+ * On Header Cell Option {Menu Container} Click  
  * @param  {goog.events.Event} ge [description]
- * @private
+ * @protected
  */
-pear.ui.Grid.prototype.handleHeaderCellOptionClick_ = function(ge) {
+pear.ui.Grid.prototype.handleHeaderCellOptionClick = function(ge) {
 	logger.info( 'Received event ' + ge.type);
-	ge.stopPropagation();
+	
 	var headerCell = ( /** @type {pear.ui.GridHeaderCell} */ (ge.target));
 	var evt = new pear.ui.Grid.GridHeaderCellEvent(
 			pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK, this, headerCell);
 	this.dispatchEvent(evt);
-};
 
-/**
- * [handleAction_ description]
- * @param  {goog.events.Event} ge [description]
- * @private
- */
-pear.ui.Grid.prototype.handleAction_ = function(ge) {
-	logger.info( 'Received event ' + ge.type);
 	ge.stopPropagation();
-	var cell = ( /** @type {pear.ui.GridCell} */(ge.target));
-	this.handleDataCellAction_(cell);
 };
 
 /**
- * [handleDataCellAction_ description]
- * @param  {pear.ui.GridCell} cell 
- * @private
+ * Handle Action on Body - Mainly to Capture Action on GridCell
+ * @param  {goog.events.Event} ge [description]
+ * @protected
  */
-pear.ui.Grid.prototype.handleDataCellAction_ = function(cell) {
+pear.ui.Grid.prototype.handleAction = function(ge) {
+	logger.info( 'Received event ' + ge.type);
+	
+	var cell = ( /** @type {pear.ui.GridCell} */(ge.target));
+	if (cell){
+		this.handleDataCellAction(cell);
+	}
+	ge.stopPropagation();
+};
+
+/**
+ * Handle action events on GridCell 
+ * Highlight Row , Select Row . Also dispatch DATACELL_BEFORE/AFTER Action 
+ * Event
+ * @param  {pear.ui.GridCell} cell 
+ * @protected
+ */
+pear.ui.Grid.prototype.handleDataCellAction = function(cell) {
 	var gridrow = ( /** @type {pear.ui.GridRow} */ (cell.getParent()));
 
 	this.setMouseOverTracking(true);
@@ -2500,13 +2558,24 @@ pear.ui.Grid.prototype.handleDataCellAction_ = function(cell) {
 	this.dispatchEvent(evt);
 };
 
-pear.ui.Grid.prototype.handleKeyEventOnBodyCanvas_ = function(e) {
+/**
+ * handle Keys events on Grid
+ * {goog.events.KeyEvent} e Key event to handle.
+ * @return {boolean}   [description]
+ * @protected
+ */
+pear.ui.Grid.prototype.handleKeyEventOnBodyCanvas = function(e) {
 	logger.info( 'Received event ' + e.type);
-	return this.handleKeyEvent_(e);
+	return this.handleKeyEvent(e);
 };
 
-
-pear.ui.Grid.prototype.handleKeyEvent_ = function(e) {
+/**
+ * [handleKeyEvent description]
+ * @param {goog.events.KeyEvent} e Key event to handle.
+ * @return {boolean}   [description]
+ * @protected
+ */
+pear.ui.Grid.prototype.handleKeyEvent = function(e) {
 	logger.info( 'Received event ' + e.type);
 
 	if (this.isEnabled() &&
@@ -2516,7 +2585,7 @@ pear.ui.Grid.prototype.handleKeyEvent_ = function(e) {
 		e.preventDefault();
 		e.stopPropagation();
 
-		this.scrollViewIntoGridRow(this.getHighlightedGridRow());
+		this.scrollCellIntoView(this.getHighlightedGridRow());
 		this.updateViewport_();
 		return true;
 	}
@@ -2527,6 +2596,7 @@ pear.ui.Grid.prototype.handleKeyEvent_ = function(e) {
  * @param {goog.events.KeyEvent} e Key event to handle.
  * @return {boolean} Whether the event was handled by the container (or one of
  *     its children).
+ * @protected
  */
 pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 

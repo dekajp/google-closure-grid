@@ -24,12 +24,12 @@
 .pear-grid-header-cell-menu-title-content ,
 .pear-grid-header-cell-menu-title-close{
   display: inline-block;
-  
   color: #ffffff;
 }
 
 .pear-grid-header-cell-menu-title-close{
   float:right;
+  cursor: pointer;
 }
 
 .pear-grid-header-cell-menu-title-filter{

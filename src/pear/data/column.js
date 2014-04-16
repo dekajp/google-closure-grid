@@ -10,7 +10,7 @@ goog.require('goog.ui.IdGenerator');
  * @example
  * new pear.data.Column("header Text",'column-id',275,pear.data.DataType.NUMBER)
  * 
- * @param {string} content   
+ * @param {string} content   header Text 
  * @param {string=} opt_id       column id should be unique
  * @param {pear.data.DataType=} opt_datatype DataType
  * @param {number=} opt_width    width of column
@@ -134,7 +134,8 @@ pear.data.Column.prototype.getColumnFormatter = function(){
 };
 
 /**
- * formatting function
+ * Set callback function for formatting all GridCell Data which belongs
+ * to this column
  * @example
  * function myformatter (GridCell) {
  *   
@@ -145,8 +146,9 @@ pear.data.Column.prototype.getColumnFormatter = function(){
  * ...
  * column.setColumnFormatter(myformatter);
  * 
- * @param {function(pear.ui.GridCell)} fn    formatting function 
- * @param {Object=} opt_scope  whose scope to call the formatter.
+ * @param {function(pear.ui.GridCell)} fn formatting function - which will be 
+ *   called for every GridCell which belongs to this column 
+ * @param {Object=} opt_scope  whose scope to call the formatter function.
  * @public
  */
 pear.data.Column.prototype.setColumnFormatter = function(fn,opt_scope){
@@ -159,7 +161,9 @@ pear.data.Column.prototype.setColumnFormatter = function(fn,opt_scope){
 
 /**
  * set the Callback function for Footer Aggregates Calculation
- * @param {Function} fn [description]
+ * @param {Function} fn Aggregate Function - this function fn will be called 
+ * if footer row is enabled/show and will be called for GridFooterCell which
+ * belongs to this Column 
  */
 pear.data.Column.prototype.setColumnFooterAggregatesFn = function(fn){
   this.fnFooterAggregate_ = fn;
@@ -167,7 +171,7 @@ pear.data.Column.prototype.setColumnFooterAggregatesFn = function(fn){
 
 /**
  * get the Aggregate function
- * @return {Function} Callback function
+ * @return {Function} Callback function for Footer Aggregate
  */
 pear.data.Column.prototype.getColumnFooterAggregatesFn = function(){
   return this.fnFooterAggregate_;
@@ -185,5 +189,7 @@ pear.data.Column.prototype.disposeInternal = function() {
   delete this.dataType;
   this.formatter =null;
   this.formatterFn=null;
+  this.fnFooterAggregate_ =null;
+
   pear.data.Column.superClass_.disposeInternal.call(this);
 };

@@ -84,7 +84,13 @@
     }
 
     function testIfGridIsFocusable() {
+      this.renderGrid();
+
+      goog.testing.events.fireClickSequence(grid.getGridRowAt(0).getChildAt(0).getElement());
+     
       // Grid should be focusable
+      goog.testing.events.fireKeySequence(grid.getFocusEventTarget(),
+      goog.events.KeyCodes.TAB);
     }
 
     function testKeyBoardInteraction(){
@@ -104,7 +110,10 @@
       // On Click of Data Cell - Set Highlighted Row and Cell
     }
 
-    
+    function testScrollCellIntoView(){
+      // Test with Key UP and Down
+      // Test with ScrollBar visible 
+    }
 
   </script>
 </body>
