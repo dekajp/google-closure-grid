@@ -14,15 +14,17 @@ goog.require('goog.ui.IdGenerator');
  * @param {string=} opt_id       column id should be unique
  * @param {pear.data.DataType=} opt_datatype DataType
  * @param {number=} opt_width    width of column
+ * @param {number=} opt_align    text Align of column data
  * @constructor
  * @extends {goog.events.EventTarget}
  */
-pear.data.Column = function(content,opt_id,opt_width,opt_datatype) {
+pear.data.Column = function(content,opt_id,opt_width,opt_datatype,opt_align) {
   goog.Disposable.call(this);
   this.headerText=content;
   this.id = opt_id || goog.ui.IdGenerator.getInstance().getNextUniqueId();
   this.dataType = opt_datatype || pear.data.DataTable.DataType.TEXT;
   this.width=opt_width || 75;
+  this.align = opt_align || pear.data.Align.LEFT;
 };
 goog.inherits(pear.data.Column, goog.events.EventTarget);
 
@@ -40,6 +42,18 @@ pear.data.DataType = {
   // DECIMAL: 'decimal'
 };
 
+
+/**
+ * Align
+ * @enum {string}
+ * @public
+ */
+pear.data.Align = {
+  LEFT:'left',
+  RIGHT:'right'
+};
+
+
 /**
  * header text of column
  * @type {string}
@@ -55,6 +69,12 @@ pear.data.Column.prototype.headerText = '';
  */
 pear.data.Column.prototype.id = '';
 
+/**
+ * Align
+ * @type {string}
+ * @private
+ */
+pear.data.Column.prototype.align = pear.data.Align.LEFT;
 
 /**
  * datatype of column
@@ -109,6 +129,15 @@ pear.data.Column.prototype.getId=function(){
  */
 pear.data.Column.prototype.getDataType=function(){
   return this.dataType;
+};
+
+/**
+ * Get Align
+ * @return {pear.data.Align} Text Align of Column
+ * @public
+ */
+pear.data.Column.prototype.getAlign=function(){
+  return this.align;
 };
 
 /**
@@ -187,6 +216,8 @@ pear.data.Column.prototype.disposeInternal = function() {
   delete this.headerText;
   delete this.id;
   delete this.dataType;
+  delete this.align;
+
   this.formatter =null;
   this.formatterFn=null;
   this.fnFooterAggregate_ =null;

@@ -52,6 +52,9 @@ pear.ui.GridFooterCellRenderer.prototype.createDom = function(cellControl) {
 
   var cellElement = cellControl.getDomHelper().createDom(
       'div', 'pear-grid-cell-data-content', cellControl.getContent());
+  var align = cellControl.getDataColumn().getAlign();
+  var aligncss = (align === pear.data.Align.LEFT)? 'pear-grid-align-left':'pear-grid-align-right';
+  goog.dom.classes.add(cellElement, aligncss);
 
   cellControl.setContentElement(cellElement);
 

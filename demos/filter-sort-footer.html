@@ -140,7 +140,7 @@
     new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
     new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
     new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER,pear.data.Align.RIGHT),
     datecol,
     new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
   ];
@@ -151,8 +151,7 @@
       goog.array.forEach(dataview.getDataRowViews(),function(row){
         total = total + row.getRowData()[datacolumn.id];
       });
-
-      return total;
+      return parseFloat(total).toFixed(2);
     }
     if (datacolumn.id === 'orderno' ){
       return 'Total';
@@ -242,7 +241,8 @@
       }
     }else{
       // if other indicators present - then be specific
-      goog.dom.removeChildren(contentIndicatorElem);
+      var elem = goog.dom.getElementByClass('fa-filter',contentIndicatorElem)
+      goog.dom.removeNode(elem);
     }
   };
 
@@ -315,7 +315,7 @@
       data[i].item = item[temp];
       data[i].unitprice = unitprice[temp];
       data[i].quantity = Math.round(Math.random() * 100);
-      data[i].total = data[i].unitprice * data[i].quantity;
+      data[i].total = (data[i].unitprice * data[i].quantity);
       data[i].processed= (i % 5 === 0);
       data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));
     }

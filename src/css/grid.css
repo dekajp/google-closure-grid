@@ -22,6 +22,15 @@
   -o-user-select: none;
   user-select: none;
 }
+
+.pear-grid-align-right{
+  text-align: right;
+}
+
+.pear-grid-align-left{
+  text-align: left;
+}
+
 .pear-grid-body{
   overflow-y:scroll;
 }
@@ -165,6 +174,8 @@
   left:100%;
   position: absolute;
   cursor:pointer;
+  border-left:1px solid rgb(192, 192, 192);
+  height:100%;
 }
 
 
@@ -205,7 +216,7 @@
   .pear-ui-resizable-e {
     right: 0px;
     top: 0px;
-    width: 5px;
+    width: 2px;
     height: 100%;
     /*cursor: e-resize;*/
   }
@@ -232,7 +243,6 @@
     width: 100%;
     left: 0px;
     top: -5px;
-    border: 0px solid green;
   }
   .pear-ui-resizable-se {
     cursor: se-resize;

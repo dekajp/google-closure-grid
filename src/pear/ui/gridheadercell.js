@@ -234,31 +234,53 @@ pear.ui.GridHeaderCell.prototype.registerEvent_ = function() {
  */
 pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function() {
   var grid = this.getGrid();
+  var align = this.getDataColumn().getAlign();
 
+  
   // Header Cell Content
-  this.contentCell_ = goog.dom.createDom('div',
-      'pear-grid-cell-header-content',
-      this.getContentText()
-      );
-  goog.dom.appendChild(this.getElement(), this.contentCell_);
+  (align === pear.data.Align.LEFT )? this.createHeaderCellContent_():'';
 
   // Indicators
   this.createHeaderCellIndicatorPlaceHolder_();
 
+  // Header Menu
   if (grid.getConfiguration().AllowColumnHeaderMenu) {
-    // Header Menu
     this.createHeaderCellMenu_();
   }
+
+  // Sort Indicators
+  if (grid.getConfiguration().AllowSorting) {
+    this.createSortIndicators_();
+  }
+    
+  // Header Cell Content
+  (align === pear.data.Align.RIGHT )? this.createHeaderCellContent_():'';
+
+    
+  
+  // Resize Handles
   if (grid.getConfiguration().AllowColumnResize) {
     this.createResizeHandle_();
   }
 
-  if (grid.getConfiguration().AllowSorting) {
-    this.createSortIndicators_();
-  }
   this.adjustContentCellWidth();
 };
 
+/**
+ * create content cell
+ * @private
+ */
+pear.ui.GridHeaderCell.prototype.createHeaderCellContent_ = function(){
+  // Header Cell Content
+  this.contentCell_ = goog.dom.createDom('div',
+        'pear-grid-cell-header-content',
+        this.getContentText()
+        );
+  var align = this.getDataColumn().getAlign();
+  var aligncss = (align === pear.data.Align.LEFT)? 'pear-grid-align-left':'pear-grid-align-right';
+  goog.dom.classes.add(this.contentCell_, aligncss); 
+  goog.dom.appendChild(this.getElement(), this.contentCell_);
+};
 
 /**
  * @private
@@ -507,6 +529,8 @@ pear.ui.GridHeaderCell.prototype.handleResize_ = function(ge) {
   var grid = this.getGrid();
   grid.setColumnWidth(pos, ge.size.width);
   this.adjustContentCellWidth();
+  // Give more realtime - resize
+  grid.refreshOnColumnResize();
 };
 
 
@@ -521,7 +545,7 @@ pear.ui.GridHeaderCell.prototype.handleResizeEnd_ = function(ge) {
   // clear style
   goog.style.setSize(this.getElement(), '','');
   goog.style.setPosition(this.getElement(), '','');
-  grid.refreshOnColumnResize();
+  // grid.refreshOnColumnResize();
 };
 
 
