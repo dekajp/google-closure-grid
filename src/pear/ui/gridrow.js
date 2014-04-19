@@ -216,7 +216,7 @@ pear.ui.Row.prototype.handleKeyEventInternal = function(e) {
   var returnResult = pear.ui.Row.superClass_.handleKeyEventInternal.call(this,e);
   switch(e.keyCode) {
     case goog.events.KeyCodes.TAB:
-      if (this.orientation_ == goog.ui.Container.Orientation.HORIZONTAL) {
+      if (this.getOrientation() == goog.ui.Container.Orientation.HORIZONTAL) {
         this.highlightNext();
       } else {
         return false;

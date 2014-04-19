@@ -1,10 +1,9 @@
 *.log
 *release*
-*.py
 peardeps.js
 
-build*
-src/build/pearbuild.py
+buildCommit.txt
+pearbuild.py
 
 out/
 

@@ -48,35 +48,28 @@ pear.ui.Cell.EventType = {
  * @type {number}
  * @private
  */
-goog.ui.Component.prototype.columnIndex_ = -1;
+pear.ui.Cell.prototype.columnIndex_ = -1;
 
 
 /**
  * @type {pear.data.Column?}
  * @private
  */
-goog.ui.Component.prototype.datacolumn_ = null;
-
-
-/**
- * @type {number}
- * @private
- */
-// goog.ui.Component.prototype.columnWidth_ = 0;
+pear.ui.Cell.prototype.datacolumn_ = null;
 
 
 /**
  * @type {pear.ui.Row?}
  * @private
  */
-goog.ui.Component.prototype.row_ = null;
+pear.ui.Cell.prototype.row_ = null;
 
 
 /**
  * @type {pear.ui.Grid?}
  * @private
  */
-goog.ui.Component.prototype.grid_ = null;
+pear.ui.Cell.prototype.grid_ = null;
 
 /**
  * @inheritDoc

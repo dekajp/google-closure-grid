@@ -46,11 +46,6 @@ goog.require('goog.object');
 goog.require('pear.data.DataTable');
 goog.require('pear.data.DataView');
 goog.require('pear.data.Column');
-goog.require('pear.plugin.ColumnMove');
-goog.require('pear.plugin.FilterMenu');
-goog.require('pear.plugin.FooterStatus');
-goog.require('pear.plugin.HeaderMenu');
-goog.require('pear.plugin.Pager');
 goog.require('pear.ui.Body');
 goog.require('pear.ui.BodyCanvas');
 goog.require('pear.ui.GridCell');
@@ -1753,9 +1748,9 @@ pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
  */
 pear.ui.Grid.prototype.debugRendering_ = function(start, end) {
 	//logger.info ('Rendering Rows '+start+ ' To '+end);
-	if (document.activeElement){
+	//if (document.activeElement){
 	//	logger.info ('Focus Element '+document.activeElement.id);
-	}
+	//}
 };
 
 /**
@@ -1919,7 +1914,7 @@ pear.ui.Grid.prototype.getViewportTopRowIndex = function(){
 
 /**
  * Whether Body has Vertical Scroll Visible
- * @return {Boolean?} true , if visible
+ * @return {boolean} true , if visible
  */
 pear.ui.Grid.prototype.isBodyHasVScroll = function(){
 	// Since Canvas height is determined by DataRows
@@ -1931,7 +1926,7 @@ pear.ui.Grid.prototype.isBodyHasVScroll = function(){
 
 /**
  * Whether body has Horizontal Scroll Visible
- * @return {Boolean?} true , if visible
+ * @return {boolean} true , if visible
  */
 pear.ui.Grid.prototype.isBodyHasHScroll = function(){
 	var bound = goog.style.getBounds(this.getBodyCanvas().getElement());

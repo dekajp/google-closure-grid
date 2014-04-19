@@ -27,10 +27,33 @@ pear.ui.GridFooterCell = function(opt_domHelper, opt_renderer) {
 goog.inherits(pear.ui.GridFooterCell, pear.ui.Cell);
 
 /**
+ * Element to hold content
+ * @type {Element}
+ */
+pear.ui.GridFooterCell.prototype.contentElement_ = null;
+
+
+/**
+ * set Content Element 
+ * @param {Element} element [description]
+ */
+pear.ui.GridFooterCell.prototype.setContentElement = function(element){
+  this.contentElement_=element;
+};
+
+/**
+ * get Content Element
+ * @return {Element}         [description]
+ */
+pear.ui.GridFooterCell.prototype.getContentElement = function(){
+  return this.contentElement_;
+};
+
+/**
  * Get Cell Data
  * @return {*} data
  */
-pear.ui.Cell.prototype.getCellData = function() {
+pear.ui.GridFooterCell.prototype.getCellContent = function() {
   return this.getModel();
 };
 
@@ -39,7 +62,23 @@ pear.ui.Cell.prototype.getCellData = function() {
  * Set Data
  * @param  {*} data
  */
-pear.ui.Cell.prototype.setCellData = function(data) {
+pear.ui.GridFooterCell.prototype.setCellContent = function(data) {
+  this.setModel(data);
+};
+/**
+ * Get Cell Data
+ * @return {*} data
+ */
+pear.ui.GridFooterCell.prototype.getCellData = function() {
+  return this.getModel();
+};
+
+
+/**
+ * Set Data
+ * @param  {*} data
+ */
+pear.ui.GridFooterCell.prototype.setCellData = function(data) {
   this.setModel(data);
 };
 
