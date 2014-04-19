@@ -115,7 +115,7 @@ pear.plugin.Pager.prototype.createPager_ = function() {
 pear.plugin.Pager.prototype.disposeInternal = function() {
   this.pagerComboBox_.dispose();
   this.pagerComboBox_ = null;
-  // this.footer_.remove();
+  goog.dom.removeNode(this.footer_);
   this.footer_ = null;
   goog.array.forEach(this.navControl_, function(nav) {
     nav.dispose();

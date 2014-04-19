@@ -108,17 +108,17 @@ pear.plugin.FilterMenu.prototype.init = function() {
  */
 pear.plugin.FilterMenu.prototype.disposeInternal = function() {
   this.headerCell_ = null;
-  this.titleContent_.remove();
+  goog.dom.removeNode(this.titleContent_);
   this.titleContent_ = null;
 
   this.filterInput_.dispose();
 
-  this.closeElement_.remove();
+  goog.dom.removeNode(this.closeElement_);
   this.closeElement_ = null;
   goog.events.unlisten(this.closeElement_, goog.events.EventType.CLICK,
                          this.close_);
 
-  this.element_.remove();
+  goog.dom.removeNode(this.element_);
   this.element_ = null;
 
   goog.array.forEach(this.headerMenuBtns_, function(mb) {

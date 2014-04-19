@@ -41,7 +41,7 @@ pear.plugin.FooterStatus.prototype.init = function() {
 pear.plugin.FooterStatus.prototype.disposeInternal = function() {
   this.footerStatus_.dispose();
   if (this.footer_) {
-    this.footer_.remove();
+    goog.dom.removeNode(this.footer_);
     this.footer_ = null;
   }
   pear.plugin.FooterStatus.superClass_.disposeInternal.call(this);
