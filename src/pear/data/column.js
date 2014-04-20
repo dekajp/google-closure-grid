@@ -156,6 +156,13 @@ pear.data.Column.prototype.getWidth=function(){
   return this.width_;
 };
 
+/**
+ * set width
+ * @param {number} width  width of column
+ */
+pear.data.Column.prototype.setWidth=function(width){
+  return this.width_=width;
+};
 
 /**
  * set column visibility

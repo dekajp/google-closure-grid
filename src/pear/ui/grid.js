@@ -555,9 +555,9 @@ pear.ui.Grid.prototype.setHeight = function(height) {
  */
 pear.ui.Grid.prototype.getColumnWidthAt = function(index) {
 	var coldata = this.getColumns_();
-	coldata[index]['width'] = coldata[index]['width'] ||
-			this.Configuration_.ColumnWidth;
-	return coldata[index]['width'];
+	coldata[index].setWidth(coldata[index].getWidth() ||
+			this.Configuration_.ColumnWidth );
+	return coldata[index].getWidth();
 };
 
 
@@ -570,7 +570,7 @@ pear.ui.Grid.prototype.getColumnWidthAt = function(index) {
  */
 pear.ui.Grid.prototype.applyColumnWidth_ = function(index, width, opt_render) {
 	var coldata = this.getColumns_();
-	coldata[index]['width'] = width || this.Configuration_.ColumnWidth;
+	coldata[index].setWidth(width || this.Configuration_.ColumnWidth);
 	// var headerCell = this.headerRow_.getChildAt(index);
 	// if (opt_render && headerCell) {
 	// 	headerCell.updateSizeAndPosition();
@@ -586,8 +586,8 @@ pear.ui.Grid.prototype.applyColumnWidth_ = function(index, width, opt_render) {
  */
 pear.ui.Grid.prototype.setColumnWidth = function(index, width) {
 	var coldata = this.getColumns_();
-	var diff = width - coldata[index]['width'];
-	this.applyColumnWidth_(index, coldata[index]['width'] + diff, true);
+	var diff = width - coldata[index].getWidth();
+	this.applyColumnWidth_(index, coldata[index].getWidth() + diff, true);
 
 	// this.updateWidthOfHeaderRow_();
 	// this.adjustWidthOfCanvas_();
