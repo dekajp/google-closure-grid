@@ -695,7 +695,7 @@ pear.ui.Grid.prototype.setDataView = function(dv) {
  * @public
  */
 pear.ui.Grid.prototype.getColumns = function() {
-	var cols = this.dataview_.getColumns();
+	var cols = this.getColumns_();
 	var columns = [];
 	goog.array.forEach(cols, function(c) {
 		var clone = goog.object.clone(c);
@@ -859,7 +859,7 @@ pear.ui.Grid.prototype.addDataRow = function(datarow) {
 	// defined row
 	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATAROWS_CHANGED);
 	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATASOURCE_CHANGED);
-	this.refresh();
+	this.refreshBody();
 };
 
 
@@ -951,7 +951,7 @@ pear.ui.Grid.prototype.setPageIndex = function(index) {
 	}
 	this.currentPageIndex_ = index;
 
-	this.refresh();
+	this.refreshBody();
 	var evt = new goog.events.Event(pear.ui.Grid.EventType.PAGE_INDEX_CHANGED,
 			this);
 	this.dispatchEvent(evt);
@@ -1201,11 +1201,13 @@ pear.ui.Grid.prototype.enterDocument = function() {
 	domHelper.appendChild(this.getElement(),focusElem);
 	this.focusElem_ = focusElem;
 
-	// Prepare the CSS Style
-	this.prepareCSSStyle_();
+	
 
 	// Register Events on Grid (this)
 	this.registerEventsOnGrid();
+
+	// Prepare the CSS Style
+	this.prepareCSSStyle_();
 
 	// Grid Rendering Started
 	this.renderGrid_();
@@ -1330,13 +1332,15 @@ pear.ui.Grid.prototype.prepareCSSStyle_ = function() {
 	var totalWidth=0;
 	var totalRowWidth=0;
 	goog.array.forEach(this.getColumns_(),function(col,index){
-		var width = col.getWidth();
-		totalWidth=totalWidth+width;
-		
-		cssText = "."+uniqCssId + " .col"+index+" { width:"+width+"px; left:"+left+"px; }";
-		domHelper.append(styleElem,cssText);
-		left = left + width +cellBorderBox.left +cellBorderBox.right;
-		totalRowWidth = totalRowWidth +  width + cellBorderBox.left +cellBorderBox.right;
+		if (col.getVisibility()){
+			var width = col.getWidth();
+			totalWidth=totalWidth+width;
+			
+			cssText = "."+uniqCssId + " .col"+index+" { width:"+width+"px; left:"+left+"px; }";
+			domHelper.append(styleElem,cssText);
+			left = left + width +cellBorderBox.left +cellBorderBox.right;
+			totalRowWidth = totalRowWidth +  width + cellBorderBox.left +cellBorderBox.right;
+		}
 	},this);
 
   
@@ -1354,15 +1358,18 @@ pear.ui.Grid.prototype.prepareCSSStyle_ = function() {
 
 };
 
+
 /**
- * 
- * @private
+ * set Column Visibility - show/hide column
+ * @param {string} columnId ColumnId of @link {pear.data.Column}
+ * @param {boolean} visible  true, to show the column
  */
-pear.ui.Grid.prototype.refreshCssStyle = function() {
-	var styleElem = this.getStyleElement();
-	this.getDomHelper().setTextContent(styleElem,"");
-	this.prepareCSSStyle_();
+pear.ui.Grid.prototype.setColumnVisibility = function(columnId,visible) {
+	var column = this.getColumnById(columnId);
+	column.setVisibility(visible);
+	this.refreshAll();
 };
+
 
 /**
  * Render Grid 
@@ -1442,17 +1449,19 @@ pear.ui.Grid.prototype.createSingleRowHeader_ = function() {
 pear.ui.Grid.prototype.createHeaderCells_ = function() {
 	var columns = this.getColumns_();
 	goog.array.forEach(columns, function(column, index) {
-		// create header cells here
-		var headerCell = new pear.ui.GridHeaderCell();
-		headerCell.setDataColumn(column);
-		headerCell.setCellIndex(index);
-		this.headerRow_.addCell(headerCell, true);
-		
-		var evt = new pear.ui.Grid.GridHeaderCellEvent(
-										pear.ui.Grid.EventType.AFTER_HEADERCELL_RENDER,
-										this, 
-										headerCell);
-		this.dispatchEvent(evt);
+		if (column.getVisibility()){
+			// create header cells here
+			var headerCell = new pear.ui.GridHeaderCell();
+			headerCell.setDataColumn(column);
+			headerCell.setCellIndex(index);
+			this.headerRow_.addCell(headerCell, true);
+			
+			var evt = new pear.ui.Grid.GridHeaderCellEvent(
+											pear.ui.Grid.EventType.AFTER_HEADERCELL_RENDER,
+											this, 
+											headerCell);
+			this.dispatchEvent(evt);
+		}
 	}, this);
 
 	var evt = new goog.events.Event(
@@ -1493,11 +1502,13 @@ pear.ui.Grid.prototype.createFooterRow_ = function() {
 pear.ui.Grid.prototype.createFooterCells_ = function() {
 	var columns = this.getColumns_();
 	goog.array.forEach(columns, function(column, index) {
-		// Create Footer Cells
-		var footerCell = new pear.ui.GridFooterCell();
-		footerCell.setDataColumn(column);
-		footerCell.setCellIndex(index);
-		this.footerRow_.addCell(footerCell, true);
+		if (column.getVisibility()){
+			// Create Footer Cells
+			var footerCell = new pear.ui.GridFooterCell();
+			footerCell.setDataColumn(column);
+			footerCell.setCellIndex(index);
+			this.footerRow_.addCell(footerCell, true);
+		}
 	}, this);
 };
 
@@ -1607,7 +1618,7 @@ pear.ui.Grid.prototype.setScrollOnFooterRow_ = function(scrollLeft) {
 pear.ui.Grid.prototype.syncScrollLeft_ = function() {
 	var scrollLeft = this.getScrollLeftOfBody_();
 	this.setScrollOnHeaderRow_(scrollLeft);
-	if ( this. showFooter_){
+	if ( this.showFooter_){
 		this.setScrollOnFooterRow_(scrollLeft);
 	}
 };
@@ -1715,11 +1726,13 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
 	}
 
 	goog.array.forEach(columns, function(datacolumn, index) {
-		var c = new pear.ui.GridCell();
-		c.setDataColumn(datacolumn);
-		c.setCellData(model[datacolumn.getId()]);
-		c.setCellIndex(index);
-		row.addCell(c, true);
+		if (datacolumn.getVisibility()){
+			var c = new pear.ui.GridCell();
+			c.setDataColumn(datacolumn);
+			c.setCellData(model[datacolumn.getId()]);
+			c.setCellIndex(index);
+			row.addCell(c, true);
+		}
 	},this);
 	this.registerEventsOnGridRow(row);
 };
@@ -1818,6 +1831,7 @@ pear.ui.Grid.prototype.renderCachedGridRowsInBodyCanvas_ = function(opt_redraw) 
 
 /**
  * Reposition each GridRow cells
+ * @deprecated 
  * @private
  */
 pear.ui.Grid.prototype.updateWidthOfGridRows = function(){
@@ -1833,24 +1847,22 @@ pear.ui.Grid.prototype.updateWidthOfGridRows = function(){
 /**
  * update width of each Footer Row Cells
  * @private
+ * @deprecated 
  */
 pear.ui.Grid.prototype.updateWidthOfFooterRow = function(){
 	this.footerRow_.repositionCells();
 	this.footerRow_.setPosition();
 };
 
-
 /**
- * update the Viewable area of the Body Canvas element
+ * 
  * @private
  */
-pear.ui.Grid.prototype.updateViewport_ = function() {
-	this.cacheGridRowsReadyForViewport_();
-	this.renderCachedGridRowsInBodyCanvas_();
-	this.restoreHighlightedRow_();
-	this.restoreSelectedRows_();
+pear.ui.Grid.prototype.refreshCssStyle = function() {
+	var styleElem = this.getStyleElement();
+	this.getDomHelper().setTextContent(styleElem,"");
+	this.prepareCSSStyle_();
 };
-
 
 /**
  * refresh header row
@@ -1880,23 +1892,59 @@ pear.ui.Grid.prototype.refreshOnColumnResize = function() {
 	this.refreshCssStyle();
 };
 
+
 /**
- * refresh grid , technically complete repaint
+ * update the Viewable area of the Body Canvas element
+ * @private
+ * @param  {boolean=} opt_redrawCanvas  optional parameter if true - redraw Canvas
+ *     remove each gridrow from canvas
+ */
+pear.ui.Grid.prototype.updateViewport_ = function(opt_redrawCanvas) {
+	this.cacheGridRowsReadyForViewport_();
+	this.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
+	this.restoreHighlightedRow_();
+	this.restoreSelectedRows_();
+};
+
+/**
+ * refresh grid , Just the Body of Grid
  * Clear the Rendered Grid Row Cache , Clear the Rendered Grid
  * Prepare Grid Rows from the DataSource
  * Set the height of canvas and cache Rendered Rows
  * Restore Highlight Rows and Restore Selected Rows
- *
+ * @private
  */
-pear.ui.Grid.prototype.refresh = function() {
+pear.ui.Grid.prototype.refreshBody = function() {
 	this.renderedGridRowsCache_ = [];
 	this.renderedGridRows_ = [];
 	this.transformDataRowsToGridRows_();
 	this.updateBodyCanvasHeight_();
-	this.cacheGridRowsReadyForViewport_();
-	this.renderCachedGridRowsInBodyCanvas_(true);
-	this.restoreHighlightedRow_();
-	this.restoreSelectedRows_();
+	this.updateViewport_(true);
+};
+
+/**
+ * Entire Body of Grid is refreshed - header , footer , body and CSS Style
+ */
+pear.ui.Grid.prototype.refreshAll = function() {
+	this.refreshCssStyle();
+	this.refreshHeader();
+	this.refreshBody();
+	if (this.getConfiguration().showFooter_){
+		this.refreshFooterRow();
+	}
+};
+
+
+/**
+ * refresh grid , Just the Body of Grid
+ * Clear the Rendered Grid Row Cache , Clear the Rendered Grid
+ * Prepare Grid Rows from the DataSource
+ * Set the height of canvas and cache Rendered Rows
+ * Restore Highlight Rows and Restore Selected Rows
+ * @public
+ */
+pear.ui.Grid.prototype.refresh = function() {
+	this.refreshBody();
 };
 
 

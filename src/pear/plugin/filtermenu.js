@@ -269,13 +269,6 @@ pear.plugin.FilterMenu.prototype.handleApplyFilter_ = function(be) {
  * @private
  */
 pear.plugin.FilterMenu.prototype.handleCancelFilter_ = function(be) {
-  /*var grid = this.getGrid();
-  var dv = grid.getDataView();
-  var column = this.headerCell_.getCellData();
-  dv.clearColumnFilter(column.id );
-  dv.applyFilter();
-  grid.refresh();*/
-
   var evt = new pear.plugin.FilterMenuEvent(
                           pear.plugin.FilterMenu.EventType.CLEAR_FILTER,
       this.getGrid(), this.headerCell_, '');

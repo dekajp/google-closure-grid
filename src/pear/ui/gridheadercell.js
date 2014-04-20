@@ -165,7 +165,7 @@ pear.ui.GridHeaderCell.prototype.getContentCell = function() {
  * @public
  */
 pear.ui.GridHeaderCell.prototype.getContentText = function() {
-  return this.getDataColumn()['headerText'];
+  return this.getDataColumn().getHeaderText();
 };
 
 
@@ -176,7 +176,7 @@ pear.ui.GridHeaderCell.prototype.getContentText = function() {
  * @public
  */
 pear.ui.GridHeaderCell.prototype.getColumnId = function() {
-  return this.getDataColumn()['id'];
+  return this.getDataColumn().getId();
 };
 
 

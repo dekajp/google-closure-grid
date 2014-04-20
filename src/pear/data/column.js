@@ -14,17 +14,17 @@ goog.require('goog.ui.IdGenerator');
  * @param {string=} opt_id       column id should be unique
  * @param {pear.data.DataType=} opt_datatype DataType
  * @param {number=} opt_width    width of column
- * @param {number=} opt_align    text Align of column data
+ * @param {number=} opt_align    text align of column data
  * @constructor
  * @extends {goog.events.EventTarget}
  */
 pear.data.Column = function(content,opt_id,opt_width,opt_datatype,opt_align) {
   goog.Disposable.call(this);
-  this.headerText=content;
+  this.headerText_=content;
   this.id = opt_id || goog.ui.IdGenerator.getInstance().getNextUniqueId();
   this.dataType = opt_datatype || pear.data.DataTable.DataType.TEXT;
-  this.width=opt_width || 75;
-  this.align = opt_align || pear.data.Align.LEFT;
+  this.width_=opt_width || 75;
+  this.align_ = opt_align || pear.data.Align.LEFT;
 };
 goog.inherits(pear.data.Column, goog.events.EventTarget);
 
@@ -44,7 +44,7 @@ pear.data.DataType = {
 
 
 /**
- * Align
+ * align_
  * @enum {string}
  * @public
  */
@@ -59,7 +59,7 @@ pear.data.Align = {
  * @type {string}
  * @private
  */
-pear.data.Column.prototype.headerText = '';
+pear.data.Column.prototype.headerText_ = '';
 
 
 /**
@@ -70,11 +70,11 @@ pear.data.Column.prototype.headerText = '';
 pear.data.Column.prototype.id = '';
 
 /**
- * Align
+ * align_
  * @type {string}
  * @private
  */
-pear.data.Column.prototype.align = pear.data.Align.LEFT;
+pear.data.Column.prototype.align_ = pear.data.Align.LEFT;
 
 /**
  * datatype of column
@@ -84,11 +84,18 @@ pear.data.Column.prototype.align = pear.data.Align.LEFT;
 pear.data.Column.prototype.dataType = pear.data.DataType.TEXT;
 
 /**
- * width of column
+ * width_ of column
  * @type {number}
  * @private
  */
-pear.data.Column.prototype.width = -1;
+pear.data.Column.prototype.width_ = -1;
+
+/**
+ * set visibility of column
+ * @type {boolean}
+ * @private
+ */
+pear.data.Column.prototype.visible_ = true;
 
 /**
  * formatting function 
@@ -110,7 +117,7 @@ pear.data.Column.prototype.formatterFnScope = null;
  * @public
  */
 pear.data.Column.prototype.getHeaderText=function(){
-  return this.headerText;
+  return this.headerText_;
 };
 
 /**
@@ -132,21 +139,39 @@ pear.data.Column.prototype.getDataType=function(){
 };
 
 /**
- * Get Align
- * @return {pear.data.Align} Text Align of Column
+ * Get align_
+ * @return {pear.data.align_} Text align_ of Column
  * @public
  */
 pear.data.Column.prototype.getAlign=function(){
-  return this.align;
+  return this.align_;
 };
 
 /**
- * get Column Width
+ * get Column width_
  * @return {number} [description]
  * @public
  */
 pear.data.Column.prototype.getWidth=function(){
-  return this.width;
+  return this.width_;
+};
+
+
+/**
+ * set column visibility
+ * @param {boolean} visible 
+ */
+pear.data.Column.prototype.setVisibility=function(visible){
+  return this.visible_ = visible;
+};
+
+/**
+ * get Column visibility
+ * @return {boolean}
+ * @public
+ */
+pear.data.Column.prototype.getVisibility=function(){
+  return this.visible_;
 };
 
 /**
@@ -213,10 +238,10 @@ pear.data.Column.prototype.getColumnFooterAggregatesFn = function(){
  * @protected
  */
 pear.data.Column.prototype.disposeInternal = function() {
-  delete this.headerText;
+  delete this.headerText_;
   delete this.id;
   delete this.dataType;
-  delete this.align;
+  delete this.align_;
 
   this.formatter =null;
   this.formatterFn=null;

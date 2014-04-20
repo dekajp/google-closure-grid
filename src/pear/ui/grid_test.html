@@ -109,7 +109,7 @@
       assertEquals('After header column resize',previousWidth+100, newWidth);
       goog.testing.events.fireMouseMoveEvent(resizableHandle,newCoord);
       goog.testing.events.fireMouseUpEvent(resizableHandle);
-      //grid.refresh();
+     
       var firstrow = grid.getGridRowAt(0);
       var firstcell = firstrow.getCellAt(0);
       var bound = goog.style.getComputedStyle(firstcell.getElement(),'width');
@@ -269,7 +269,17 @@
       // 
     }
 
-    
+    function testColumnVisibility(){
+      // Test Column Visibility
+    };
+
+    function testRefresh(){
+      // test Refresh
+    }
+
+    function testRefreshAll(){
+      // test Refresh All
+    }
   </script>
 </body>
 </html>

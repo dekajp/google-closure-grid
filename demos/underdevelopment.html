@@ -1,14 +1,166 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <title>pear.ui.Grid - Built in Google Closure</title>
-  <link rel="stylesheet" type="text/css" href="../lib/closure-library/closure/goog/demos/css/demo.css">
+  <title>Google Closure Grid - pear.ui.Grid</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
+
+  <link rel="stylesheet" href="css/demo.css" />
+  <link rel="stylesheet" href="../src/css/grid.css" />
+  
  
+ <style>
+  body {
+  background-color: white;
+  font: normal 10pt Arial, sans-serif;
+  }
+
+ </style>
+  <script src="../lib/closure-library/closure/goog/base.js"></script>
+  <script src="../src/bin/release/pear.grid.js"></script>
+  <script>
+    goog.require('goog.debug.DivConsole');
+    goog.require('goog.debug.LogManager');
+    goog.require('goog.dom.forms');
+    goog.require('pear.ui.Grid');
+    
+  </script>
+
+  <style>
+    
+  </style>
 </head>
 <body>
-  <h1>pear.ui.Grid - Built in Google Closure</h1>
-  <p> Sorry !!!  - this demo is under development. please check back</p>
+   <fieldset class="goog-debug-panel">
+    <legend>Simple Grid</legend>
+    <div id="">
+      <li> Load grid with 1000 - 50K records </li>
+      <li> Use Keyboard (Arrow Keys) For Navigation </li>
+      <li> Resize Columns </li>
+    </div>
+  </fieldset>
+
+  <fieldset class="goog-debug-panel">
+    <legend>Data / Debug</legend>
+    <div id="">
+      <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  /> </div>
+      <div class="config-item"> Show/Hide Total Column :
+      </div>
+    </div>
+  </fieldset>
  
+  <fieldset class="goog-debug-panel">
+    <legend>Action</legend>
+    <div id="">
+    <input class="config-item" type="button" id="id_reload" value="Reload"  />
+    <input class="config-item" type="button" id="id_cleareventlog" value="Clear Event Log" onclick="logconsole.clear()" />
+  </fieldset>
+  <br>
+  <!-- This div will have a Sample Component added to its contents. -->
+  <div id="target1">
+  </div>
+  <fieldset class="goog-debug-panel">
+    <legend>Event Log</legend>
+    <div id="log"></div>
+  </fieldset>
+  <div id="perf"></div>
 </body>
+
+ <script>
+
+    var timer = goog.now();
+
+    // Set up a logger.
+    goog.debug.LogManager.getRoot().setLevel(goog.log.Level.ALL);
+    var logger = goog.log.getLogger('demo');
+    var logconsole = new goog.debug.DivConsole(goog.dom.getElement('log'));
+    logconsole.setCapturing(true);
+
+    var GRID_EVENTS = goog.object.getValues(pear.ui.Grid.EventType);
+    goog.log.fine(logger, 'Listening for: ' + GRID_EVENTS.join(', ')+ ' .');
+
+    function logEvent(e) {
+      var component = e.target;
+     // var caption = (typeof component.getCaption == 'function') ?
+     //     component.getCaption() : component.getId();
+      logger.info(' dispatched: ' + e.type);
+      if (isChecked('id_consoledir')){
+        console.dir(e);
+      }
+    }
+
+  function isChecked(id,name){
+    var elem = goog.dom.getElement(id);
+    return  elem.checked;
+  };
+
+  var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
+  var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
+
+  var grid;
+  var columns = [
+    new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
+    new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
+    new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME),
+    new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
+  ];
+
+  var load = function () {
+    if (grid){
+      grid.dispose();
+    }
+    var data = [];
+    var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
+    var temp;
+    for (var i = 0; i < parseInt(limit,10); i++) {
+      data[i] = {
+        orderno:  i +1
+      };
+      temp = Math.round(Math.random() * 9);
+     
+      data[i].item = item[temp];
+      data[i].unitprice = unitprice[temp];
+      data[i].quantity = Math.round(Math.random() * 100);
+      data[i].total = data[i].unitprice * data[i].quantity;
+      data[i].processed= (i % 5 === 0);
+      data[i].created = '11/21/2013';
+    }
+
+    var start = +new Date();  // log start timestamp
+
+
+    grid = new pear.ui.Grid();
+    var config = {
+      AllowColumnResize: true,
+      AllowAlternateRowHighlight: false,
+      ShowCellBorder:true
+    };
+    config = grid.setConfiguration(config);
+
+    grid.setWidth(800);
+    grid.setHeight(400);
+    grid.setColumns(columns);
+    grid.setDataRows(data);
+    
+    goog.events.listen(grid, GRID_EVENTS, logEvent);
+
+    grid.render(goog.dom.getElement('target1'));
+    var end =  +new Date();  
+    var diff = end - start;
+    console.log('Load Time : '+diff+'ms');
+
+    logconsole.clear();
+    goog.log.fine(logger, 'Loaded '+limit+' rows. ');
+  };
+
+  goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
+
+  load();
+  
+ </script>
+
 </html>
