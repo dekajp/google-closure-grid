@@ -32,6 +32,7 @@ pear.ui.Plugin.prototype.enabled_ = true;
 
 
 /**
+ * Get Instance of Grid , on which this plugin is registered
  * @return {pear.ui.Grid}
  * @public
  */

@@ -6,8 +6,8 @@ goog.require('pear.ui.GridCellRenderer');
 
 
 /**
- * DataCell
- *
+ * GridCell
+ * 
  * @param {goog.ui.ControlRenderer=} opt_renderer Renderer used to render or
  *     decorate the component; defaults to {@link goog.ui.ControlRenderer}.
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper, used for
@@ -54,25 +54,28 @@ pear.ui.GridCell.prototype.getContentElement = function(){
  * Get Cell Data
  * @return {*} data
  */
-pear.ui.GridCell.prototype.getCellContent = function() {
-  return this.getModel();
-};
+//pear.ui.GridCell.prototype.getCellContent = function() {
+//  return this.getModel();
+//};
 
 
 /**
  * Set Data
  * @param  {*} data
  */
-pear.ui.GridCell.prototype.setCellContent = function(data) {
-  this.setModel(data);
-};
+//pear.ui.GridCell.prototype.setCellContent = function(data) {
+//  this.setModel(data);
+//};
 
 /**
  * Get Cell Data
  * @return {*} data
  */
 pear.ui.GridCell.prototype.getCellData = function() {
-  return this.getModel();
+  var rowview = this.getRow().getDataRowView();
+  var model = rowview.getRowData();
+  return model[this.getDataColumn().getId()];
+  //return this.getModel();
 };
 
 
@@ -81,7 +84,7 @@ pear.ui.GridCell.prototype.getCellData = function() {
  * @param  {*} data
  */
 pear.ui.GridCell.prototype.setCellData = function(data) {
-  this.setModel(data);
+  //this.setModel(data);
 };
 
 /**
@@ -91,7 +94,7 @@ pear.ui.GridCell.prototype.setCellData = function(data) {
  */
 pear.ui.GridCell.prototype.getContent = function() {
   
-  return String(this.getCellContent());
+  return String(this.getCellData());
 };
 
 /**
@@ -119,6 +122,17 @@ pear.ui.GridCell.prototype.enterDocument = function() {
   this.applyFormatting();
 };
 
+
+/**
+ * Remove Content Element
+ */
+pear.ui.GridCell.prototype.removeContent = function() {
+ goog.dom.removeNode(this.contentElement_);
+};
+
+//pear.ui.GridCell.prototype.createContentElement = function() {
+// this.getRenderer().createContentDom(this,this.getElement());
+//};
 
 /**
  * @override

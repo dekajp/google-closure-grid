@@ -83,7 +83,11 @@ pear.ui.BodyCanvas.prototype.enableFocusHandling_ = function(enable) {
 				goog.events.EventType.BLUR, this.handleBlur, false, this).
 			listenWithScope(this.getKeyHandler(),
 				goog.events.KeyHandler.EventType.KEY,
-				this.handleKeyEvent, false, this);
+				this.handleKeyEvent, false, this).
+			listenWithScope(keyTarget, 
+					goog.events.EventType.DBLCLICK,
+						this.handleDoubleClick, false, self);
+
 	} else {
 		handler.
 			unlisten(keyTarget,
@@ -96,6 +100,10 @@ pear.ui.BodyCanvas.prototype.enableFocusHandling_ = function(enable) {
 	}
 };
 
+
+pear.ui.BodyCanvas.prototype.handleDoubleClick = function(ge){
+	// no op
+};
 
 /**
  * Handles focus events raised when the key event target receives

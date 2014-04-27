@@ -514,6 +514,8 @@ pear.ui.Resizable.prototype.disposeInternal = function() {
   }
   this.handleDraggers_ = {};
   for (var position in this.handlers_) {
+    goog.events.unlisten(this.handlers_[position], goog.events.EventType.MOUSEDOWN,
+          this.handleEvents_);
     goog.dom.removeNode(this.handlers_[position]);
   }
   this.handlers_ = {};

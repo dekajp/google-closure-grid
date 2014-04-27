@@ -36,7 +36,6 @@ goog.inherits(pear.ui.GridRow, pear.ui.Row);
  */
 pear.ui.GridRow.prototype.top_ = 0;
 
-
 /**
  * [selected_ description]
  * @type {boolean}

@@ -110,6 +110,7 @@ pear.ui.Cell.prototype.getRow = function() {
 
 
 /**
+ * Get Instance of Grid , which owns this Cell
  * @return {pear.ui.Grid?}
  */
 pear.ui.Cell.prototype.getGrid = function() {

@@ -109,7 +109,7 @@ pear.ui.Row.prototype.getCellAt = function(index) {
 
 
 /**
- * return grid
+ * Get Instance of Grid , which owns this Row
  * @return {pear.ui.Grid}
 */
 pear.ui.Row.prototype.getGrid = function() {
@@ -251,6 +251,17 @@ pear.ui.Row.prototype.handleClickEvent_ = function(be) {
   }
 };
 
+/**
+ * Returns the child control that owns the given DOM node, or null if no such
+ * control is found.
+ * @param {Node} node DOM node whose owner is to be returned.
+ * @return {goog.ui.Control?} Control hosted in the container to which the node
+ *     belongs (if found)
+ * @public
+ */
+pear.ui.Row.prototype.getNodeOwnerControl = function(node) {
+  return pear.ui.Row.superClass_.getOwnerControl.call(this,node);
+};
 
 /**
  * @override

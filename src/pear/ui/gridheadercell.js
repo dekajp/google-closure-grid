@@ -236,10 +236,6 @@ pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function() {
   var grid = this.getGrid();
   var align = this.getDataColumn().getAlign();
 
-  
-  // Header Cell Content
-  (align === pear.data.Align.LEFT )? this.createHeaderCellContent_():'';
-
   // Indicators
   this.createHeaderCellIndicatorPlaceHolder_();
 
@@ -252,16 +248,14 @@ pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function() {
   if (grid.getConfiguration().AllowSorting) {
     this.createSortIndicators_();
   }
-    
-  // Header Cell Content
-  (align === pear.data.Align.RIGHT )? this.createHeaderCellContent_():'';
 
-    
-  
   // Resize Handles
   if (grid.getConfiguration().AllowColumnResize) {
     this.createResizeHandle_();
   }
+
+  this.createHeaderCellContent_();
+  
 
   this.adjustContentCellWidth();
 };
@@ -272,14 +266,24 @@ pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function() {
  */
 pear.ui.GridHeaderCell.prototype.createHeaderCellContent_ = function(){
   // Header Cell Content
-  this.contentCell_ = goog.dom.createDom('div',
+  var contentElem = goog.dom.createDom('div',
         'pear-grid-cell-header-content',
         this.getContentText()
         );
   var align = this.getDataColumn().getAlign();
-  var aligncss = (align === pear.data.Align.LEFT)? 'pear-grid-align-left':'pear-grid-align-right';
-  goog.dom.classes.add(this.contentCell_, aligncss); 
-  goog.dom.appendChild(this.getElement(), this.contentCell_);
+  var aligncss = (align === pear.data.Column.Align.LEFT)? 'pear-grid-align-left':'pear-grid-align-right';
+  goog.dom.classes.add(contentElem, aligncss);
+
+  if(align === pear.data.Column.Align.RIGHT ){
+    this.contentCell_= (/**@type {Element} */ ( this.getElement().appendChild(contentElem))); 
+  }else if (align === pear.data.Column.Align.LEFT ){
+    this.contentCell_ = (/**@type {Element} */(this.getElement().insertBefore(contentElem,
+      this.contentIndicator_))); 
+  }else{
+    // no-op
+  }
+
+  
 };
 
 /**
@@ -571,11 +575,18 @@ pear.ui.GridHeaderCell.prototype.toggleSortDirection = function() {
   }
 };
 
+pear.ui.GridHeaderCell.prototype.disposeEvents = function(){
+  goog.events.unlisten(this.getElement(), goog.events.EventType.CLICK,
+          this.handleActive_);
+};
+  
 
 /**
  * @override
  */
 pear.ui.GridHeaderCell.prototype.disposeInternal = function() {
+  this.disposeEvents();
+
   if (this.resizable_) {
     this.resizable_.dispose();
   }

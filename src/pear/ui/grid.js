@@ -31,6 +31,9 @@
 goog.provide('pear.ui.Grid');
 goog.provide('pear.ui.Grid.GridDataCellEvent');
 goog.provide('pear.ui.Grid.GridHeaderCellEvent');
+goog.provide('pear.ui.Grid.GridSortCellEvent');
+goog.provide('pear.ui.Grid.GridRowEvent');
+
 
 goog.require('goog.events.EventType');
 goog.require('goog.Timer');
@@ -57,18 +60,20 @@ goog.require('pear.ui.GridRow');
 goog.require('pear.ui.Header');
 goog.require('pear.ui.Footer');
 goog.require('pear.ui.Plugin');
-
+goog.require('pear.ui.editor.IEditor');
+goog.require('pear.ui.editor.CellEditorMediator');
 
 /**
  * @classdesc 
  * Table/Grid built in Google Closure
  * <ul>
  *   <li> Data Virtualization ~ 100,000 Rows </li>
- *   <li> Active Cell and Active Row Highlight </li>
+ *   <li> Active Cell and Active Row Highlight , Row Selection</li>
  *   <li> Sorting , Column Resizing , Header Cell Menu , Paging  </li>
  *   <li> Column Formatting , Keyboard Navigation , Data Filter </li>
  *   <li> Column Move </li>
- *   <li> Footer Row </li>
+ *   <li> Sticky Footer Row </li>
+ *   <li> Cell Editing </li>
  * </ul>
  *
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper.
@@ -257,13 +262,11 @@ pear.ui.Grid.prototype.Configuration_ = {
  * @enum {string}
  */
 pear.ui.Grid.EventType = {
-	BEFORE_HEADER_CELL_CLICK: 'before-header-cell-click',
-	AFTER_HEADER_CELL_CLICK: 'after-header-cell-click',
+	HEADER_CELL_ON_CLICK: 'header-cell-on-click',
 	SORT: 'on-sort',
 	PAGE_INDEX_CHANGED: 'on-page-index-change',
 	PAGE_SIZE_CHANGED: 'on-page-size-change',
-	DATACELL_BEFORE_ACTION: 'datacell-before-action',
-	DATACELL_AFTER_ACTION: 'datacell-after-action',
+	DATACELL_ON_ACTION: 'datacell-on-action',
 	HEADERCELLS_RENDERED: 'headercells-rendered',
 	AFTER_HEADERCELL_RENDER: 'after-headercell-render',
 	DATAROWS_CHANGED: 'on-grid-datarows-changed',
@@ -273,6 +276,7 @@ pear.ui.Grid.EventType = {
 	GRIDROW_UNHIGHLIGHT: 'on-gridrow-unhighlighted',
 	GRIDROW_SELECT: 'on-gridrow-select',
 	GRIDROW_UNSELECT: 'on-gridrow-unselect',
+	GRIDROW_RENDERED: 'on-gridrow-rendered',
 	RENDERED: 'rendered',
 	HEADER_CELL_MENU_CLICK: 'header-cell-menu-click'
 };
@@ -378,6 +382,18 @@ pear.ui.Grid.prototype.showFooter_ = false;
  */
 pear.ui.Grid.prototype.trackMouseOver_ = true;
 
+/**
+ * Active Editor - there can only be one
+ * @private
+ * @type { pear.ui.editor.CellEditorMediator }
+ */
+pear.ui.Grid.prototype.editorMediator_ = null;
+
+/**
+ * title
+ * @type {string}
+ */
+pear.ui.Grid.prototype.title_ ='';
 
 /**
  * Logging object.
@@ -387,6 +403,22 @@ pear.ui.Grid.prototype.trackMouseOver_ = true;
 pear.ui.Grid.prototype.logger =
 		goog.log.getLogger('pear.ui.Grid');
 
+
+/**
+ * set Title of Grid
+ * @param {string} title [description]
+ */
+pear.ui.Grid.prototype.setTitle = function (title){
+	this.title_ = title;
+}
+
+/**
+ * Get Grid Title
+ * @return {string} [description]
+ */
+pear.ui.Grid.prototype.getTitle = function (){
+	return this.title_ ;
+}
 
 /**
  * configuration object of grid
@@ -410,6 +442,7 @@ pear.ui.Grid.prototype.getBody = function() {
 
 
 /**
+ * Body Canvas
  * @return {pear.ui.BodyCanvas}
  * @public
  */
@@ -746,9 +779,7 @@ pear.ui.Grid.prototype.setColumns = function(cols) {
 	});
 	this.getDataView().setColumns(columns);
 
-	var evt = new goog.events.Event(pear.ui.Grid.EventType.COLUMNS_CHANGED,
-			this);
-	this.dispatchEvent(evt);
+	this.dispatchGridEvent_(pear.ui.Grid.EventType.COLUMNS_CHANGED);
 };
 
 
@@ -937,6 +968,21 @@ pear.ui.Grid.prototype.getPageSize = function() {
 	return this.getConfiguration().PageSize;
 };
 
+/**
+ * Set the page size configuration
+ * @public
+ */
+pear.ui.Grid.prototype.setPageSize = function(size) {
+	this.getConfiguration().PageSize = size;
+	if (this.currentPageIndex_ === 0 ){
+		this.refreshBody();
+	}else{
+		this.setPageIndex(0);
+	}
+	var evt = new goog.events.Event(pear.ui.Grid.EventType.PAGE_SIZE_CHANGED,
+			this);
+	this.dispatchEvent(evt);
+};
 
 /**
  * Set the current page index of grid , Also dispatches PageIndex Change Event
@@ -947,6 +993,7 @@ pear.ui.Grid.prototype.setPageIndex = function(index) {
 	if (index === this.currentPageIndex_ ||
 			index < 0 ||
 			index > this.getMaxPageIndex()) {
+		this.refreshBody();
 		return;
 	}
 	this.currentPageIndex_ = index;
@@ -1096,6 +1143,26 @@ pear.ui.Grid.prototype.setConfiguration = function(config) {
 		this.Configuration_[key] = value;
 	},this);
 	return this.Configuration_;
+};
+
+/**
+ * get Editor Associated with the Column
+ * @public
+ */
+pear.ui.Grid.prototype.setEditor=function(fn){
+  this.editorFn = fn
+};
+
+/**
+ * get Editor Associated with the Column
+ * @return {pear.ui.editor.IEditor} Editor
+ * @public
+ */
+pear.ui.Grid.prototype.getEditor=function(column){
+  if (this.editorFn){
+  	return this.editorFn.call(this,column);
+  }
+  return null;
 };
 
 
@@ -1325,7 +1392,7 @@ pear.ui.Grid.prototype.prepareCSSStyle_ = function() {
 	// pear-grid-cell-data
 	// TODO : get the border calculation
 	cellHeight = this.getConfiguration().RowHeight-contentPaddingBox.top-contentPaddingBox.bottom - 2;
-	cssText = "."+uniqCssId + " .pear-grid-cell-data-content { height:"+cellHeight+"px;}";
+	cssText = "."+uniqCssId + " .pear-grid-cell-data-content { line-height:"+cellHeight+"px;}";
 	domHelper.append(styleElem,cssText);
 
 	var left =0;
@@ -1718,18 +1785,15 @@ pear.ui.Grid.prototype.restoreSelectedRows_ = function() {
  * @param {pear.ui.GridRow} row
  */
 pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
-	var rowview = row.getDataRowView();
-	var model = rowview.getRowData();
 	var columns = this.getColumns_();
+	// TODO : remove children , necessary ?
 	if (row.getChildCount() > 0) {
 		row.removeChildren(true);
 	}
-
 	goog.array.forEach(columns, function(datacolumn, index) {
 		if (datacolumn.getVisibility()){
 			var c = new pear.ui.GridCell();
 			c.setDataColumn(datacolumn);
-			c.setCellData(model[datacolumn.getId()]);
 			c.setCellIndex(index);
 			row.addCell(c, true);
 		}
@@ -1746,9 +1810,14 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
 pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
 	for (var i in this.renderedGridRowsCache_) {
 		if (i < start || i > end) {
-			this.renderedGridRowsCache_[i].removeChildren(true);
-			this.bodyCanvas_.removeChild(this.renderedGridRowsCache_[i], true);
-			delete this.renderedGridRowsCache_[i];
+			if (this.isActiveEditorGridRow(this.renderedGridRowsCache_[i])){
+				// Row is Active Editor
+			}else{
+				this.renderedGridRowsCache_[i].removeChildren(true);
+				this.bodyCanvas_.removeChild(this.renderedGridRowsCache_[i], true);
+				delete this.renderedGridRowsCache_[i];
+			}
+			
 		}
 	}
 };
@@ -1803,7 +1872,13 @@ pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
 	var gridrows = this.getGridRows();
 	for (i = startIndex; (i < endIndex && i < gridrows.length); i++) {
 		if (!this.renderedGridRowsCache_[i]) {
-			this.renderedGridRows_[i] = this.getGridRowAt(i);
+			var gridrow = this.getGridRowAt(i);
+			if (this.isActiveEditorGridRow(gridrow)){
+				// Gridrow should already exists in Cache
+			}else{
+				this.renderedGridRows_[i] = gridrow;
+			}
+			
 		}
 	}
 	this.removeRowsFromRowModelCache_(startIndex, endIndex);
@@ -1822,8 +1897,8 @@ pear.ui.Grid.prototype.renderCachedGridRowsInBodyCanvas_ = function(opt_redraw) 
 	}
 	goog.array.forEach(this.renderedGridRows_, function(datarow, index) {
 		// Render Cell on Canvas on demand for Performance
-		this.renderDataRowCells_(datarow);
 		this.bodyCanvas_.addChild(datarow, true);
+		this.renderDataRowCells_(datarow);
 		this.renderedGridRowsCache_[index] = datarow;
 	},this);
 	this.renderedGridRows_ = [];
@@ -1895,6 +1970,7 @@ pear.ui.Grid.prototype.refreshOnColumnResize = function() {
 
 /**
  * update the Viewable area of the Body Canvas element
+ * 
  * @private
  * @param  {boolean=} opt_redrawCanvas  optional parameter if true - redraw Canvas
  *     remove each gridrow from canvas
@@ -1909,17 +1985,27 @@ pear.ui.Grid.prototype.updateViewport_ = function(opt_redrawCanvas) {
 /**
  * refresh grid , Just the Body of Grid
  * Clear the Rendered Grid Row Cache , Clear the Rendered Grid
+ * Active Editor - will rollback
  * Prepare Grid Rows from the DataSource
  * Set the height of canvas and cache Rendered Rows
  * Restore Highlight Rows and Restore Selected Rows
  * @private
+ * @param  {boolean=} opt_keepeditoralive 
  */
-pear.ui.Grid.prototype.refreshBody = function() {
+pear.ui.Grid.prototype.refreshBody = function(opt_keepeditoralive) {
+	if (opt_keepeditoralive){
+		this.closeActiveEditor();
+	}
+
 	this.renderedGridRowsCache_ = [];
 	this.renderedGridRows_ = [];
 	this.transformDataRowsToGridRows_();
 	this.updateBodyCanvasHeight_();
 	this.updateViewport_(true);
+		// Focus 
+	if (!this.isFocusOnGrid()){
+		this.setFocusOnGrid();
+	}
 };
 
 /**
@@ -2018,6 +2104,62 @@ pear.ui.Grid.prototype.scrollCellIntoView = function(gridrow) {
 	this.body_.getElement().scrollTop = scrollTopBody;
 	this.body_.getElement().scrollLeft = scrollLeftBody;
 };
+
+
+// Editor
+
+/**
+ * Get Active Editor Grid Row
+ * @return {pear.ui.GridRow?} [description]
+ */
+pear.ui.Grid.prototype.getActiveEditorGridRow = function(){
+	if (this.editorMediator_ && this.editorMediator_.isActive()){
+		return this.editorMediator_.getGridRow();
+	}
+	return null;
+};
+
+/**
+ * Is GridRow currently hosting Active Editor
+ * @param  {pear.ui.GridRow}  gridrow [description]
+ * @return {boolean}         [description]
+ */
+pear.ui.Grid.prototype.isActiveEditorGridRow = function(gridrow){
+	var result = this.getActiveEditorGridRow() && 
+				this.getActiveEditorGridRow().getId() === gridrow.getId() && 
+			gridrow.isInDocument();
+	return !!result;
+};
+
+/**
+ * Close Editor
+ */
+pear.ui.Grid.prototype.closeActiveEditor = function(){
+	if (this.editorMediator_){
+		this.editorMediator_.dispose();
+	}
+};
+
+/**
+ * Get Editor Mediator
+ * @return {pear.ui.editor.CellEditorMediator} [description]
+ */
+pear.ui.Grid.prototype.getEditorMediator = function(){
+	if (this.editorMediator_){
+		this.editorMediator_.dispose();
+	}
+	this.editorMediator_ = new pear.ui.editor.CellEditorMediator(this);
+	return this.editorMediator_;
+};
+
+pear.ui.Grid.prototype.showCellEditor = function(gridcell){
+	if (this.getEditor(gridcell.getDataColumn())){
+		var cellEditorMediator = this.getEditorMediator();
+		cellEditorMediator.ActivateCellEditor(gridcell);
+	}
+};
+
+
 
 // Row Selection
 
@@ -2200,8 +2342,9 @@ pear.ui.Grid.prototype.setFocusOnGrid = function() {
  * @return {boolean|null} true, if grid is in focus
  */
 pear.ui.Grid.prototype.isFocusOnGrid = function() {
-	return this.focusElem_ ==
-         goog.dom.getOwnerDocument(this.focusElem_).activeElement;
+	return (
+  goog.dom.getActiveElement(goog.dom.getOwnerDocument(this.focusElem_)) ==
+      this.focusElem_ );
 };
 
 
@@ -2308,6 +2451,43 @@ pear.ui.Grid.prototype.setHighlightedIndexFromKeyEvent = function(index) {
 
 
 /**
+ * Returns the GridRow that owns the given DOM node, or null if no such
+ * GridRow is found.
+ * @param {Node} node DOM node whose owner is to be returned.
+ * @return {null|pear.ui.GridRow} GridRow Container
+ * @protected
+ */
+pear.ui.Grid.prototype.getOwnerGridRow = function(node) {
+    var elem = this.getElement();
+    while (node && node !== elem) {
+      var id = node.id;
+      var row = this.bodyCanvas_.getChild(id)
+      if (row){
+      	return (/** @type {pear.ui.GridRow} */ (row));
+      }
+      node = node.parentNode;
+    }
+  return null;
+};
+
+/**
+ * Returns the GridCell that owns the given DOM node, or null if no such
+ * GridCell is found.
+ * @param {Node} node DOM node whose owner is to be returned.
+ * @return {null|pear.ui.GridCell} GridCell Control
+ * @protected
+ */
+pear.ui.Grid.prototype.getOwnerGridCell = function(node) {
+    var elem = this.getElement();
+    var row = this.getOwnerGridRow(node)
+    if(row){
+    	return (/** @type {pear.ui.GridCell} */ (row.getNodeOwnerControl(node)));
+    }else{
+    	return null;
+    }
+};
+
+/**
  * Dispatch GridRow Event 
  * @param  {pear.ui.GridRow} gridrow 
  * @param  {string} eventName [description]  
@@ -2318,6 +2498,7 @@ pear.ui.Grid.prototype.dispatchGridRowEvent_ = function(gridrow,eventName) {
 	var evt = new pear.ui.Grid.GridRowEvent(eventName,this, gridrow, index);
 	this.dispatchEvent(evt);
 };
+
 
 /**
  * Dispatch Grid Events
@@ -2368,7 +2549,10 @@ pear.ui.Grid.prototype.registerEventsOnGrid = function(){
       listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSOUT,
       		 this.handleBlur, false, this).
       listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSIN,
-      	 this.handleFocus, false, this);
+      	 	this.handleFocus, false, this).
+      listenOnce(
+        this.getElement(), goog.events.EventType.CLICK,
+       		this.handleFocus,false, this);
 };
 
 /**
@@ -2422,8 +2606,12 @@ pear.ui.Grid.prototype.registerEventsOnBodyCanvas = function() {
       listenWithScope(this.getKeyHandler(),
 					goog.events.KeyHandler.EventType.KEY,
 						this.handleKeyEventOnBodyCanvas, false, this).
-			listenWithScope(this.bodyCanvas_, goog.ui.Component.EventType.ACTION,
-				this.handleAction, false, self);
+			listenWithScope(this.bodyCanvas_, 
+					goog.ui.Component.EventType.ACTION,
+						this.handleAction, false, self).
+			listenWithScope(this.bodyCanvas_.getElement(), 
+					goog.events.EventType.DBLCLICK,
+						this.handleDoubleClick, false, self);
 };
 
 /**
@@ -2434,7 +2622,6 @@ pear.ui.Grid.prototype.registerEventsOnBodyCanvas = function() {
 pear.ui.Grid.prototype.handleBlur =  function(ge) {
 };
 
-
 /**
  * Handles focus events raised when the key event target receives
  * keyboard focus.
@@ -2443,7 +2630,7 @@ pear.ui.Grid.prototype.handleBlur =  function(ge) {
  */
 pear.ui.Grid.prototype.handleFocus = function(ge) {
 	logger.info( 'Received event ' + ge.type);
-	this.debugRendering_();
+	//this.debugRendering_();
 	var gridrow = this.getHighlightedGridRow();
   var cellIndex = -1;
 	if (gridrow){
@@ -2509,11 +2696,7 @@ pear.ui.Grid.prototype.handleHeaderCellClick = function(ge) {
 	var headerCell = ( /** @type {pear.ui.GridHeaderCell} */ (ge.target));
 	var grid = ge.currentTarget;
 	var prevSortedCell = this.getSortedHeaderCell();
-
-	var evt = new pear.ui.Grid.GridHeaderCellEvent(pear.ui.Grid.EventType.BEFORE_HEADER_CELL_CLICK,
-			this, headerCell);
-	this.dispatchEvent(evt);
-
+	var evt;
 	// On Sort
 	if (this.getConfiguration().AllowSorting) {
 		if (prevSortedCell && prevSortedCell !== headerCell) {
@@ -2529,7 +2712,7 @@ pear.ui.Grid.prototype.handleHeaderCellClick = function(ge) {
 	}
 
 	evt = new pear.ui.Grid.GridHeaderCellEvent(
-			pear.ui.Grid.EventType.AFTER_HEADER_CELL_CLICK, this, headerCell);
+			pear.ui.Grid.EventType.HEADER_CELL_ON_CLICK, this, headerCell);
 	this.dispatchEvent(evt);
 
 	ge.stopPropagation();
@@ -2557,11 +2740,23 @@ pear.ui.Grid.prototype.handleHeaderCellOptionClick = function(ge) {
  * @protected
  */
 pear.ui.Grid.prototype.handleAction = function(ge) {
-	logger.info( 'Received event ' + ge.type);
+	logger.info( 'handleAction - ' + ge.type);
 	
 	var cell = ( /** @type {pear.ui.GridCell} */(ge.target));
 	if (cell){
 		this.handleDataCellAction(cell);
+	}
+	ge.stopPropagation();
+};
+
+
+pear.ui.Grid.prototype.handleDoubleClick = function(ge){
+	logger.info( 'handleDoubleClick -  ' + ge.type);
+	
+	var gridcell = this.getOwnerGridCell(ge.target);
+	var gridrow = this.getOwnerGridRow(ge.target);
+	if (gridcell && gridrow){
+		 this.showCellEditor(gridcell);
 	}
 	ge.stopPropagation();
 };
@@ -2575,18 +2770,15 @@ pear.ui.Grid.prototype.handleAction = function(ge) {
  */
 pear.ui.Grid.prototype.handleDataCellAction = function(cell) {
 	var gridrow = ( /** @type {pear.ui.GridRow} */ (cell.getParent()));
-
+	var evt;
 	this.setMouseOverTracking(true);
-	var evt = new pear.ui.Grid.GridDataCellEvent(
-			pear.ui.Grid.EventType.DATACELL_BEFORE_ACTION, this, cell);
-	this.dispatchEvent(evt);
 
 	// Highlight
 	this.highlightGridRow(gridrow);
 	gridrow.setHighlighted(cell);
 	this.setHighlightedCellIndex(gridrow.indexOfChild(cell));
 
-	// Focus
+	// Focus 
 	if (!this.isFocusOnGrid()){
 		this.setFocusOnGrid();
 	}
@@ -2596,8 +2788,11 @@ pear.ui.Grid.prototype.handleDataCellAction = function(cell) {
 		this.selectGridRow();
 	}
 
+	// close Active Editor
+	this.closeActiveEditor();
+
 	evt = new pear.ui.Grid.GridDataCellEvent(
-			pear.ui.Grid.EventType.DATACELL_AFTER_ACTION, this, cell);
+			pear.ui.Grid.EventType.DATACELL_ON_ACTION, this, cell);
 	this.dispatchEvent(evt);
 };
 
@@ -2615,7 +2810,7 @@ pear.ui.Grid.prototype.handleKeyEventOnBodyCanvas = function(e) {
 /**
  * [handleKeyEvent description]
  * @param {goog.events.KeyEvent} e Key event to handle.
- * @return {boolean}   [description]
+ * @return {boolean} Whether the key event was handled.
  * @protected
  */
 pear.ui.Grid.prototype.handleKeyEvent = function(e) {
@@ -2628,7 +2823,15 @@ pear.ui.Grid.prototype.handleKeyEvent = function(e) {
 		e.preventDefault();
 		e.stopPropagation();
 
-		this.scrollCellIntoView(this.getHighlightedGridRow());
+		var gridrow = this.getHighlightedGridRow();
+		if (gridrow.isInDocument()){
+			// Good
+		}else{
+			this.setHighlightedGridRowIndex(this.getViewportTopRowIndex());
+			gridrow = this.getHighlightedGridRow();
+		}
+		
+		this.scrollCellIntoView(gridrow);
 		this.updateViewport_();
 		return true;
 	}
@@ -2688,6 +2891,9 @@ pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 			if (this.isSelectionModeOn()) {
 				this.selectGridRow();
 			}
+			break;
+		case goog.events.KeyCodes.F2:
+			this.showCellEditor(this.getHighlightedGridRow().getHighlighted());
 			break;
 		default:
 			return false;
@@ -2871,3 +3077,7 @@ pear.ui.Grid.GridSortCellEvent = function(type, target, cell ) {
 	this.sortDirection = cell.getSortDirection();
 };
 goog.inherits(pear.ui.Grid.GridSortCellEvent, goog.events.Event);
+
+
+
+

@@ -11,10 +11,35 @@ goog.require('pear.data.Column');
  * Any operations Directly done on DataTable will
  * affect Grid expected behaviour. All operations on DataTable should be done
  * thru DataView {@link pear.data.DataView}
- * 
+ *  
  * @param {Array.<pear.data.Column>} datacolumns -Each Column in 
  * dataColumns must have unique id
- * @param {Array} datarows
+ * @param {Array} datarows a datarow is a array of Objects , where each object 
+ * should have property  @link pear.data.Datacolumn.Id from DataColumn Collection
+ * 
+ * @example
+ *   var datarows = [
+ *     {orderno:1,item:'Samsung-Galaxy',unitprice:200,...,...,...},
+ *     {orderno:2,item:'Iphone',unitprice:200,...,...,...},
+ *     {orderno:3,item:'Kindle-Fire',unitprice:200,...,...,...},
+ *     ...
+ *     ...
+ *     ...
+ *   ];
+ *
+ *  
+ * TODO - not available
+ * add datarow array to hold object as data 
+ * e.g [{display:'data1',...},{display:'data2',...}]
+ * var data = [
+ *     {orderno:{display :1 ,value:{}},item:{display :'Samsung-Galaxy' ,value:{}},......},
+ *     {orderno:{display :2 ,value:{}},item:{display :'iphone' ,value:{}},......},
+ *     {orderno:{display :3 ,value:{}},item:{display :'Kindle-Fire' ,value:{}},......},
+ *     ...
+ *     ...
+ *     ...
+ *   ];
+ *   
  * @constructor
  * @extends {goog.events.EventTarget}
  */
@@ -27,12 +52,6 @@ pear.data.DataTable = function(datacolumns, datarows) {
 };
 goog.inherits(pear.data.DataTable, goog.events.EventTarget);
 
-/**
- * DataType
- * @enum {string}
- * @public
- */
-pear.data.DataTable.DataType = pear.data.DataType;
 
 
 /**
@@ -144,7 +163,7 @@ pear.data.DataTable.prototype.init_ = function() {
  * Return a single row by Id , this Id is unique id
  * generated for each Row and stored in DataM
  * @param  {string} rowid
- * @return {Array}
+ * @return {Object}
  * @public
  */
 pear.data.DataTable.prototype.getDataRowById = function(rowid) {

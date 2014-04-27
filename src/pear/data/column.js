@@ -8,13 +8,17 @@ goog.require('goog.ui.IdGenerator');
 /**
  * @classdesc  Represent the Column of Grid
  * @example
- * new pear.data.Column("header Text",'column-id',275,pear.data.DataType.NUMBER)
+ * new pear.data.Column("header Text",'column-id',275,pear.data.Column.DataType.NUMBER)
  * 
  * @param {string} content   header Text 
- * @param {string=} opt_id       column id should be unique
- * @param {pear.data.DataType=} opt_datatype DataType
- * @param {number=} opt_width    width of column
- * @param {number=} opt_align    text align of column data
+ * @param {string=} opt_id       column id should be unique , if not class 
+ * will generate a unique id for each column
+ * @param {pear.data.Column.DataType=} opt_datatype DataType , default DataType
+ * is pear.data.Column.DataType.TEXT
+ * @param {number=} opt_width    width of column , defaults to 75
+ * @param {pear.data.Column.Align=} opt_align    text Align of column data ,
+ * defaults to pear.data.Column.Align.LEFT
+
  * @constructor
  * @extends {goog.events.EventTarget}
  */
@@ -22,9 +26,9 @@ pear.data.Column = function(content,opt_id,opt_width,opt_datatype,opt_align) {
   goog.Disposable.call(this);
   this.headerText_=content;
   this.id = opt_id || goog.ui.IdGenerator.getInstance().getNextUniqueId();
-  this.dataType = opt_datatype || pear.data.DataTable.DataType.TEXT;
+  this.dataType = opt_datatype || pear.data.Column.DataType.TEXT;
   this.width_=opt_width || 75;
-  this.align_ = opt_align || pear.data.Align.LEFT;
+  this.align_ = opt_align || pear.data.Column.Align.LEFT;
 };
 goog.inherits(pear.data.Column, goog.events.EventTarget);
 
@@ -34,24 +38,32 @@ goog.inherits(pear.data.Column, goog.events.EventTarget);
  * @enum {string}
  * @public
  */
-pear.data.DataType = {
+pear.data.Column.DataType = {
+  /**
+   * 
+   * @type {String}
+   */
   NUMBER: 'number',
   TEXT: 'text',
   BOOLEAN: 'boolean',
   DATETIME: 'datetime'
-  // DECIMAL: 'decimal'
 };
 
-
 /**
- * align_
+ * Align of Column
  * @enum {string}
  * @public
  */
-pear.data.Align = {
+pear.data.Column.Align = {
+  /**
+   * Default Alignment , if align is not specified
+   * @type {String}
+   */
   LEFT:'left',
   RIGHT:'right'
 };
+
+
 
 
 /**
@@ -71,17 +83,18 @@ pear.data.Column.prototype.id = '';
 
 /**
  * align_
- * @type {string}
+ * @type {pear.data.Column.Align}
  * @private
  */
-pear.data.Column.prototype.align_ = pear.data.Align.LEFT;
+
+pear.data.Column.prototype.align_ = pear.data.Column.Align.LEFT;
 
 /**
  * datatype of column
- * @type {pear.data.DataType}
+ * @type {pear.data.Column.DataType}
  * @private
  */
-pear.data.Column.prototype.dataType = pear.data.DataType.TEXT;
+pear.data.Column.prototype.dataType = pear.data.Column.DataType.TEXT;
 
 /**
  * width_ of column
@@ -131,7 +144,7 @@ pear.data.Column.prototype.getId=function(){
 
 /**
  * Get DataType of Column
- * @return {pear.data.DataType} DataType of Column
+ * @return {pear.data.Column.DataType} DataType of Column
  * @public
  */
 pear.data.Column.prototype.getDataType=function(){
@@ -139,8 +152,9 @@ pear.data.Column.prototype.getDataType=function(){
 };
 
 /**
- * Get align_
- * @return {pear.data.align_} Text align_ of Column
+
+ * Get Align
+ * @return {pear.data.Column.Align} Text Align of Column
  * @public
  */
 pear.data.Column.prototype.getAlign=function(){
@@ -156,6 +170,7 @@ pear.data.Column.prototype.getWidth=function(){
   return this.width_;
 };
 
+
 /**
  * set width
  * @param {number} width  width of column
@@ -163,6 +178,7 @@ pear.data.Column.prototype.getWidth=function(){
 pear.data.Column.prototype.setWidth=function(width){
   return this.width_=width;
 };
+
 
 /**
  * set column visibility

@@ -50,16 +50,25 @@ pear.ui.GridCellRenderer.prototype.createDom = function(cellControl) {
   var element = cellControl.getDomHelper().createDom(
       'div', this.getClassNames(cellControl).join(' '));
 
+  this.createContentDom(cellControl,element);
+  this.setAriaStates(cellControl, element);
+  return element;
+};
+
+/**
+ * create Content Element
+ * @param {goog.ui.Control} cellControl Control to render.
+ */
+pear.ui.GridCellRenderer.prototype.createContentDom = function(cellControl,cellControlElement) {
+
   var cellElement = cellControl.getDomHelper().createDom(
-      'div', 'pear-grid-cell-data-content', cellControl.getContent());
+      'div', 'pear-grid-cell-data-content  overflowhidden', cellControl.getContent());
 
   var align = cellControl.getDataColumn().getAlign();
-  var aligncss = (align === pear.data.Align.LEFT)? 'pear-grid-align-left':'pear-grid-align-right';
+  var aligncss = (align === pear.data.Column.Align.LEFT)? 'pear-grid-align-left':'pear-grid-align-right';
   goog.dom.classes.add(cellElement, aligncss);
 
   cellControl.setContentElement(cellElement);
 
-  cellControl.getDomHelper().appendChild(element,cellElement);
-  this.setAriaStates(cellControl, element);
-  return element;
+  cellControl.getDomHelper().appendChild(cellControlElement,cellElement);
 };

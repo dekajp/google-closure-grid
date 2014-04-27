@@ -51,6 +51,7 @@
     <legend>Row Selection</legend>
     <div id="">
       <li> Row Selection - with KeyBoard Navigation (Hit Enter to Select/Unselect a Row)</li>
+      <li> Use Arrow Keys to Navigate within Row</li>
       <li> Update/Delete Selected Row(s)</li>
       <li> Add Row at the end </li>
     </div>
@@ -111,7 +112,21 @@
         console.dir(e);
       }
     }
+  var handlesort = function(ge){
+    var grid = ge.target;
+    var dv = grid.getDataView();
+    var sortDirection = ge.sortDirection;
+    var headerCell = ge.sortCell;
+    var columnid = headerCell.getColumnId();
 
+    dv.sort(sortDirection,columnid);
+  }
+
+  var handleRowViewsChanged = function (ge){
+    var dv = ge.target;
+    var grid = dv.getGrid();
+    grid.refresh();
+  }
   function isChecked(id,name){
     var elem = goog.dom.getElement(id);
     return  elem.checked;
@@ -122,13 +137,13 @@
 
   var grid;
    var columns = [
-    new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
-    new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME),
-    new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
+    new pear.data.Column("Order No",'orderno',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Item",'item',115,pear.data.Column.DataType.TEXT),
+    new pear.data.Column("Unit Price",'unitprice',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Quantity",'quantity',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Total",'total',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Created On",'created',95,pear.data.Column.DataType.DATETIME),
+    new pear.data.Column("Processed",'processed',95,pear.data.Column.DataType.BOOLEAN)
   ];
 
   var load = function () {
@@ -159,6 +174,7 @@
     grid = new pear.ui.Grid();
     var config = {
       AllowColumnResize:true,
+      AllowSorting:true,
       SelectionMode: parseInt(goog.dom.forms.getValue(goog.dom.getElement('id_selectionmode')),10)
     };
     config = grid.setConfiguration(config);
@@ -174,6 +190,8 @@
     
     goog.events.listen(grid, GRID_EVENTS, logEvent);
     goog.events.listen(grid.getDataView(), DATAVIEW_EVENTS, logEvent);
+      goog.events.listen(grid, pear.ui.Grid.EventType.SORT, handlesort);
+    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, handleRowViewsChanged);
   };
 
   goog.events.listen(goog.dom.getElement('id_add'), goog.events.EventType.CLICK, addRow);
@@ -230,6 +248,7 @@
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
 
   load();
+
 
   
   </script>

@@ -111,7 +111,7 @@
 
   function dateFormatter(gridcell){
     var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
-    var text = fmt.format(gridcell.getModel());
+    var text = fmt.format(gridcell.getCellData());
 
     goog.dom.setTextContent(gridcell.getContentElement(),text);
   };
@@ -120,16 +120,16 @@
   var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
 
   var grid;
-  var datecol = new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME);
+  var datecol = new pear.data.Column("Created On",'created',95,pear.data.Column.DataType.DATETIME);
   datecol.setColumnFormatter(dateFormatter,this);
   var columns = [
-    new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
-    new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER,pear.data.Align.RIGHT),
+    new pear.data.Column("Order No",'orderno',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Item",'item',115,pear.data.Column.DataType.TEXT),
+    new pear.data.Column("Unit Price",'unitprice',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Quantity",'quantity',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Total",'total',75,pear.data.Column.DataType.NUMBER,pear.data.Column.Align.RIGHT),
     datecol,
-    new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
+    new pear.data.Column("Processed",'processed',95,pear.data.Column.DataType.BOOLEAN)
   ];
 
   var load = function () {

@@ -74,13 +74,20 @@ pear.plugin.Pager.prototype.init = function() {
 
   goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, function(ge) {
     this.handleRowCountChange_(ge);
-    this.updateMsg_(ge);
+    this.updateMsg_();
   },false, this);
 
   goog.events.listen(grid, pear.ui.Grid.EventType.PAGE_INDEX_CHANGED, function(ge) {
     this.trigger_ = false;
-    this.updateMsg_(ge);
+    this.updateMsg_();
     this.updatePagerDropdown_(this.getGrid().getPageIndex());
+    this.trigger_ = true;
+  },false, this);
+
+  goog.events.listen(grid, pear.ui.Grid.EventType.PAGE_SIZE_CHANGED, function(ge) {
+    this.trigger_ = false;
+    this.handleRowCountChange_(ge);
+    this.updateMsg_();
     this.trigger_ = true;
   },false, this);
 
@@ -102,8 +109,11 @@ pear.plugin.Pager.prototype.createPager_ = function() {
   this.createFooter_();
   goog.dom.appendChild(this.footer_, this.getElement());
 
+
+  
   this.createPagerNavControls_();
   this.createPagerDropDown_();
+  this.createPageSizeDropDown_();
 
   this.updatePagerDropdown_(this.getPageIndex());
 
@@ -177,6 +187,10 @@ pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
     this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i + 1)));
     i++;
   }while (i * rowsPerPage < totalRows);
+  
+  var text = goog.dom.createDom('span', 'label','Go to Page:');
+  goog.dom.appendChild(this.getElement(),text);
+
   this.pagerComboBox_.render(this.getElement());
   goog.style.setWidth(this.pagerComboBox_.getInputElement(), 30);
   goog.style.setHeight(this.pagerComboBox_.getMenu().getElement(), 150);
@@ -185,6 +199,42 @@ pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
   goog.events.
       listen(this.pagerComboBox_, goog.ui.Component.EventType.CHANGE, this.handleChange_, false, this);
 };
+
+
+/**
+ * Create Pager-size Dropdown List 
+ * @private
+ */
+pear.plugin.Pager.prototype.createPageSizeDropDown_ = function() {
+  var elem = this.getElement();
+  var grid = this.getGrid();
+  var rowsPerPage = grid.getConfiguration().PageSize;
+  
+
+  this.pageSizeComboBox_ = new goog.ui.ComboBox();
+  this.pageSizeComboBox_.setUseDropdownArrow(true);
+ 
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("10"));
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("25"));
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("50"));
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("100"));
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("500"));
+   
+  var text = goog.dom.createDom('span', 'label','Show rows:');
+  goog.dom.appendChild(this.getElement(),text);
+
+  this.pageSizeComboBox_.render(this.getElement());
+
+  goog.style.setWidth(this.pageSizeComboBox_.getInputElement(), 30);
+  goog.style.setHeight(this.pageSizeComboBox_.getMenu().getElement(), 150);
+  this.pageSizeComboBox_.getMenu().getElement().style.overflowY = 'auto';
+
+  this.pageSizeComboBox_.setValue(''+grid.getPageSize());
+
+  goog.events.
+      listen(this.pageSizeComboBox_, goog.ui.Component.EventType.CHANGE, this.handlePageSizeChange_, false, this);
+};
+
 
 /**
  * Create Pager Navigation controls
@@ -231,6 +281,7 @@ pear.plugin.Pager.prototype.handleAction_ = function(ge) {
   ge.stopPropagation();
 };
 
+
 /**
  * Update Pager Dropdownlist
  * @param  {number} index  Grid Page Index
@@ -243,6 +294,7 @@ pear.plugin.Pager.prototype.updatePagerDropdown_ = function(index) {
   var s = ''+(index + 1);
   this.pagerComboBox_.setValue(s);
 };
+
 
 /**
  * Handle Pager Dropdown Change Event
@@ -257,6 +309,20 @@ pear.plugin.Pager.prototype.handleChange_ = function(ge) {
       var index = parseInt(this.pagerComboBox_.getValue(),10) - 1;
       grid.setPageIndex(index);
     }
+  }
+};
+
+/**
+ * Handle Page Size Change
+ * @param  {goog.events.Event} ge [description]
+ * @private
+ */
+pear.plugin.Pager.prototype.handlePageSizeChange_ = function(ge) {
+  var grid = this.getGrid();
+  var cbValue = parseInt(this.pageSizeComboBox_.getValue(),10);
+  if (cbValue && cbValue >0){
+    var size = parseInt(this.pageSizeComboBox_.getValue(),10);
+    grid.setPageSize(size);
   }
 };
 

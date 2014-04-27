@@ -5,10 +5,18 @@
   <meta charset="utf-8">
   <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
   <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/datepicker.css">
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/inputdatepicker.css">
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menu.css">
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuitem.css">
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuseparator.css">
+
+
 
   <link rel="stylesheet" href="css/demo.css" />
   <link rel="stylesheet" href="../src/css/grid.css" />
-  
+  <link rel="stylesheet" href="../src/css/plugin/titlebarplugin.css" />
+    <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css">
  
  <style>
   body {
@@ -16,6 +24,18 @@
   font: normal 10pt Arial, sans-serif;
   }
 
+  .goog-date-picker{
+    z-index : 200;
+  }
+  .pear-grid-cell-editor input {
+    width: 80%;
+    height: 100%;
+    border: 0;
+    margin: 0;
+    background: transparent;
+    outline: 0;
+    padding: 0;
+   }
  </style>
   <script src="../lib/closure-library/closure/goog/base.js"></script>
   <script src="../src/bin/release/pear.grid.js"></script>
@@ -24,7 +44,9 @@
     goog.require('goog.debug.LogManager');
     goog.require('goog.dom.forms');
     goog.require('pear.ui.Grid');
-    
+    goog.require('pear.ui.editor.TextEditor');
+    goog.require('pear.ui.editor.DatePickerEditor');
+    goog.require('pear.ui.editor.ComboBoxEditor');
   </script>
 
   <style>
@@ -33,11 +55,12 @@
 </head>
 <body>
    <fieldset class="goog-debug-panel">
-    <legend>Cell Editor</legend>
+    <legend>Cell Editor (Under Development) </legend>
     <div id="">
-      <li>  </li>
-      <li>  </li>
-      <li>  </li>
+      <li> TextEditor for Quantity and Unit Price Column  </li>
+      <li> DatePickerEditor for Created on Column  </li>
+      <li> Double Click or Press F2 to activate editor </li>
+      <li> ESC to rollback </li>
     </div>
   </fieldset>
 
@@ -51,7 +74,6 @@
              <option value="1000">1000</option>
              <option selected value="10000">10,000</option>
              <option value="50000">50,000</option>
-             <option value="100000">100,000</option>
            </select> 
       </div>
     </div>
@@ -97,6 +119,100 @@
       }
     }
 
+  function getEditorForQuantityColumn (){
+    var editor =  new pear.ui.editor.TextEditor();
+       
+    editor.setValidateCallback(function (oldrowdata,newrowdata){
+      var success = true;
+      if (parseInt(newrowdata["quantity"],10) < 1 || parseInt(newrowdata["quantity"],10) > 100){
+        alert('quantity should be between 1-100');
+        return success && false;
+      }else{
+        newrowdata['total'] = parseInt(newrowdata["quantity"],10) * newrowdata["unitprice"]
+        return success && true;
+      }
+
+      if (parseFloat(newrowdata["unitprice"],10) < 1 || parseFloat(newrowdata["unitprice"],10) > 500){
+        alert('unitprice should be between 1-500');
+        return success && false;
+      }else{
+        newrowdata['total'] = parseInt(newrowdata["quantity"],10) * parseFloat(newrowdata["unitprice"]);
+        return success && true;
+      }
+
+      return success;
+    });
+    return editor;
+  };
+
+  function getEditorForProductColumn (){
+    var editor =  new pear.ui.editor.ComboBoxEditor();
+       
+    editor.setAfterEditorDom(function (){
+      var cb = this.getComboxBox();
+      goog.array.forEach(item,function (p){
+        cb.addItem(new goog.ui.ComboBoxItem(p));
+      },this);
+      
+    });
+
+    editor.setCallbackToGetValueFromEditor(function (){
+     
+    });
+
+    return editor;
+  }
+
+  function getEditorForProcessedColumn (){
+    var editor =  new pear.ui.editor.ComboBoxEditor();
+       
+    editor.setAfterEditorDom(function (){
+      var cb = this.getComboxBox();
+      var list =['true','false'];
+      goog.array.forEach(list,function (p){
+        cb.addItem(new goog.ui.ComboBoxItem(p));
+      },this);
+
+      var value = this.getGridCellData()
+      if (value){
+        cb.setValue('true');
+      }else{
+        cb.setValue('false');
+      }
+    });
+
+    editor.setCallbackToGetValueFromEditor(function (){
+      var cb = this.getComboxBox();
+      var value = cb.getValue();
+      if (value=='true'){
+        this.setNewValue(true);
+      }else{
+        this.setNewValue(false);
+      }
+    });
+
+    
+    return editor;
+  }
+
+  function getEditor(column){
+    var editor ;
+    if (column.getDataType() === pear.data.Column.DataType.NUMBER 
+      && (column.getId() === 'quantity' || column.getId() === 'unitprice')
+     ){
+       editor= getEditorForQuantityColumn();
+
+    }else if (column.getDataType() === pear.data.Column.DataType.DATETIME ){
+      editor = new pear.ui.editor.DatePickerEditor();
+    }else if (column.getId() === 'item' ){
+      editor = new getEditorForProductColumn();
+    }else if (column.getId() === 'processed' ){
+      editor = new getEditorForProcessedColumn();
+    }
+    
+    return editor;
+  };
+
   function isChecked(id,name){
     var elem = goog.dom.getElement(id);
     return  elem.checked;
@@ -107,18 +223,15 @@
 
   var grid;
   var columns = [
-    new pear.data.Column("Order No",'orderno',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Item",'item',115,pear.data.DataTable.DataType.TEXT),
-    new pear.data.Column("Unit Price",'unitprice',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Quantity",'quantity',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Total",'total',75,pear.data.DataTable.DataType.NUMBER),
-    new pear.data.Column("Created On",'created',95,pear.data.DataTable.DataType.DATETIME),
-    new pear.data.Column("Processed",'processed',95,pear.data.DataTable.DataType.BOOLEAN)
-  ];
 
-  function setupCellEditorOn(column){
-    
-  }
+    new pear.data.Column("Order No",'orderno',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Item",'item',115,pear.data.Column.DataType.TEXT),
+    new pear.data.Column("Unit Price",'unitprice',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Quantity",'quantity',75,pear.data.Column.DataType.NUMBER,pear.data.Column.Align.RIGHT),
+    new pear.data.Column("Total",'total',75,pear.data.Column.DataType.NUMBER),
+    new pear.data.Column("Created On",'created',95,pear.data.Column.DataType.DATETIME),
+    new pear.data.Column("Processed",'processed',95,pear.data.Column.DataType.BOOLEAN)
+  ];
 
   var load = function () {
     if (grid){
@@ -147,7 +260,8 @@
     grid = new pear.ui.Grid();
     var config = {
       AllowColumnResize: true,
-      AllowAlternateRowHighlight: true
+      AllowAlternateRowHighlight: false,
+      ShowCellBorder:true
     };
     config = grid.setConfiguration(config);
 
@@ -155,6 +269,7 @@
     grid.setHeight(400);
     grid.setColumns(columns);
     grid.setDataRows(data);
+    grid.setEditor(getEditor);
     
     goog.events.listen(grid, GRID_EVENTS, logEvent);
 
@@ -162,6 +277,9 @@
     var end =  +new Date();  
     var diff = end - start;
     console.log('Load Time : '+diff+'ms');
+    logconsole.clear();
+    goog.log.fine(logger, 'Loaded '+limit+' rows. ');
+
   };
 
   goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
