@@ -34,7 +34,7 @@ goog.require('pear.data.RowView');
  *    var dataView = new pear.data.DataView(columns,data);
  * 
  * @param {Array.<pear.data.Column>} datacolumns Array of pear.data.Column
- * @param {Array.<Object>} datarows 
+ * @param {Array.<Object.<string,*>>} datarows 
  * @constructor
  * @extends {goog.events.EventTarget}
  */
@@ -167,7 +167,7 @@ pear.data.DataView.prototype.setColumns = function(dc) {
 
 /**
  * Get DataRows
- * @return {Array.<Object>}
+ * @return {Array.<Object.<string,*>>}
  * @public
  */
 pear.data.DataView.prototype.getDataRows = function() {
@@ -192,7 +192,7 @@ pear.data.DataView.prototype.getDataRows = function() {
  *
  *  // Set DataRows
  *  myDataView.setDataRows(data);
- * @param {Array.<Object>} data
+ * @param {Array.<Object.<string,*>>} data
  * @public
  */
 pear.data.DataView.prototype.setDataRows = function(data) {
@@ -328,7 +328,7 @@ pear.data.DataView.prototype.getGrid = function() {
 
 /**
  * Add a DataRow
- * @param {Array} datarow
+ * @param {Object.<string,*>} datarow
  * @public
  */
 pear.data.DataView.prototype.addDataRow = function(datarow) {
@@ -362,7 +362,7 @@ pear.data.DataView.prototype.removeDataRow = function(id) {
 /**
  * Update a DataRow
  * @param  {string} uniqueid
- * @param  {Array} datarow
+ * @param  {Object.<string,*>} datarow
  * @public
  */
 pear.data.DataView.prototype.updateDataRow = function(uniqueid, datarow) {
@@ -478,10 +478,9 @@ pear.data.DataView.prototype.applyFilter = function(fnFilter, op_context) {
 
 
 /**
- * Get DataRow by RowView Id i.e RowId , this returns a clone of
- * DataRow 
+ * Get DataRow by RowView Id i.e RowId 
  * @param  {string} rowid
- * @return {Object}
+ * @return {Object.<string,*>}
  * @public
  */
 pear.data.DataView.prototype.getDataRowById = function(rowid) {
@@ -502,7 +501,7 @@ pear.data.DataView.prototype.dispatchDataViewChange_ = function() {
 
 /**
  * Dispatch DataRow Change event
- * @param  {Array} row
+ * @param  {Object.<string,*>} row
  * @private
  */
 pear.data.DataView.prototype.dispatchDataRowChange_ = function(row) {
@@ -590,7 +589,7 @@ goog.inherits(pear.data.DataViewEvent, goog.events.Event);
  *
  * @param {string} type Event type.
  * @param {pear.data.DataView} target
- * @param {Array.<Object>} row    DataRow
+ * @param {Object.<string,*>} row    DataRow
  * @extends {goog.events.Event}
  * @constructor
  * @final

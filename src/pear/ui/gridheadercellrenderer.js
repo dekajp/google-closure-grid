@@ -47,6 +47,7 @@ pear.ui.GridHeaderCellRenderer.prototype.createDom = function(cellControl) {
   
   cellControl.addClassName(pear.ui.GridHeaderCellRenderer.CSS_CLASS);
   cellControl.addClassName('col'+cellControl.getCellIndex());
+  cellControl.addClassName('overflowhidden');
 
   var element = cellControl.getDomHelper().createDom(
       'div', this.getClassNames(cellControl).join(' '), cellControl.getContent());

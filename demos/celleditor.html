@@ -57,8 +57,9 @@
    <fieldset class="goog-debug-panel">
     <legend>Cell Editor (Under Development) </legend>
     <div id="">
-      <li> TextEditor for Quantity and Unit Price Column  </li>
-      <li> DatePickerEditor for Created on Column  </li>
+      <li> TextEditor for <b>Quantity</b> and <b>Unit Price</b> Column  </li>
+      <li> DatePickerEditor for <b>Created on</b> Column  </li>
+      <li> ComboxBox Editor for <b>Item</b> and <b>Processed</b> Column  </li>
       <li> Double Click or Press F2 to activate editor </li>
       <li> ESC to rollback </li>
     </div>
@@ -70,10 +71,7 @@
       <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  /> </div>
       <div class="config-item"> Nos Of Rows : 
           <select id ="id_rows">
-             <option value="10">10</option>
-             <option value="1000">1000</option>
-             <option selected value="10000">10,000</option>
-             <option value="50000">50,000</option>
+             <option selected value="100">100</option>
            </select> 
       </div>
     </div>
@@ -248,7 +246,7 @@
      
       data[i].item = item[temp];
       data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 100);
+      data[i].quantity = Math.round(Math.random() * 10);
       data[i].total = data[i].unitprice * data[i].quantity;
       data[i].processed= (i % 5 === 0);
       data[i].created = '11/21/2013';

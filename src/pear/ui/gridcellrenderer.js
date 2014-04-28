@@ -62,7 +62,7 @@ pear.ui.GridCellRenderer.prototype.createDom = function(cellControl) {
 pear.ui.GridCellRenderer.prototype.createContentDom = function(cellControl,cellControlElement) {
 
   var cellElement = cellControl.getDomHelper().createDom(
-      'div', 'pear-grid-cell-data-content  overflowhidden', cellControl.getContent());
+      'div', pear.ui.GridCellRenderer.CSS_CLASS+'-content  overflowhidden', cellControl.getContent());
 
   var align = cellControl.getDataColumn().getAlign();
   var aligncss = (align === pear.data.Column.Align.LEFT)? 'pear-grid-align-left':'pear-grid-align-right';

@@ -170,7 +170,7 @@
      
       data[i].item = item[temp];
       data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 10000);
+      data[i].quantity = Math.round(Math.random() * 10);
       data[i].total = data[i].unitprice * data[i].quantity;
       data[i].processed= (i % 5 === 0);
       data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));

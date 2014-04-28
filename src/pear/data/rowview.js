@@ -24,7 +24,7 @@ goog.inherits(pear.data.RowView, goog.Disposable);
 
 /**
  * Data , this is typically a DataRow
- * @type {?Array.<Object>}
+ * @type {Object.<string,*>}
  * @private
  */
 pear.data.RowView.prototype.rowdata_ = null;
@@ -49,7 +49,7 @@ pear.data.RowView.prototype.selectState_ = false;
 
 /**
  * get Data of Row
- * @return {?Array}
+ * @return {Object.<string,*>}
  * @public
  */
 pear.data.RowView.prototype.getRowData = function() {

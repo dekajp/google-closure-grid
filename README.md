@@ -10,13 +10,15 @@ version 0.1 (unstable)
 * Data Virtualization ~ 100,000 Rows
 * Active Cell and Active Row Highlight
 * Sorting
-* Column Resizing
+* Column Move & Resizing
 * Header Cell Menu
 * Paging
 * Column Formatting
 * Keyboard Navigation
 * Data Filter
 * Column Move
+* Sticky Footer / Aggregates
+* Customizable Cell Editors
 * ... more coming (please feel free to raise feature [request](https://github.com/dekajp/google-closure-grid/issues) in Github)
 
 ##Credits 

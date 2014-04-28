@@ -262,23 +262,110 @@ pear.ui.Grid.prototype.Configuration_ = {
  * @enum {string}
  */
 pear.ui.Grid.EventType = {
+	/**
+	 * On Click of Header Cell , this event is dispatched
+	 * @type {string}
+	 */
 	HEADER_CELL_ON_CLICK: 'header-cell-on-click',
+
+	/**
+	 * On Header Cell Menu Option Click - this event is dispatched , this will
+	 * not dispatch Header-cell-on-click event
+	 * @type {string}
+	 */
+	HEADER_CELL_MENU_CLICK: 'header-cell-menu-click',
+	
+	/**
+	 * If Sorting is allowed , On Click of Header Cell this event is dispatched 
+	 * before Header-cell-on-click
+	 * @type {string}
+	 */
 	SORT: 'on-sort',
+
+	/**
+	 * If Paging is allowed , On Change of Page Index this event is dispatched
+	 * @type {string}
+	 */
 	PAGE_INDEX_CHANGED: 'on-page-index-change',
+
+	/**
+	 * If Paging is allowed , On Change of Page Size this event is dispatched ,
+	 * this will also dispatch Page-index-change . since page size reset page index
+	 * to 0
+	 * @type {string}
+	 */
 	PAGE_SIZE_CHANGED: 'on-page-size-change',
+
+	/**
+	 * On action of Data Cell
+	 * @type {string}
+	 */
 	DATACELL_ON_ACTION: 'datacell-on-action',
+
+	/**
+	 * This event is dispatched after all header cells are rendered
+	 * @type {string}
+	 */
 	HEADERCELLS_RENDERED: 'headercells-rendered',
+
+	/**
+	 * This event is dispatched ,after header cell is rendered. This will be 
+	 * generated for each header cell
+	 * @type {string}
+	 */
 	AFTER_HEADERCELL_RENDER: 'after-headercell-render',
+
+	/**
+	 * This event is dispatched when a DataRow is Changed e.g AddDataRow and
+	 * UpdateDataRow . This will also dispatch DataSource-changed event.
+	 * @type {string}
+	 */
 	DATAROWS_CHANGED: 'on-grid-datarows-changed',
+
+	/**
+	 * This event is dispatched when DataSource is Changed  
+	 * @type {string}
+	 */
 	DATASOURCE_CHANGED: 'on-grid-datasource-changed',
+
+	/**
+	 * This event is dispatched when Columns are Changed on the Grid 
+	 * @type {string}
+	 */
 	COLUMNS_CHANGED: 'on-columns-changed',
+
+	/**
+	 * This event is dispatched On GridRow Highlight 
+	 * @type {string}
+	 */
 	GRIDROW_HIGHLIGHT: 'on-gridrow-highlighted',
+
+	/**
+	 * This event is dispatched On GridRow unhighlight 
+	 * @type {string}
+	 */
 	GRIDROW_UNHIGHLIGHT: 'on-gridrow-unhighlighted',
+
+	/**
+	 * If Row Selection is allowed , this event is dispatched when Row is 
+	 * selected
+	 * @type {string}
+	 */
 	GRIDROW_SELECT: 'on-gridrow-select',
+	
+	/**
+	 * If Row Selection is allowed , this event is dispatched when Row is 
+	 * unselected
+	 * @type {string}
+	 */
 	GRIDROW_UNSELECT: 'on-gridrow-unselect',
-	GRIDROW_RENDERED: 'on-gridrow-rendered',
-	RENDERED: 'rendered',
-	HEADER_CELL_MENU_CLICK: 'header-cell-menu-click'
+	/**
+	 * @todo - yet to define
+	 * @type {string}
+	 */
+	RENDERED: 'rendered'
+
+	
 };
 
 
@@ -376,13 +463,6 @@ pear.ui.Grid.prototype.selectedGridRowsIds_ = null;
 pear.ui.Grid.prototype.showFooter_ = false;
 
 /**
- * flag to tell if grid is scrolling due to Key events
- * @private
- * @type { boolean }
- */
-pear.ui.Grid.prototype.trackMouseOver_ = true;
-
-/**
  * Active Editor - there can only be one
  * @private
  * @type { pear.ui.editor.CellEditorMediator }
@@ -390,8 +470,9 @@ pear.ui.Grid.prototype.trackMouseOver_ = true;
 pear.ui.Grid.prototype.editorMediator_ = null;
 
 /**
- * title
+ * title of Grid
  * @type {string}
+ * @private
  */
 pear.ui.Grid.prototype.title_ ='';
 
@@ -406,7 +487,7 @@ pear.ui.Grid.prototype.logger =
 
 /**
  * set Title of Grid
- * @param {string} title [description]
+ * @param {string} title title of grid
  */
 pear.ui.Grid.prototype.setTitle = function (title){
 	this.title_ = title;
@@ -414,7 +495,7 @@ pear.ui.Grid.prototype.setTitle = function (title){
 
 /**
  * Get Grid Title
- * @return {string} [description]
+ * @return {string} title of grid
  */
 pear.ui.Grid.prototype.getTitle = function (){
 	return this.title_ ;
@@ -582,7 +663,7 @@ pear.ui.Grid.prototype.setHeight = function(height) {
 
 /**
  * get width of column
- * @param {number} [index] Column Index
+ * @param {number} index Column Index
  * @return {number}
  * @public
  */
@@ -637,9 +718,9 @@ pear.ui.Grid.prototype.getScrollbarWidth = function() {
 
 /**
  * Get Cell Border Box , this will create a Cell in Document
- * and will store the value of BorderBox and then remove the cell
+ * and will store the value of BorderBox and then remove the cell from document
  * @param  {string} uniqClass unique css class for this instance of pear grid
- * @return {goog.math.Box}   
+ * @return {goog.math.Box} 
  */
 pear.ui.Grid.prototype.getCellBorderBox = function(uniqClass) {
 	if (!this.cellBorderBox_){
@@ -648,7 +729,7 @@ pear.ui.Grid.prototype.getCellBorderBox = function(uniqClass) {
   	outerDiv.style.cssText = 'overflow:auto;' +
       'position:absolute;top:0;width:100px;height:100px';
   	var innerDiv = goog.dom.createElement('div');
-  	innerDiv.className = 'pear-grid-cell';
+  	innerDiv.className = pear.ui.CellRenderer.CSS_CLASS;
   	goog.style.setSize(innerDiv, '200px', '200px');
   	outerDiv.appendChild(innerDiv);
   	goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
@@ -673,16 +754,18 @@ pear.ui.Grid.prototype.getCellContentPaddingBox = function(uniqClass) {
     outerDiv.className = uniqClass;
   	outerDiv.style.cssText = 'overflow:auto;' +
       'position:absolute;top:0;width:30px;height:30px';
+  	
   	// Cell
   	var innerDiv = goog.dom.createElement('div');
-  	innerDiv.className = 'pear-grid-cell-data pear-grid-cell ';
+  	goog.dom.classes.add(innerDiv, pear.ui.CellRenderer.CSS_CLASS);
+  	goog.dom.classes.add(innerDiv, pear.ui.GridCellRenderer.CSS_CLASS);
   	goog.style.setSize(innerDiv, '25px', '25px');
   	outerDiv.appendChild(innerDiv);
   	goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
 		
 		// Cell Content
 		var cellContentDiv = goog.dom.createElement('div');
-  	cellContentDiv.className = 'pear-grid-cell-data-content';
+  	goog.dom.classes.add(cellContentDiv, pear.ui.GridCellRenderer.CSS_CLASS+'-content');
   	goog.style.setSize(innerDiv, '20px', '20px');
   	innerDiv.appendChild(cellContentDiv);
   	goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
@@ -739,7 +822,7 @@ pear.ui.Grid.prototype.getColumns = function() {
 
 /**
  * Get column by id
- * @param  {string} id [description]
+ * @param  {string} id UniqueId to identify a Column
  * @return {?pear.data.Column}
  * @public
  */
@@ -755,7 +838,7 @@ pear.ui.Grid.prototype.getColumnById = function(id) {
 };
 
 /**
- * clone array of columns and return them
+ * Reference to All Columns
  * @return {Array.<pear.data.Column>} 
  * @private
  */
@@ -789,44 +872,66 @@ pear.ui.Grid.prototype.setColumns = function(cols) {
  * @public
  */
 pear.ui.Grid.prototype.setDataRows = function(data) {
-	this.getDataView().setDataRows(goog.array.clone(data));
+	this.getDataView().setDataRows(data);
 	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATASOURCE_CHANGED);
 };
 
 
+
+
+
+/**
+ * Get All DataRows 
+ * @return {Array.<Object.<string,*>>}
+ * @public
+ * @todo  - use of deep cloning
+ */
+pear.ui.Grid.prototype.getClonedDataRows = function() {
+	var rows = this.getDataView().getDataRows();
+	var cloneRows = [];
+	goog.array.forEach(rows,function(rowdata,index){
+		cloneRows[index]=goog.object.clone(rowdata);
+	});
+	return cloneRows;
+};
+
 /**
  * get rows , currently dispalyed or loaded in grid , in case of paging
  * this will return all the rows
- * @return {Array}
+ * @return {Array.<Object.<string,*>>}
  * @public
  */
-pear.ui.Grid.prototype.getDisplayDataRows = function(data) {
-	var rows = goog.array.clone(this.getDataView().getDataRowViews());
-	return rows;
+pear.ui.Grid.prototype.getClonedDataViews = function() {
+	var rows = this.getDataView().getDataRowViews();
+	var cloneRows = [];
+	goog.array.forEach(rows,function(rv,index){
+		cloneRows.push(goog.object.clone(rv.getRowData()));
+	});
+	return cloneRows;
 };
 
-
 /**
- * get all rows
- * @return {Array}
- * @public
- */
-pear.ui.Grid.prototype.getDataRows = function(data) {
-	var rows = goog.array.clone(this.getDataView().getDataRows());
-	return rows;
-};
-
-
-/**
- * get all rows
+ * Get All RowViews
  * @return {Array.<pear.data.RowView>}
  * @public
  */
 pear.ui.Grid.prototype.getDataRowViews = function() {
-	var rows = this.dataview_.getDataRowViews();
+	var rows = this.getDataView().getDataRowViews();
 	return rows;
 };
 
+/**
+ * Get All data rows , in case of paging enabled get all rows at current
+ * page index. For Internal Use only
+ * @return {Array.<pear.data.RowView>}
+ * @private
+ */
+pear.ui.Grid.prototype.getDataRowViewsForViewport = function() {
+	var rows = (this.getConfiguration().AllowPaging) ?
+			this.getPagedDataRowViews() :
+			this.getDataRowViews();
+	return rows;
+};
 
 /**
  * number of rows currently loaded in grid
@@ -836,21 +941,6 @@ pear.ui.Grid.prototype.getDataRowViews = function() {
 pear.ui.Grid.prototype.getDataViewRowCount = function() {
 	return this.getDataRowViews().length;
 };
-
-
-/**
- * Get All data rows , in case of paging enabled get all rows at current
- * page index
- * @return {Array.<pear.data.RowView>}
- * @private
- */
-pear.ui.Grid.prototype.getDataRowsGrid_ = function() {
-	var rows = (this.getConfiguration().AllowPaging) ?
-			this.getPagedDataRowViews() :
-			this.getDataRowViews();
-	return rows;
-};
-
 
 /**
  * Get all datarow views for current page index
@@ -882,12 +972,20 @@ pear.ui.Grid.prototype.showFooterRow = function(display) {
  * add a single row , this dispatch DATAROW_CHANGE and DATASOURCE_CHANGED
  * event. this will also dispatch events from DataView
  * @public
- * @param {Array} datarow
+ * @param {Object.<string,*>} datarow
+ * @example
+ *  var data = {};
+    data.columnId =  'sample data';
+      ...
+      ...
+      ...
+    grid.addDataRow(data);
+    ...
+    ...
+    grid.refresh();
  */
 pear.ui.Grid.prototype.addDataRow = function(datarow) {
 	this.getDataView().addDataRow(datarow);
-	// assume there is undefined row - hence adding row means undefined to
-	// defined row
 	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATAROWS_CHANGED);
 	this.dispatchGridEvent_(pear.ui.Grid.EventType.DATASOURCE_CHANGED);
 	this.refreshBody();
@@ -911,7 +1009,7 @@ pear.ui.Grid.prototype.removeDataRow = function(rowid) {
  * event. this will also dispatch events from DataView
  * @public
  * @param {string} rowid
- * @param {Array} row
+ * @param {Object.<string,*>} row
  */
 pear.ui.Grid.prototype.updateDataRow = function(rowid, row) {
 	this.dataview_.updateDataRow(rowid, row);
@@ -1135,7 +1233,7 @@ pear.ui.Grid.prototype.clearSelectedGridRows = function() {
 
 /**
  * Set configuration object
- * @param {Object} config
+ * @param {Object.<string,*>} config
  * @public
  */
 pear.ui.Grid.prototype.setConfiguration = function(config) {
@@ -1204,6 +1302,7 @@ pear.ui.Grid.prototype.unregisterPlugin = function(plugin) {
 
 /**
  *  @return {boolean} true always
+ *  @todo  - TBD
  */
 pear.ui.Grid.prototype.isEnabled = function() {
 	return true;
@@ -1212,22 +1311,10 @@ pear.ui.Grid.prototype.isEnabled = function() {
 
 /**
  *  @return {boolean} true always
+ *  @todo  - TBD
  */
 pear.ui.Grid.prototype.isVisible = function() {
 	return true;
-};
-
-
-/**
- *  @return {boolean} true always
- */
-pear.ui.Grid.prototype.isMouseOverTrackingEnabled = function() {
-	return this.trackMouseOver_;
-};
-
-
-pear.ui.Grid.prototype.setMouseOverTracking = function(enable) {
-	this.trackMouseOver_ = enable;
 };
 
 /**
@@ -1289,7 +1376,8 @@ pear.ui.Grid.prototype.enterDocument = function() {
 
 /**
  * Return the Unique CSS Root Style
- * @return {string} [description]
+ * @return {string} 
+ * @private
  */
 pear.ui.Grid.prototype.getUniqueRootCss_ = function() {
 	var prefix = "peargrid";
@@ -1414,7 +1502,7 @@ pear.ui.Grid.prototype.prepareCSSStyle_ = function() {
 	var maxWidth  = (totalRowWidth +this.getScrollbarWidth()) > this.getWidth() ? totalRowWidth+this.getScrollbarWidth():this.getWidth();
 
   // pear-grid-row
-	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-data { width: "+totalRowWidth+"px; height: "+this.getCalculatedRowHeight()+"px; }");
+	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-data { width: "+totalRowWidth+"px; height: "+this.getComputedRowHeight()+"px; }");
 	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-data pear-grid-row-even { }");
 	domHelper.append(styleElem, "."+uniqCssId + " .pear-grid-row-data pear-grid-row-odd { }");
 
@@ -1639,7 +1727,7 @@ pear.ui.Grid.prototype.renderBodyCanvas_ = function() {
 pear.ui.Grid.prototype.updateBodyCanvasHeight_ = function() {
 	var height = 0;
 	var pagesize = this.getPageSize();
-	var rowHeight = this.getCalculatedRowHeight();
+	var rowHeight = this.getComputedRowHeight();
 
 	if (this.Configuration_.AllowPaging) {
 		height = (this.getGridRowsCount_() * rowHeight);
@@ -1708,10 +1796,11 @@ pear.ui.Grid.prototype.getFocusEventTarget = function() {
 
 
 /**
- * get Calculated Row Height
- * @return {number} [description]
+ * get Calculated Row Height 
+ * 
+ * @return {number} 
  */
-pear.ui.Grid.prototype.getCalculatedRowHeight = function() {
+pear.ui.Grid.prototype.getComputedRowHeight = function() {
 	var rootCss = this.getUniqueRootCss_();
 	var cellBorderBox = this.getCellBorderBox(rootCss);
 	if (!this.calculatedRowHeight_){
@@ -1725,9 +1814,9 @@ pear.ui.Grid.prototype.getCalculatedRowHeight = function() {
  * @private
  */
 pear.ui.Grid.prototype.transformDataRowsToGridRows_ = function() {
-	var rows = this.getDataRowsGrid_();
+	var rows = this.getDataRowViewsForViewport();
 	var pagesize = this.getPageSize();
-	var rowHeight = this.getCalculatedRowHeight();
+	var rowHeight = this.getComputedRowHeight();
 
 	this.setGridRows_([]);
 
@@ -1844,7 +1933,7 @@ pear.ui.Grid.prototype.debugRendering_ = function(start, end) {
  */
 pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
 	var rowCount = this.getDataViewRowCount();
-	var rowHeight = this.getCalculatedRowHeight();
+	var rowHeight = this.getComputedRowHeight();
 	var canvasVisibleBeginPx = (this.body_.getElement().scrollTop >
 			(rowHeight * 10))
 															? (this.body_.getElement().scrollTop -
@@ -2040,7 +2129,7 @@ pear.ui.Grid.prototype.refresh = function() {
  */
 pear.ui.Grid.prototype.getViewportTopRowIndex = function(){
 	var scrollTopBody = this.getBody().getElement().scrollTop;
-	var height = this.getCalculatedRowHeight();
+	var height = this.getComputedRowHeight();
 
 	var index = Math.floor(scrollTopBody / height );
 	return index;
@@ -2053,7 +2142,7 @@ pear.ui.Grid.prototype.getViewportTopRowIndex = function(){
 pear.ui.Grid.prototype.isBodyHasVScroll = function(){
 	// Since Canvas height is determined by DataRows
 	var rowCount = this.getDataView().getDataRows().length;
-	var rowHeight = this.getCalculatedRowHeight();
+	var rowHeight = this.getComputedRowHeight();
 
 	return (this.height_ < rowCount * rowHeight);
 };
@@ -2110,7 +2199,7 @@ pear.ui.Grid.prototype.scrollCellIntoView = function(gridrow) {
 
 /**
  * Get Active Editor Grid Row
- * @return {pear.ui.GridRow?} [description]
+ * @return {pear.ui.GridRow?} Instance of gridrow beign edited
  */
 pear.ui.Grid.prototype.getActiveEditorGridRow = function(){
 	if (this.editorMediator_ && this.editorMediator_.isActive()){
@@ -2121,8 +2210,8 @@ pear.ui.Grid.prototype.getActiveEditorGridRow = function(){
 
 /**
  * Is GridRow currently hosting Active Editor
- * @param  {pear.ui.GridRow}  gridrow [description]
- * @return {boolean}         [description]
+ * @param  {pear.ui.GridRow}  gridrow 
+ * @return {boolean}  
  */
 pear.ui.Grid.prototype.isActiveEditorGridRow = function(gridrow){
 	var result = this.getActiveEditorGridRow() && 
@@ -2771,7 +2860,6 @@ pear.ui.Grid.prototype.handleDoubleClick = function(ge){
 pear.ui.Grid.prototype.handleDataCellAction = function(cell) {
 	var gridrow = ( /** @type {pear.ui.GridRow} */ (cell.getParent()));
 	var evt;
-	this.setMouseOverTracking(true);
 
 	// Highlight
 	this.highlightGridRow(gridrow);

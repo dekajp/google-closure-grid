@@ -127,12 +127,15 @@ pear.ui.GridCell.prototype.enterDocument = function() {
  * Remove Content Element
  */
 pear.ui.GridCell.prototype.removeContent = function() {
- goog.dom.removeNode(this.contentElement_);
+  goog.dom.removeNode(this.contentElement_);
 };
 
-//pear.ui.GridCell.prototype.createContentElement = function() {
-// this.getRenderer().createContentDom(this,this.getElement());
-//};
+/**
+ * Create Content Element
+ */
+pear.ui.GridCell.prototype.createContentElement = function() {
+  this.getRenderer().createContentDom(this,this.getElement());
+};
 
 /**
  * @override

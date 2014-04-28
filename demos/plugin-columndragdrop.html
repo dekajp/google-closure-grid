@@ -143,7 +143,7 @@
     var data = [];
     var temp;
     var start = new Date(2013,12,31);
-    for (var i = 0; i < 10000; i++) {
+    for (var i = 0; i < 10; i++) {
       data[i] = {
         orderno:  i +1
       };
@@ -151,7 +151,7 @@
      
       data[i].item = item[temp];
       data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 10000);
+      data[i].quantity = Math.round(Math.random() * 10);
       data[i].total = data[i].unitprice * data[i].quantity;
       data[i].processed= (i % 5 === 0);
       data[i].created = new Date(new Date().setDate(new Date().getDate()-Math.round(Math.random() * 365)));

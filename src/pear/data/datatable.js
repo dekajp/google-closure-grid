@@ -14,7 +14,7 @@ goog.require('pear.data.Column');
  *  
  * @param {Array.<pear.data.Column>} datacolumns -Each Column in 
  * dataColumns must have unique id
- * @param {Array} datarows a datarow is a array of Objects , where each object 
+ * @param {Array.<Object.<string,*>>} datarows a datarow is a array of Objects , where each object 
  * should have property  @link pear.data.Datacolumn.Id from DataColumn Collection
  * 
  * @example
@@ -70,7 +70,7 @@ pear.data.DataTable.prototype.dataColumns_ = [];
 
 
 /**
- * @type {Array}
+ * @type {Array.<Object.<string,*>>}
  * @private
  */
 pear.data.DataTable.prototype.dataRows_ = [];
@@ -113,7 +113,7 @@ pear.data.DataTable.prototype.setColumns = function(dc) {
 /**
  * Get Datarows
  *
- * @return {Array}
+ * @return {Array.<Object.<string,*>>}
  */
 pear.data.DataTable.prototype.getDataRows = function() {
   return this.dataRows_;
@@ -135,7 +135,7 @@ pear.data.DataTable.prototype.getDataRows = function() {
  *  // Set DataRows
  *  mydataTable.setDataRows(data);
  *     
- * @param {Array} rows
+ * @param {Array.<Object.<string,*>>} rows
  */
 pear.data.DataTable.prototype.setDataRows = function(rows) {
   this.dataRows_ = rows;
@@ -163,7 +163,7 @@ pear.data.DataTable.prototype.init_ = function() {
  * Return a single row by Id , this Id is unique id
  * generated for each Row and stored in DataM
  * @param  {string} rowid
- * @return {Object}
+ * @return {Object.<string,*>}
  * @public
  */
 pear.data.DataTable.prototype.getDataRowById = function(rowid) {
@@ -174,7 +174,7 @@ pear.data.DataTable.prototype.getDataRowById = function(rowid) {
 /**
  * Add a single row
  * @todo  Allow to add Multiple rows
- * @param {Array} row
+ * @param {Object.<string,*>} row
  * @public
  */
 pear.data.DataTable.prototype.addDataRow = function(row) {
@@ -199,7 +199,7 @@ pear.data.DataTable.prototype.removeDataRow = function(id) {
 /**
  * Update a Single DataRow
  * @param  {?string} uniqueid is Unique RowId
- * @param  {Array} datarow
+ * @param  {Object.<string,*>} datarow
  * @public
  */
 pear.data.DataTable.prototype.updateDataRow = function(uniqueid, datarow) {

@@ -39,10 +39,6 @@ goog.inherits(pear.data.Column, goog.events.EventTarget);
  * @public
  */
 pear.data.Column.DataType = {
-  /**
-   * 
-   * @type {String}
-   */
   NUMBER: 'number',
   TEXT: 'text',
   BOOLEAN: 'boolean',
