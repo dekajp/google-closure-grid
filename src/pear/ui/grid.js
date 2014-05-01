@@ -93,7 +93,7 @@ pear.ui.Grid = function(opt_domHelper) {
 	 * @type {Array.<pear.ui.GridRow>}
 	 * @private
 	 */
-	this.renderedGridRows_ = [];
+	this.renderReadyGridRows_ = [];
 	/**
 	 * @type {Array.<pear.ui.GridRow>}
 	 * @private
@@ -1484,12 +1484,12 @@ pear.ui.Grid.prototype.prepareCSSStyle_ = function() {
 	domHelper.append(styleElem,cssText);
 
 	var left =0;
-	var totalWidth=0;
+//	var totalWidth=0;
 	var totalRowWidth=0;
 	goog.array.forEach(this.getColumns_(),function(col,index){
 		if (col.getVisibility()){
 			var width = col.getWidth();
-			totalWidth=totalWidth+width;
+		//	totalWidth=totalWidth+width;
 			
 			cssText = "."+uniqCssId + " .col"+index+" { width:"+width+"px; left:"+left+"px; }";
 			domHelper.append(styleElem,cssText);
@@ -1925,13 +1925,11 @@ pear.ui.Grid.prototype.debugRendering_ = function(start, end) {
 };
 
 /**
- * Calculatre Viewport Area and then Cache GridRows to be rendered , in ViewPort.
- * 
- * TODO : height of Body Canvas will be different for more than 50K rows in
- * IE and Google Chrome
+ * calculate Start and End Row index - depends on viewport within BodyCanvas
+ * @return {Object} [description]
  * @private
  */
-pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
+pear.ui.Grid.prototype.calculateViewportDimension_ = function (){
 	var rowCount = this.getDataViewRowCount();
 	var rowHeight = this.getComputedRowHeight();
 	var canvasVisibleBeginPx = (this.body_.getElement().scrollTop >
@@ -1957,6 +1955,17 @@ pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
 	endIndex = parseInt(canvasVisibleEndPx / rowHeight, 10);
 	endIndex = (endIndex > rowCount) ? rowCount : endIndex;
 
+	return { 'startRowIndex':startIndex,'endRowIndex':endIndex};
+};
+
+/**
+ * Calculatre Viewport Area and then Cache GridRows to be rendered , in ViewPort.
+ * 
+ * TODO : height of Body Canvas will be different for more than 50K rows in
+ * IE and Google Chrome
+ * @private
+ */
+pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function(startIndex,endIndex) {
 	var i = 0;
 	var gridrows = this.getGridRows();
 	for (i = startIndex; (i < endIndex && i < gridrows.length); i++) {
@@ -1965,13 +1974,11 @@ pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function() {
 			if (this.isActiveEditorGridRow(gridrow)){
 				// Gridrow should already exists in Cache
 			}else{
-				this.renderedGridRows_[i] = gridrow;
+				this.renderReadyGridRows_[i] = gridrow;
 			}
 			
 		}
 	}
-	this.removeRowsFromRowModelCache_(startIndex, endIndex);
-	this.debugRendering_(startIndex,endIndex);
 };
 
 /**
@@ -1984,13 +1991,13 @@ pear.ui.Grid.prototype.renderCachedGridRowsInBodyCanvas_ = function(opt_redraw) 
 	if (opt_redraw && this.bodyCanvas_.getChildCount() > 0) {
 		this.bodyCanvas_.removeChildren(true);
 	}
-	goog.array.forEach(this.renderedGridRows_, function(datarow, index) {
+	goog.array.forEach(this.renderReadyGridRows_, function(datarow, index) {
 		// Render Cell on Canvas on demand for Performance
 		this.bodyCanvas_.addChild(datarow, true);
 		this.renderDataRowCells_(datarow);
 		this.renderedGridRowsCache_[index] = datarow;
 	},this);
-	this.renderedGridRows_ = [];
+	this.renderReadyGridRows_ = [];
 };
 
 /**
@@ -2065,8 +2072,23 @@ pear.ui.Grid.prototype.refreshOnColumnResize = function() {
  *     remove each gridrow from canvas
  */
 pear.ui.Grid.prototype.updateViewport_ = function(opt_redrawCanvas) {
-	this.cacheGridRowsReadyForViewport_();
-	this.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
+	var self = this;var viewDimension;
+	if ( Math.abs(this.previousScrollTop_ - this.body_.getElement().scrollTop)<50){
+		 viewDimension = self.calculateViewportDimension_ ();
+			self.cacheGridRowsReadyForViewport_(viewDimension.startRowIndex, viewDimension.endRowIndex);
+			self.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
+			self.removeRowsFromRowModelCache_(viewDimension.startRowIndex, viewDimension.endRowIndex);
+	}else{
+		if (this.timer_){
+			clearTimeout(this.timer_);    
+		}
+		this.timer_ = setTimeout (function(){
+			 viewDimension = self.calculateViewportDimension_ ();
+			self.cacheGridRowsReadyForViewport_(viewDimension.startRowIndex, viewDimension.endRowIndex);
+			self.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
+			self.removeRowsFromRowModelCache_(viewDimension.startRowIndex, viewDimension.endRowIndex);
+		},50);
+	}
 	this.restoreHighlightedRow_();
 	this.restoreSelectedRows_();
 };
@@ -2087,7 +2109,7 @@ pear.ui.Grid.prototype.refreshBody = function(opt_keepeditoralive) {
 	}
 
 	this.renderedGridRowsCache_ = [];
-	this.renderedGridRows_ = [];
+	this.renderReadyGridRows_ = [];
 	this.transformDataRowsToGridRows_();
 	this.updateBodyCanvasHeight_();
 	this.updateViewport_(true);
@@ -2486,12 +2508,12 @@ pear.ui.Grid.prototype.highlightPreviousRow = function() {
  * child controls in response to keyboard events.
  * @param {function(number, number) : number} fn Function that accepts the
  *     current and maximum indices, and returns the next index to check.
- * @param {number} startIndex Start index.
+ * @param {number} startRowIndex Start index.
  * @return {boolean} Whether the highlight has changed.
  * @protected
  */
-pear.ui.Grid.prototype.highlightHelper = function(fn, startIndex) {
-	var curIndex = startIndex < 0 ? 0 : startIndex;
+pear.ui.Grid.prototype.highlightHelper = function(fn, startRowIndex) {
+	var curIndex = startRowIndex < 0 ? 0 : startRowIndex;
 	var numItems = this.getGridRowsCount_();
 	curIndex = fn.call(this, curIndex, numItems);
 	this.highligtedCellIndex_ = this.getHighlightedCellIndex() ;
@@ -2763,6 +2785,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
 	) {
 		this.syncScrollLeft_();
 	}
+
 
 	this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.NONE;
 	this.previousScrollTop_ = this.body_.getElement().scrollTop;
@@ -3069,7 +3092,7 @@ pear.ui.Grid.prototype.disposeInternal = function() {
 	this.previousScrollLeft_ = null;
 
 	delete(this.previousScrollTop_);
-	delete(this.renderedGridRows_);
+	delete(this.renderReadyGridRows_);
 	delete(this.renderedGridRowsCache_);
 	delete(this.scrollbarWidth_);
 
