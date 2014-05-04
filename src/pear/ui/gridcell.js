@@ -74,7 +74,7 @@ pear.ui.GridCell.prototype.getContentElement = function(){
 pear.ui.GridCell.prototype.getCellData = function() {
   var rowview = this.getRow().getDataRowView();
   var model = rowview.getRowData();
-  return model[this.getDataColumn().getId()];
+  return model[this.getDataColumn().getDataField()];
   //return this.getModel();
 };
 

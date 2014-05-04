@@ -43,10 +43,24 @@ pear.ui.GridHeaderRow.prototype.addCell = function(cell, opt_render) {
   @public
   @param {string} id
 */
-pear.ui.Row.prototype.getHeaderCellById = function(id) {
+pear.ui.Row.prototype.getHeaderCellByColumnId = function(id) {
   var cell;
   this.forEachChild(function(child) {
     if (!cell && id === child.getColumnId()) {
+      cell = child;
+    }
+  });
+  return cell;
+};
+
+/**
+  @public
+  @param {string} fieldName
+*/
+pear.ui.Row.prototype.getHeaderCellByDataField = function(fieldName) {
+  var cell;
+  this.forEachChild(function(child) {
+    if (!cell && fieldName === child.getDataField()) {
       cell = child;
     }
   });

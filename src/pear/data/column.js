@@ -11,10 +11,11 @@ goog.require('goog.ui.IdGenerator');
  * new pear.data.Column("header Text",'column-id',275,pear.data.Column.DataType.NUMBER)
  * 
  * @param {string} content   header Text 
- * @param {string=} opt_id       column id should be unique , if not class 
+ * @param {string} id       column id should be unique , if not class 
  * will generate a unique id for each column
  * @param {pear.data.Column.DataType=} opt_datatype DataType , default DataType
  * is pear.data.Column.DataType.TEXT
+ * @param {number=} opt_datafield    field mapping to DataRow field name
  * @param {number=} opt_width    width of column , defaults to 75
  * @param {pear.data.Column.Align=} opt_align    text Align of column data ,
  * defaults to pear.data.Column.Align.LEFT
@@ -22,13 +23,14 @@ goog.require('goog.ui.IdGenerator');
  * @constructor
  * @extends {goog.events.EventTarget}
  */
-pear.data.Column = function(content,opt_id,opt_width,opt_datatype,opt_align) {
+pear.data.Column = function(content,id,opt_datafield,opt_width,opt_datatype,opt_align) {
   goog.Disposable.call(this);
   this.headerText_=content;
-  this.id = opt_id || goog.ui.IdGenerator.getInstance().getNextUniqueId();
+  this.id = id;
   this.dataType = opt_datatype || pear.data.Column.DataType.TEXT;
   this.width_=opt_width || 75;
   this.align_ = opt_align || pear.data.Column.Align.LEFT;
+  this.dataField_ = opt_datafield || this.id;
 };
 goog.inherits(pear.data.Column, goog.events.EventTarget);
 
@@ -76,6 +78,15 @@ pear.data.Column.prototype.headerText_ = '';
  * @private
  */
 pear.data.Column.prototype.id = '';
+
+
+/**
+ * Datafield ID
+ * @type {string}
+ * @private
+ */
+pear.data.Column.prototype.dataField_ = '';
+
 
 /**
  * align_
@@ -136,6 +147,15 @@ pear.data.Column.prototype.getHeaderText=function(){
  */
 pear.data.Column.prototype.getId=function(){
   return this.id;
+};
+
+/**
+ * get Data Field , bound to this column
+ * @return {string} [description]
+ * @public
+ */
+pear.data.Column.prototype.getDataField=function(){
+  return this.dataField_;
 };
 
 /**

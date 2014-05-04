@@ -26,7 +26,8 @@
  </style>
   <script src="../lib/closure-library/closure/goog/base.js"></script>
   <script src="../src/bin/release/pear.grid.js"></script>
-  <!--<script src="../src/pear/peardeps.js"></script>-->
+  <script src="js/demo.js"></script>
+
   <script>
     goog.require('goog.debug.DivConsole');
     goog.require('goog.debug.LogManager');
@@ -115,43 +116,18 @@
     return  elem.checked;
   };
 
-  var item = ['item-0','item-1','item-2','item-3','item-4','item-5','item-6','item-7','item-8','item-9'];
-  var item2 = ['changed-0','changed-1','changed-2','changed-3','changed-4','changed-5','changed-6','changed-7','changed-8','changed-9'];
-  var unitprice = [1.01,2.25,3.45,4.97,5.0,6.0,7.0,8.2,9.5,10];
-
   var grid;
-  var columns = [
-    new pear.data.Column("Order No",'orderno',75,pear.data.Column.DataType.NUMBER),
-    new pear.data.Column("Item",'item',115,pear.data.Column.DataType.TEXT),
-    new pear.data.Column("Unit Price",'unitprice',75,pear.data.Column.DataType.NUMBER),
-    new pear.data.Column("Quantity",'quantity',75,pear.data.Column.DataType.NUMBER),
-    new pear.data.Column("Total",'total',75,pear.data.Column.DataType.NUMBER),
-    new pear.data.Column("Created On",'created',95,pear.data.Column.DataType.DATETIME),
-    new pear.data.Column("Processed",'processed',95,pear.data.Column.DataType.BOOLEAN)
-  ];
+  
+  // Get Columns
+  var columns = demoDataset1GetColumns();
 
   var load = function () {
     if (grid){
       grid.dispose();
     }
-    var data = [];
-    var temp;
-    var start = new Date(2013,12,31);
-    for (var i = 0; i < 10025; i++) {
-      data[i] = {
-        orderno:  i +1
-      };
-      temp = Math.round(Math.random() * 9);
-     
-      data[i].item = item[temp];
-      data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 10000);
-      data[i].total = data[i].unitprice * data[i].quantity;
-      data[i].processed= (i % 5 === 0);
-      data[i].created = '11/21/2013';
-    }
-
-    var start = +new Date();  // log start timestamp
+   
+    // Get Rows
+    var data = demoDataSet1GetRows(10000);
 
 
     grid = new pear.ui.Grid();
@@ -171,9 +147,7 @@
     grid.registerPlugin( new pear.plugin.Pager());
 
     grid.render(goog.dom.getElement('target1'));
-    var end =  +new Date();  
-    var diff = end - start;
-    //console.log('Load Time : '+diff+'ms');
+   
     goog.events.listen(grid, GRID_EVENTS, logEvent);
   };
 

@@ -49,8 +49,6 @@ goog.require('goog.object');
 goog.require('pear.data.DataTable');
 goog.require('pear.data.DataView');
 goog.require('pear.data.Column');
-goog.require('pear.ui.Body');
-goog.require('pear.ui.BodyCanvas');
 goog.require('pear.ui.GridCell');
 goog.require('pear.ui.GridFooterRow');
 goog.require('pear.ui.GridHeaderCell');
@@ -380,13 +378,13 @@ pear.ui.Grid.prototype.headerRow_ = null;
 /**
  * body of grid
  * @private
- * @type {pear.ui.Body?}
+ * @type {goog.ui.Component?}
  */
-pear.ui.Grid.prototype.body_ = null;
+pear.ui.Grid.prototype.viewport_ = null;
 
 /**
  * Body Canvas 
- * @type {pear.ui.BodyCanvas?}
+ * @type {goog.ui.Component?}
  * @private
  */
 pear.ui.Grid.prototype.bodyCanvas_ = null;
@@ -514,21 +512,21 @@ var logger = goog.log.getLogger('demo');
 
 
 /**
- * @return {pear.ui.Body}
+ * @return {goog.ui.Component}
  * @public
  */
-pear.ui.Grid.prototype.getBody = function() {
-	return this.body_;
+pear.ui.Grid.prototype.getViewport = function() {
+	return this.viewport_;
 };
 
 
 /**
  * Body Canvas
- * @return {pear.ui.BodyCanvas}
+ * @return {goog.ui.Component}
  * @public
  */
 pear.ui.Grid.prototype.getBodyCanvas = function() {
-	return this.bodyCanvas_
+	return this.bodyCanvas_;
 };
 
 
@@ -881,6 +879,16 @@ pear.ui.Grid.prototype.setDataRows = function(data) {
 
 
 /**
+ * Get All DataRows - for cloned Rows use getClonedDataRows
+ * @return {Array.<Object.<string,*>>}
+ * @public
+ */
+pear.ui.Grid.prototype.getDataRows = function() {
+	var rows = this.getDataView().getDataRows();
+	return rows;
+};
+
+/**
  * Get All DataRows 
  * @return {Array.<Object.<string,*>>}
  * @public
@@ -1171,7 +1179,7 @@ pear.ui.Grid.prototype.gotoLastPage = function() {
  * @public
  */
 pear.ui.Grid.prototype.getSortedHeaderCell = function() {
-	var cell = this.headerRow_.getHeaderCellById(this.getSortColumnId());
+	var cell = this.headerRow_.getHeaderCellByColumnId(this.getSortColumnId());
 	return cell;
 };
 
@@ -1542,7 +1550,7 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
 	this.renderHeader_();
 
 	// Render Body and BodyCanvas -  Set the Height of Canvas
-	this.renderBody_();
+	this.renderviewport_();
 	this.renderBodyCanvas_();
 
 	if (this.showFooter_){
@@ -1690,21 +1698,23 @@ pear.ui.Grid.prototype.calculateBodyHeight_ = function(){
  * @private
  */
 pear.ui.Grid.prototype.setBodySize_ = function(){
-	var element = this.body_.getElement();
+	var element = this.viewport_.getElement();
 	goog.style.setHeight(element, this.calculateBodyHeight_());
 	goog.dom.classes.add(element, 'pear-grid-body');
 };
 
 
 /**
- * Render body of grid
+ * Render Viewport of Grid 
  * @private
  */
-pear.ui.Grid.prototype.renderBody_ = function() {
-	this.body_ = new pear.ui.Body();
-	this.addChild(this.body_, true);
+pear.ui.Grid.prototype.renderviewport_ = function() {
+	this.viewport_ = new goog.ui.Component();
+	this.addChild(this.viewport_, true);
+
+	goog.dom.classes.set(this.viewport_.getElement(), 'pear-grid-viewport');
   
-	this.registerEventsOnBody();
+	this.registerEventsOnViewport();
 };
 
 
@@ -1713,8 +1723,12 @@ pear.ui.Grid.prototype.renderBody_ = function() {
  * @private
  */
 pear.ui.Grid.prototype.renderBodyCanvas_ = function() {
-	this.bodyCanvas_ = new pear.ui.BodyCanvas();
-	this.body_.addChild(this.bodyCanvas_, true);
+	this.bodyCanvas_ = new goog.ui.Component();
+	this.viewport_.addChild(this.bodyCanvas_, true);
+
+	var elem = this.bodyCanvas_.getElement();
+	goog.dom.classes.set(elem, 'pear-grid-body-canvas');
+
 	this.registerEventsOnBodyCanvas();
 };
 
@@ -1743,8 +1757,8 @@ pear.ui.Grid.prototype.updateBodyCanvasHeight_ = function() {
  * @return {number} [description]
  * @private
  */
-pear.ui.Grid.prototype.getScrollLeftOfBody_ = function() { 
-	return  (/** @type {number} */ (this.body_.getElement().scrollLeft));
+pear.ui.Grid.prototype.getScrollLeftOfviewport_ = function() { 
+	return  (/** @type {number} */ (this.viewport_.getElement().scrollLeft));
 };
 
 /**
@@ -1771,7 +1785,7 @@ pear.ui.Grid.prototype.setScrollOnFooterRow_ = function(scrollLeft) {
  * @private
  */
 pear.ui.Grid.prototype.syncScrollLeft_ = function() {
-	var scrollLeft = this.getScrollLeftOfBody_();
+	var scrollLeft = this.getScrollLeftOfviewport_();
 	this.setScrollOnHeaderRow_(scrollLeft);
 	if ( this.showFooter_){
 		this.setScrollOnFooterRow_(scrollLeft);
@@ -1929,16 +1943,16 @@ pear.ui.Grid.prototype.debugRendering_ = function(start, end) {
  * @return {Object} [description]
  * @private
  */
-pear.ui.Grid.prototype.calculateViewportDimension_ = function (){
+pear.ui.Grid.prototype.calculateViewRange_ = function (){
 	var rowCount = this.getDataViewRowCount();
 	var rowHeight = this.getComputedRowHeight();
-	var canvasVisibleBeginPx = (this.body_.getElement().scrollTop >
+	var canvasVisibleBeginPx = (this.viewport_.getElement().scrollTop >
 			(rowHeight * 10))
-															? (this.body_.getElement().scrollTop -
+															? (this.viewport_.getElement().scrollTop -
 			(rowHeight * 10))
 															: 0;
 
-	var size = goog.style.getSize(this.body_.getElement());
+	var size = goog.style.getSize(this.viewport_.getElement());
 	var canvasSize = goog.style.getSize(this.bodyCanvas_.getElement());
 
 	var modulo = canvasVisibleBeginPx % rowHeight;
@@ -2072,21 +2086,21 @@ pear.ui.Grid.prototype.refreshOnColumnResize = function() {
  *     remove each gridrow from canvas
  */
 pear.ui.Grid.prototype.updateViewport_ = function(opt_redrawCanvas) {
-	var self = this;var viewDimension;
-	if ( Math.abs(this.previousScrollTop_ - this.body_.getElement().scrollTop)<50){
-		 viewDimension = self.calculateViewportDimension_ ();
-			self.cacheGridRowsReadyForViewport_(viewDimension.startRowIndex, viewDimension.endRowIndex);
-			self.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
-			self.removeRowsFromRowModelCache_(viewDimension.startRowIndex, viewDimension.endRowIndex);
+	var self = this;var viewportRange;
+	if ( Math.abs(this.previousScrollTop_ - this.viewport_.getElement().scrollTop)<50){
+		viewportRange = self.calculateViewRange_ ();
+		self.cacheGridRowsReadyForViewport_(viewportRange.startRowIndex, viewportRange.endRowIndex);
+		self.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
+		self.removeRowsFromRowModelCache_(viewportRange.startRowIndex, viewportRange.endRowIndex);
 	}else{
-		if (this.timer_){
-			clearTimeout(this.timer_);    
+		if (this.updateViewportTimer_){
+			clearTimeout(this.updateViewportTimer_);    
 		}
-		this.timer_ = setTimeout (function(){
-			 viewDimension = self.calculateViewportDimension_ ();
-			self.cacheGridRowsReadyForViewport_(viewDimension.startRowIndex, viewDimension.endRowIndex);
+		this.updateViewportTimer_ = setTimeout (function(){
+			viewportRange = self.calculateViewRange_ ();
+			self.cacheGridRowsReadyForViewport_(viewportRange.startRowIndex, viewportRange.endRowIndex);
 			self.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
-			self.removeRowsFromRowModelCache_(viewDimension.startRowIndex, viewDimension.endRowIndex);
+			self.removeRowsFromRowModelCache_(viewportRange.startRowIndex, viewportRange.endRowIndex);
 		},50);
 	}
 	this.restoreHighlightedRow_();
@@ -2150,7 +2164,7 @@ pear.ui.Grid.prototype.refresh = function() {
  * @return {number} Index of GridRow
  */
 pear.ui.Grid.prototype.getViewportTopRowIndex = function(){
-	var scrollTopBody = this.getBody().getElement().scrollTop;
+	var scrollTopBody = this.getViewport().getElement().scrollTop;
 	var height = this.getComputedRowHeight();
 
 	var index = Math.floor(scrollTopBody / height );
@@ -2179,20 +2193,21 @@ pear.ui.Grid.prototype.isBodyHasHScroll = function(){
 };
 
 /**
- * Bring Cell into View 
+ * Bring Cell into View , If getHighlighted Cell of Gridrow is 
  * @param {pear.ui.GridRow} gridrow
+ * @param {pear.ui.GridCell=} [opt_gridcell] [description]
  */
-pear.ui.Grid.prototype.scrollCellIntoView = function(gridrow) {
+pear.ui.Grid.prototype.scrollCellIntoView = function(gridrow,opt_gridcell) {
 	if (!this.getGridRowsCount_() /*&& !this.getConfiguration().AllowRowSelection*/
 	) {
 		return;
 	}
-	var scrollTopBody = this.getBody().getElement().scrollTop;
-	var scrollLeftBody = this.getBody().getElement().scrollLeft;
+	var scrollTopBody = this.getViewport().getElement().scrollTop;
+	var scrollLeftBody = this.getViewport().getElement().scrollLeft;
 	var positionRow = goog.style.getPosition(gridrow.getElement());
-	var boundBody = goog.style.getBounds(this.getBody().getElement());
+	var boundBody = goog.style.getBounds(this.getViewport().getElement());
 	var boundRow = goog.style.getBorderBoxSize(gridrow.getElement());
-	var cell = gridrow.getHighlighted() || gridrow.getChildAt(0);
+	var cell = opt_gridcell || gridrow.getHighlighted() || gridrow.getChildAt(0);
 	var positionCell = goog.style.getPosition(cell.getElement());
 	var boundCell = goog.style.getBorderBoxSize(cell.getElement());
 	var scrollVWidth = this.isBodyHasVScroll() ? this.getScrollbarWidth() : 0;
@@ -2212,8 +2227,8 @@ pear.ui.Grid.prototype.scrollCellIntoView = function(gridrow) {
 		scrollLeftBody = positionCell.x;
 	}
 
-	this.body_.getElement().scrollTop = scrollTopBody;
-	this.body_.getElement().scrollLeft = scrollLeftBody;
+	this.viewport_.getElement().scrollTop = scrollTopBody;
+	this.viewport_.getElement().scrollLeft = scrollLeftBody;
 };
 
 
@@ -2700,10 +2715,10 @@ pear.ui.Grid.prototype.registerEventsOnGridRow = function(row) {
  * Register events on Event Body - Mainly Scroll Event
  * @protected
  */
-pear.ui.Grid.prototype.registerEventsOnBody = function() {
+pear.ui.Grid.prototype.registerEventsOnViewport = function() {
 	// Capture Scroll Event on the Body Canvas Element for Virtualization
 	this.getHandler().
-			listenWithScope(this.body_.getElement(), goog.events.EventType.SCROLL,
+			listenWithScope(this.viewport_.getElement(), goog.events.EventType.SCROLL,
 					this.handleBodyCanvasScroll,false,this);
 };
 
@@ -2762,7 +2777,7 @@ pear.ui.Grid.prototype.handleFocus = function(ge) {
  */
 pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
 	logger.info( 'Received event ' + e.type);
-	if (this.previousScrollTop_ <= this.body_.getElement().scrollTop) {
+	if (this.previousScrollTop_ <= this.viewport_.getElement().scrollTop) {
 		this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.DOWN;
 	}else {
 		this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.UP;
@@ -2774,7 +2789,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
 		this.updateViewport_();
 	}
 
-	if (this.previousScrollLeft_ <= this.body_.getElement().scrollLeft) {
+	if (this.previousScrollLeft_ <= this.viewport_.getElement().scrollLeft) {
 		this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.RIGHT;
 	}else {
 		this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.LEFT;
@@ -2788,7 +2803,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
 
 
 	this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.NONE;
-	this.previousScrollTop_ = this.body_.getElement().scrollTop;
+	this.previousScrollTop_ = this.viewport_.getElement().scrollTop;
 
 	if (e) {
 		e.stopPropagation();
@@ -3040,10 +3055,10 @@ pear.ui.Grid.prototype.disposeInternal = function() {
 	});
 	this.gridRows_ = null;
 
-	if (this.body_){
-		this.body_.dispose();
+	if (this.viewport_){
+		this.viewport_.dispose();
 	}
-	this.body_ = null;
+	this.viewport_ = null;
 
 	if (this.bodyCanvas_){
 		this.bodyCanvas_.dispose();
@@ -3082,6 +3097,11 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   	this.focusHandler_.dispose();
   }
   this.focusHandler_ = null;
+
+  if (this.updateViewportTimer_){
+		clearTimeout(this.updateViewportTimer_);    
+	}
+	this.updateViewportTimer_=null;
 
 	delete this.width_;
 	delete this.height_;

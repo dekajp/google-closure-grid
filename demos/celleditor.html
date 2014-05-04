@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="css/demo.css" />
   <link rel="stylesheet" href="../src/css/grid.css" />
   <link rel="stylesheet" href="../src/css/plugin/titlebarplugin.css" />
-    <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css">
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css">
  
  <style>
   body {
@@ -39,6 +39,8 @@
  </style>
   <script src="../lib/closure-library/closure/goog/base.js"></script>
   <script src="../src/bin/release/pear.grid.js"></script>
+  <script src="js/demo.js"></script>
+
   <script>
     goog.require('goog.debug.DivConsole');
     goog.require('goog.debug.LogManager');
@@ -69,11 +71,6 @@
     <legend>Data / Debug</legend>
     <div id="">
       <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  /> </div>
-      <div class="config-item"> Nos Of Rows : 
-          <select id ="id_rows">
-             <option selected value="100">100</option>
-           </select> 
-      </div>
     </div>
   </fieldset>
  
@@ -216,45 +213,15 @@
     return  elem.checked;
   };
 
-  var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
-  var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
-
   var grid;
-  var columns = [
-
-    new pear.data.Column("Order No",'orderno',75,pear.data.Column.DataType.NUMBER),
-    new pear.data.Column("Item",'item',115,pear.data.Column.DataType.TEXT),
-    new pear.data.Column("Unit Price",'unitprice',75,pear.data.Column.DataType.NUMBER),
-    new pear.data.Column("Quantity",'quantity',75,pear.data.Column.DataType.NUMBER,pear.data.Column.Align.RIGHT),
-    new pear.data.Column("Total",'total',75,pear.data.Column.DataType.NUMBER),
-    new pear.data.Column("Created On",'created',95,pear.data.Column.DataType.DATETIME),
-    new pear.data.Column("Processed",'processed',95,pear.data.Column.DataType.BOOLEAN)
-  ];
+  var columns = demoDataset1GetColumns();
 
   var load = function () {
     if (grid){
       grid.dispose();
     }
-    var data = [];
-    var limit = goog.dom.forms.getValue(goog.dom.getElement('id_rows'));
-    var temp;
-    for (var i = 0; i < parseInt(limit,10); i++) {
-      data[i] = {
-        orderno:  i +1
-      };
-      temp = Math.round(Math.random() * 9);
-     
-      data[i].item = item[temp];
-      data[i].unitprice = unitprice[temp];
-      data[i].quantity = Math.round(Math.random() * 10);
-      data[i].total = data[i].unitprice * data[i].quantity;
-      data[i].processed= (i % 5 === 0);
-      data[i].created = '11/21/2013';
-    }
-
-    var start = +new Date();  // log start timestamp
-
-
+    var data = demoDataSet1GetRows(100);
+    
     grid = new pear.ui.Grid();
     var config = {
       AllowColumnResize: true,
@@ -272,11 +239,6 @@
     goog.events.listen(grid, GRID_EVENTS, logEvent);
 
     grid.render(goog.dom.getElement('target1'));
-    var end =  +new Date();  
-    var diff = end - start;
-    console.log('Load Time : '+diff+'ms');
-    logconsole.clear();
-    goog.log.fine(logger, 'Loaded '+limit+' rows. ');
 
   };
 

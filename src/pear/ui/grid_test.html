@@ -5,12 +5,21 @@
   <title>Closure Unit Tests - pear.ui.Grid</title>
   <link rel="stylesheet" href="../../css/grid.css" />
   <script src="../../../lib/closure-library/closure/goog/base.js"></script>
+  
   <script src="../peardeps.js"></script>
+  <script src="../peartestdata.js"></script>
+
+
   <script>
     goog.require('goog.dom');
     goog.require('goog.testing.jsunit');
     goog.require('goog.testing.events');
     goog.require('pear.ui.Grid');
+    goog.require('goog.i18n.NumberFormat')
+    goog.require('goog.i18n.DateTimeFormat');
+    goog.require('goog.testing.MockClock');
+
+
   </script>
 </head>
 <body>
@@ -20,39 +29,12 @@
   </div>
   <script>
     var grid;
-    var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
-    var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
-    var data = [];
-    var columns = [
-      new pear.data.Column("Order No",'orderno',75,pear.data.Column.DataType.NUMBER),
-      new pear.data.Column("Item",'item',115,pear.data.Column.DataType.TEXT),
-      new pear.data.Column("Unit Price",'unitprice',75,pear.data.Column.DataType.NUMBER),
-      new pear.data.Column("Quantity",'quantity',75,pear.data.Column.DataType.NUMBER),
-      new pear.data.Column("Total",'total',75,pear.data.Column.DataType.NUMBER),
-      new pear.data.Column("Created On",'created',95,pear.data.Column.DataType.DATETIME),
-      new pear.data.Column("Processed",'processed',95,pear.data.Column.DataType.BOOLEAN)
-    ];
-    function getData(){
-      data = [];
-      var limit = 500
-      var temp;
-      for (var i = 0; i < parseInt(limit,10); i++) {
-        data[i] = {
-          orderno:  i +1
-        };
-        temp = Math.round(Math.random() * 9);
-       
-        data[i].item = item[temp];
-        data[i].unitprice = unitprice[temp];
-        data[i].quantity = Math.round(Math.random() * 100);
-        data[i].total = data[i].unitprice * data[i].quantity;
-        data[i].processed= (i % 5 === 0);
-        data[i].created = '11/21/2013';
-      }
-
-      return data;
-    }
+    var mockClock ;
+    var columns ;
+    var data ;
+    
     function setUp() {
+      mockClock = new goog.testing.MockClock(true);
       grid = new pear.ui.Grid();
     }
 
@@ -60,10 +42,12 @@
       grid.setConfiguration(config);
     }
     function renderGrid(){
+      columns = testData1Columns();
+      data = testData1Rows(500);
       grid.setWidth(800);
       grid.setHeight(400);
       grid.setColumns(columns);
-      grid.setDataRows(getData());
+      grid.setDataRows(data);
       grid.render(goog.dom.getElement('target1'));
     }
 
@@ -71,17 +55,9 @@
       grid.dispose();
       grid = null;
       data=null;
+      mockClock.dispose();
     }
 
-    function dispatchScroll(target,newScrollTop) {
-      target.scrollTop = newScrollTop;
-      var e = document.createEvent("UIEvents");
-      // creates a scroll event that bubbles, can be cancelled,
-      // and with its view and detail property initialized to window and 1,
-      // respectively
-      e.initUIEvent("scroll", true, true, window, 1);
-      target.dispatchEvent(e);
-    }
 
     function testConstructor() {
       assertNotNull('Should have successful construction', grid);
@@ -96,7 +72,7 @@
       setConfiguration(config);
       renderGrid();
 
-      var headerCell=grid.getHeaderRow().getHeaderCellById("orderno");
+      var headerCell=grid.getHeaderRow().getHeaderCellByColumnId("orderno");
       var resizable = headerCell.getResizable();
       var resizableHandle = resizable.getHandle(pear.ui.Resizable.Position.RIGHT);
       goog.testing.events.fireMouseDownEvent(resizableHandle);
@@ -125,7 +101,7 @@
       setConfiguration(config);
       renderGrid();
 
-      var headerCell=grid.getHeaderRow().getHeaderCellById("orderno");
+      var headerCell=grid.getHeaderRow().getHeaderCellByColumnId("orderno");
       var resizable = headerCell.getResizable();
       assertNull('AllowColumnResize:false , No Resizable handle',resizable);
     }
@@ -138,7 +114,7 @@
       setConfiguration(config);
       renderGrid();
 
-      var headerCell=grid.getHeaderRow().getHeaderCellById("orderno");
+      var headerCell=grid.getHeaderRow().getHeaderCellByColumnId("orderno");
       var resizable = headerCell.getResizable();
       var resizableHandle = resizable.getHandle(pear.ui.Resizable.Position.RIGHT);
       assertNotNull('AllowColumnResize:true ,Resizable handle exists',resizableHandle);
@@ -254,8 +230,11 @@
       assertEvaluatesToTrue("firstrow inDocument",firstrow.isInDocument());
       assertEvaluatesToFalse("lastrow inDocument",lastrow.isInDocument());
 
-      var objDiv = grid.getBody().getElement();
+      var objDiv = grid.getViewport().getElement();
       dispatchScroll(objDiv,objDiv.scrollHeight);
+      
+      mockClock.tick(SCROLL_DELAY);
+
       assertEvaluatesToFalse("firstrow inDocument after full scroll",firstrow.isInDocument());
       assertEvaluatesToTrue("lastrow inDocument after full scroll",lastrow.isInDocument());
     }

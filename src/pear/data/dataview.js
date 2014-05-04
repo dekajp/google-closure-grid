@@ -13,9 +13,9 @@ goog.require('pear.data.RowView');
  * are done thru DataView . 
  * @example
  *     var columns = [
- *       new pear.data.Column("Order No",'orderno',75,pear.data.Column.DataType.NUMBER),
- *       new pear.data.Column("Item",'item',115,pear.data.Column.DataType.TEXT),
- *       new pear.data.Column("Unit Price",'unitprice',75,pear.data.Column.DataType.NUMBER),
+ *       new pear.data.Column("Order No",'orderno','orderno',75,pear.data.Column.DataType.NUMBER),
+ *       new pear.data.Column("Item",'item','item',115,pear.data.Column.DataType.TEXT),
+ *       new pear.data.Column("Unit Price",'unitprice','unitprice',75,pear.data.Column.DataType.NUMBER),
  *       ...
  *       ...
  *     ];

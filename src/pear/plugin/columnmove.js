@@ -125,7 +125,7 @@ pear.plugin.ColumnMove.prototype.handleDragEvent_ = function(ge) {
   // Refresh Header, Body,Footer
   grid.refreshAll();
 
-  var dragCell = headerRow.getHeaderCellById(this.dragColumnId_);
+  var dragCell = headerRow.getHeaderCellByColumnId(this.dragColumnId_);
   var evt = new pear.plugin.ColumnMoveEvent(
                     pear.plugin.ColumnMove.EventType.ON_COLUMN_POSITION_CHANGE,
                     this.getGrid(),
