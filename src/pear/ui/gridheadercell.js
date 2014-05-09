@@ -113,7 +113,7 @@ pear.ui.GridHeaderCell.prototype.setsortDirection = function(value) {
     goog.style.setElementShown(this.sortAscIndicator_,false);
     goog.style.setElementShown(this.sortDescIndicator_,false);
   }
-  this.adjustContentCellWidth();
+  this.adjustContentCellSize();
 };
 
 
@@ -257,7 +257,7 @@ pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function() {
   this.createHeaderCellContent_();
   
 
-  this.adjustContentCellWidth();
+  this.adjustContentCellSize();
 };
 
 /**
@@ -349,14 +349,13 @@ pear.ui.GridHeaderCell.prototype.createSortIndicators_ = function(){
   goog.dom.appendChild(this.sortIndicator_,this.sortDescIndicator_);
 }
 
-
 /**
- * Adjust Contnet cell width
+ * Adjust size of content cell. 
+ * @public
  */
-pear.ui.GridHeaderCell.prototype.adjustContentCellWidth = function() {
+pear.ui.GridHeaderCell.prototype.adjustContentCellSize = function() {
   this.syncContentCellOnResize_();
 };
-
 
 /**
  * Synchronize Cells on Resize Event
@@ -424,7 +423,7 @@ pear.ui.GridHeaderCell.prototype.slideMenuOpen = function(display) {
   }
   marginleft = marginleft * -1;
   this.handleMenuSlide_(this.headerMenuContainer_.getElement(), [marginleft]);
-  this.adjustContentCellWidth();
+  this.adjustContentCellSize();
 };
 
 
@@ -456,7 +455,7 @@ pear.ui.GridHeaderCell.prototype.setPosition = function() {
 pear.ui.GridHeaderCell.prototype.handleMenuSlide_ = function(el, value) {
   var anim = new pear.fx.dom.HeaderMenuSlide(el, [0], value, 300);
   goog.events.listen(anim, goog.fx.Animation.EventType.ANIMATE,
-      this.adjustContentCellWidth, false, this);
+      this.adjustContentCellSize, false, this);
   anim.play();
 };
 
@@ -532,7 +531,7 @@ pear.ui.GridHeaderCell.prototype.handleResize_ = function(ge) {
   var pos = this.getCellIndex();
   var grid = this.getGrid();
   grid.setColumnWidth(pos, ge.size.width);
-  this.adjustContentCellWidth();
+  this.adjustContentCellSize();
   // Give more realtime - resize
   grid.refreshOnColumnResize();
 };
@@ -549,7 +548,7 @@ pear.ui.GridHeaderCell.prototype.handleResizeEnd_ = function(ge) {
   // clear style
   goog.style.setSize(this.getElement(), '','');
   goog.style.setPosition(this.getElement(), '','');
-  // grid.refreshOnColumnResize();
+  grid.refreshCssStyle(true);
 };
 
 

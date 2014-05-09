@@ -15,7 +15,7 @@ goog.require('goog.ui.IdGenerator');
  * will generate a unique id for each column
  * @param {pear.data.Column.DataType=} opt_datatype DataType , default DataType
  * is pear.data.Column.DataType.TEXT
- * @param {number=} opt_datafield    field mapping to DataRow field name
+ * @param {string=} opt_datafield    field mapping to DataRow field name
  * @param {number=} opt_width    width of column , defaults to 75
  * @param {pear.data.Column.Align=} opt_align    text Align of column data ,
  * defaults to pear.data.Column.Align.LEFT
@@ -118,6 +118,13 @@ pear.data.Column.prototype.width_ = -1;
 pear.data.Column.prototype.visible_ = true;
 
 /**
+ * set freeze of column
+ * @type {boolean}
+ * @private
+ */
+pear.data.Column.prototype.freeze_ = false;
+
+/**
  * formatting function 
  * @type {function(pear.ui.GridCell)|null}
  * @private
@@ -193,6 +200,25 @@ pear.data.Column.prototype.getWidth=function(){
  */
 pear.data.Column.prototype.setWidth=function(width){
   return this.width_=width;
+};
+
+
+
+/**
+ * set column freeze
+ * @param {boolean} freeze 
+ */
+pear.data.Column.prototype.setFrozen=function(freeze){
+  return this.freeze_ = freeze;
+};
+
+/**
+ * Is Column Frozen
+ * @return {boolean}
+ * @public
+ */
+pear.data.Column.prototype.isFrozen=function(){
+  return this.freeze_;
 };
 
 

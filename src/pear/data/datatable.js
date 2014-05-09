@@ -27,19 +27,6 @@ goog.require('pear.data.Column');
  *     ...
  *   ];
  *
- *  
- * TODO - not available
- * add datarow array to hold object as data 
- * e.g [{display:'data1',...},{display:'data2',...}]
- * var data = [
- *     {orderno:{display :1 ,value:{}},item:{display :'Samsung-Galaxy' ,value:{}},......},
- *     {orderno:{display :2 ,value:{}},item:{display :'iphone' ,value:{}},......},
- *     {orderno:{display :3 ,value:{}},item:{display :'Kindle-Fire' ,value:{}},......},
- *     ...
- *     ...
- *     ...
- *   ];
- *   
  * @constructor
  * @extends {goog.events.EventTarget}
  */

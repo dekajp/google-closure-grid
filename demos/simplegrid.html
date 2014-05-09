@@ -45,7 +45,7 @@
 
   <fieldset class="goog-debug-panel">
     <legend>Data / Debug</legend>
-    <div id="">
+    <div id="" style="padding:0px 0px 0px 10px;">
       <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  /> </div>
       <div class="config-item"> Nos Of Rows : 
           <select id ="id_rows">
@@ -92,7 +92,7 @@
     grid = new pear.ui.Grid();
     var config = {
       AllowColumnResize: true,
-      AllowAlternateRowHighlight: false,
+      AllowAlternateRowHighlight: true,
       ShowCellBorder:true
     };
     config = grid.setConfiguration(config);
@@ -102,7 +102,6 @@
     grid.setColumns(columns);
     grid.setDataRows(data);
   
-
     grid.render(goog.dom.getElement('target1'));
    
   };

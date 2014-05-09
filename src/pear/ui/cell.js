@@ -95,6 +95,12 @@ pear.ui.Cell.prototype.enterDocument = function() {
   pear.ui.Cell.superClass_.
       enterDocument.call(this);
   // this.updateSizeAndPosition();
+  
+   // Frozen Column
+  if (this.getDataColumn().isFrozen()){
+    goog.dom.classes.add(this.getElement(), 'pear-grid-cell-frozen');
+  }
+  
 };
 
 

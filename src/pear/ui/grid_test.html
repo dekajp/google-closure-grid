@@ -156,7 +156,8 @@
 
       var firstrow = grid.getGridRowAt(0);
       var firstcell = firstrow.getChildAt(0);
-      var bound = goog.style.getComputedStyle(firstcell.getElement(),'height');
+      var bound = goog.style.getComputedStyle(firstrow.getElement(),'height');
+      var borderBox = goog.style.getBorderBoxSize(firstrow.getElement());
       assertEquals('Height ',config.RowHeight+'px',bound);
     }
 

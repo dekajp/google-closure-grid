@@ -43,7 +43,7 @@
   text-align: left;
 }
 
-.pear-grid-body{
+.pear-grid-viewport{
   overflow-y:scroll;
 }
 
@@ -60,7 +60,7 @@
   padding:0px 0px 0px 0px;
 }
 .pear-grid-row-header, .pear-grid-row-footer,
-.pear-grid-body{
+.pear-grid-viewport{
   position: relative;
   outline:none;
 }
@@ -83,6 +83,7 @@
 .pear-grid-row-data{
   position: absolute;
   outline:none;
+  background: white;
 }
 
 .pear-grid-row-data-horizontal{
@@ -90,6 +91,9 @@
 
 .pear-grid-row-over .pear-grid-cell{
   background: rgb(230, 230, 230);
+}
+.pear-grid-row-data-even{
+  background: white;
 }
 .pear-grid-row-data-odd{
   background: rgb(237, 245, 255);
@@ -116,8 +120,15 @@
   margin: 0;
   white-space: nowrap;
   cursor: default;
+  background-color: inherit;
+  border-right: 1px dotted silver;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
 }
 
+.pear-grid-cell-frozen{
+  z-index:1;
+}
 
 .pear-grid-cell-header ,
 .pear-grid-cell-footer{
@@ -216,9 +227,7 @@
   cursor: col-resize;
 }
 
-.pear-grid-cell{
-  border-right: 1px dotted silver;
-}
+
 
   .pear-ui-resizable-e {
     right: 0px;
