@@ -1683,7 +1683,7 @@ pear.ui.Grid.prototype.setCSSRulesInDocument  = function(){
 pear.ui.Grid.prototype.setColumnVisibility = function(columnId,visible) {
 	var column = this.getColumnById(columnId);
 	column.setVisibility(visible);
-	this.refreshAll();
+	this.refreshAll(true);
 };
 
 
@@ -2332,9 +2332,11 @@ pear.ui.Grid.prototype.refreshBody = function(opt_keepeditoralive) {
 
 /**
  * Entire Body of Grid is refreshed - header , footer , body and CSS Style
+ * @param  {boolean} opt_redrawStyle  if true , rebuild CSS Styles
+ * @public
  */
-pear.ui.Grid.prototype.refreshAll = function() {
-	this.refreshCssStyle();
+pear.ui.Grid.prototype.refreshAll = function(opt_redrawStyle) {
+	this.refreshCssStyle(opt_redrawStyle);
 	this.refreshHeader();
 	this.refreshBody();
 	if (this.getConfiguration().showFooter_){
