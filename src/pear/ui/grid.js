@@ -716,9 +716,6 @@ pear.ui.Grid.prototype.setColumnWidth = function(index, width) {
 	var coldata = this.getColumns_();
 	var diff = width - coldata[index].getWidth();
 	this.applyColumnWidth_(index, coldata[index].getWidth() + diff, true);
-
-	// this.updateWidthOfHeaderRow_();
-	// this.adjustWidthOfCanvas_();
 };
 
 
@@ -1717,32 +1714,28 @@ pear.ui.Grid.prototype.renderGrid_ = function() {
 	goog.style.setHeight(this.getElement(), this.height_);
 	goog.style.setWidth(this.getElement(), this.width_);
 
-	this.renderHeader_();
-
-	// Render Body and BodyCanvas -  Set the Height of Canvas
-	this.renderviewport_();
-	this.renderBodyCanvas_();
-
 	this.applyCSSStyleToGrid_();
 
 	// Prepare the CSS Style
 	this.buildCSSRules();
 	this.setCSSRulesInDocument();
-	//this.applyCSSRules_();
-
+	
+	// Render Grid
+	this.renderHeader_();
+	this.renderviewport_();
+	this.renderBodyCanvas_();
 	if (this.showFooter_){
 		this.renderFooter_();
 	}
 
-	this.setBodySize_();
+	// Adjust Size
+	this.setViewportSize();
 
 	this.transformDataRowsToGridRows_();
 	if (this.Configuration_.AllowPaging) {
 		this.setPageIndex(0);
 	}
 	this.updateBodyCanvasHeight_();
-	// this.updateWidthOfHeaderRow_();
-	// this.adjustWidthOfCanvas_();
 	this.updateViewport_();
 	this.restoreHighlightedRow_();
 	this.restoreSelectedRows_();
@@ -1874,10 +1867,9 @@ pear.ui.Grid.prototype.calculateBodyHeight_ = function(){
  * Set height and Width of Body Element
  * @private
  */
-pear.ui.Grid.prototype.setBodySize_ = function(){
+pear.ui.Grid.prototype.setViewportSize = function(){
 	var element = this.viewport_.getElement();
 	goog.style.setHeight(element, this.calculateBodyHeight_());
-	goog.dom.classes.add(element, 'pear-grid-body');
 };
 
 
