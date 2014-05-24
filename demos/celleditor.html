@@ -151,8 +151,17 @@
       
     });
 
-    editor.setCallbackToGetValueFromEditor(function (){
-     
+    editor.setValidateCallback(function (oldrowdata,newrowdata){
+      var success = true;
+      var index = goog.array.findIndex(item,function(elem,index){
+        if (elem === newrowdata["item"]){
+          return true;
+        }
+      });
+      var up = unitprice[index]; 
+      newrowdata["unitprice"]=up;
+      newrowdata['total'] = parseInt(newrowdata["quantity"],10) * parseFloat(newrowdata["unitprice"]);
+      return success;
     });
 
     return editor;

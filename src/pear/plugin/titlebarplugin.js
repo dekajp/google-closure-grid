@@ -116,11 +116,11 @@ pear.plugin.TitleBar.prototype.createMenu = function(){
  goog.events.listen(this.menu_, 'action', function(e) {
     var item = e.target;
     grid.setColumnVisibility(item.getCaption(),item.isChecked());
-    e.stopPropagation();
+    e.preventDefault();
   },false,this);
 
  goog.events.listen(this.menu_.getElement(),goog.events.EventType.CLICK,function(e){
-    e.stopPropagation();
+    e.preventDefault();
   },false,this);
 };
 

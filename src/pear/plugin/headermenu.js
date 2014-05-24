@@ -73,7 +73,7 @@ pear.plugin.HeaderMenu.prototype.createHeaderMenuDom = function() {
         });
 
     var mb = new pear.plugin.HeaderMenuButton('', m1);
-    mb.render(headercell.getMenuControl().getElement());
+    mb.render(headercell.getMenuElement());
     mb.setHeaderCell(headercell);
     this.headerMenuBtns_.push(mb);
 

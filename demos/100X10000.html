@@ -33,11 +33,35 @@
 </head>
 <body>
    <fieldset class="goog-debug-panel">
-    <legend>75 Columns</legend>
+    <legend>Simple Grid</legend>
     <div id="">
-      <li>75 X 10,000 </li>
+      <li>100 X 10,000 </li>
     </div>
   </fieldset>
+
+  <fieldset class="goog-debug-panel">
+    <legend>Data / Debug</legend>
+    <div id="">
+      <div class="config-item"> Console.dir {events} <input type="checkbox" id="id_consoledir"  /> </div>
+      <div class="config-item"> Nos Of Rows : 
+          <select id ="id_rows">
+             <option  value="10">10</option>
+             <option value="100">100</option>
+             <option value="1000">1000</option>
+             <option selected value="10000">10,000</option>
+             <option value="50000">50,000</option>
+           </select> 
+      </div>
+    </div>
+  </fieldset>
+ 
+  <fieldset class="goog-debug-panel">
+    <legend>Action</legend>
+    <div id="">
+    <input class="config-item" type="button" id="id_reload" value="Reload"  />
+    <input class="config-item" type="button" id="id_cleareventlog" value="Clear Event Log" onclick="logconsole.clear()" />
+  </fieldset>
+  <br>
 
   <!-- This div will have a Sample Component added to its contents. -->
   <div id="target1">
@@ -67,9 +91,15 @@
      // var caption = (typeof component.getCaption == 'function') ?
      //     component.getCaption() : component.getId();
       logger.info(' dispatched: ' + e.type);
+
      // if (isChecked('id_consoledir')){
      //   console.dir(e);
      // }
+
+      if (isChecked('id_consoledir')){
+        console.dir(e);
+      }
+
     }
 
   function isChecked(id,name){
@@ -89,10 +119,12 @@
   var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
 
   var grid;
-  var NoOfRows=10000;
-  var NoOfCols=50;
+
+  var NoOfRows=parseInt(goog.dom.forms.getValue(goog.dom.getElement('id_rows')),10);
+  var NoOfCols=250;
 
   var load = function () {
+    NoOfRows=parseInt(goog.dom.forms.getValue(goog.dom.getElement('id_rows')),10);
     if (grid){
       grid.dispose();
     }
@@ -117,8 +149,10 @@
     };
     config = grid.setConfiguration(config);
 
+
     grid.setWidth(window.innerWidth-50);
     grid.setHeight(window.innerHeight-200);
+
     grid.setColumns(getColumns(NoOfCols));
     grid.setDataRows(data);
     
@@ -132,6 +166,8 @@
     logconsole.clear();
   };
 
+
+  goog.events.listen(goog.dom.getElement('id_reload'), goog.events.EventType.CLICK, load);
 
   load();
   

@@ -200,7 +200,7 @@
 .pear-grid-cell-header-hover .pear-grid-cell-header-slidemenu{
    display: inline-block;
 }
-.pear-grid-cell-data-hover .pear-grid-cell-data-content{
+.pear-grid-row-highlight .pear-grid-cell-data-highlight .pear-grid-cell-data-content{
   border: 1px solid black;
 }
 

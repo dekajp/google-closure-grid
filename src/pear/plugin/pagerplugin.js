@@ -278,7 +278,7 @@ pear.plugin.Pager.prototype.handleAction_ = function(ge) {
   }else if (ge.target === this.navControl_[1]) {
     grid.gotoNextPage();
   }
-  ge.stopPropagation();
+  ge.preventDefault();
 };
 
 

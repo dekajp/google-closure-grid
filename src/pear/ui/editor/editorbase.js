@@ -213,10 +213,9 @@ pear.ui.editor.EditorBase.prototype.createEditorRootDom = function() {
   goog.events.listen(this.getKeyHandler(),
           goog.events.KeyHandler.EventType.KEY,
             this.handleKeyEvent, false, this);
-  //goog.events.listen(this.getEventTarget(), goog.events.EventType.MOUSEOVER, this.handleMouseEvent);
+  goog.events.listen(this.getEventTarget(), goog.events.EventType.CLICK, this.handleMouseEvent);
   goog.events.listen(this.getEventTarget(), goog.events.EventType.MOUSEDOWN, this.handleMouseEvent);
   goog.events.listen(this.getEventTarget(), goog.events.EventType.MOUSEUP, this.handleMouseEvent);
-  //goog.events.listen(this.getEventTarget(), goog.events.EventType.MOUSEOUT, this.handleMouseEvent);
 };
 
 
@@ -261,7 +260,7 @@ pear.ui.editor.EditorBase.prototype.createEditorDom = function() {};
  * @private
  */
 pear.ui.editor.EditorBase.prototype.handleMouseEvent = function (be){
-  be.stopPropagation();
+  be.preventDefault();
 }
 
 /**
@@ -269,10 +268,9 @@ pear.ui.editor.EditorBase.prototype.handleMouseEvent = function (be){
  * @private
  */
 pear.ui.editor.EditorBase.prototype.detachEvents_ = function(){
-  //goog.events.unlisten(this.getEventTarget(), goog.events.EventType.MOUSEOVER, this.handleMouseEvent);
+  goog.events.unlisten(this.getEventTarget(), goog.events.EventType.CLICK, this.handleMouseEvent);
   goog.events.unlisten(this.getEventTarget(), goog.events.EventType.MOUSEDOWN, this.handleMouseEvent);
   goog.events.unlisten(this.getEventTarget(), goog.events.EventType.MOUSEUP, this.handleMouseEvent);
-  //goog.events.unlisten(this.getEventTarget(), goog.events.EventType.MOUSEOUT, this.handleMouseEvent);
   
   goog.dom.removeNode(this.getEventTarget());
   this.rootElement_ = null;

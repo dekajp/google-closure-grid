@@ -169,7 +169,7 @@ pear.plugin.FilterMenu.prototype.createHeaderMenuDom = function() {
     var mb = new pear.plugin.FilterMenuButton(goog.dom.createDom('div',
                        'fa fa-caret-square-o-down'));
     mb.setHeaderCell(headercell);
-    mb.render(headercell.getMenuControl().getElement());
+    mb.render(headercell.getMenuElement());
     //goog.dom.appendChild(headercell.getMenuControl().getElement(),mb);
     this.headerMenuBtns_.push(mb);
   },this);
@@ -178,7 +178,6 @@ pear.plugin.FilterMenu.prototype.createHeaderMenuDom = function() {
     goog.events.listen(mb, goog.ui.Component.EventType.ACTION, 
                                               this.showFilterUI_, false, this);
     goog.events.listen(mb.getElement(), goog.events.EventType.MOUSEDOWN,function(e){
-      e.stopPropagation();
       e.preventDefault();
     });
   },this);
@@ -308,9 +307,9 @@ pear.plugin.FilterMenu.prototype.showFilterUI_ = function(ge) {
   }
 
   this.headerCell_ = mb.getHeaderCell();
-  var menuElement = this.headerCell_.getMenuControl().getElement();
+  var menuElement = this.headerCell_.getMenuElement();
   var menuPosition = goog.style.getRelativePosition(menuElement, this.getGrid().getElement());
-  menuPosition.y = menuPosition.y + goog.style.getSize(this.headerCell_.getMenuControl().getElement()).height;
+  menuPosition.y = menuPosition.y + goog.style.getSize(this.headerCell_.getMenuElement()).height;
   var position = new goog.positioning.AbsolutePosition(menuPosition,
       goog.positioning.Corner.TOP_START);
 
@@ -329,8 +328,7 @@ pear.plugin.FilterMenu.prototype.showFilterUI_ = function(ge) {
 
   goog.dom.setTextContent(this.titleContent_, this.headerCell_.getContentText());
   this.filterInput_.setValue(text);
-
-  ge.stopPropagation();
+  
   ge.preventDefault();
 };
 

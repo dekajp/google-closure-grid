@@ -253,7 +253,6 @@ pear.ui.Resizable.prototype.getSize_ = function(el ) {
  * @private
  */
 pear.ui.Resizable.prototype.handleEvents_ = function(e) {
-  e.stopPropagation();
   e.preventDefault();
 };
 
@@ -277,8 +276,6 @@ pear.ui.Resizable.prototype.handleDragStart_ = function(ge) {
   this.handlerOffsetCoord_ = new goog.math.Coordinate(targetPos.x, targetPos.y);
   this.elementCoord_ = coord;
   this.elementSize_ = new goog.math.Size(size.width, size.height);
-
-  ge.stopPropagation();
 
   // TODO : Calculate final size here
   this.dispatchResizableEvent_(pear.ui.Resizable.EventType.START_RESIZE,null);
@@ -339,7 +336,7 @@ pear.ui.Resizable.prototype.handleDrag_ = function(ge) {
     el.resize(size);
   }
 
-  ge.stopPropagation();
+  ge.preventDefault();
   return false;
 };
 
@@ -349,7 +346,7 @@ pear.ui.Resizable.prototype.handleDrag_ = function(ge) {
  * @private
  */
 pear.ui.Resizable.prototype.handleDragEnd_ = function(ge) {
-  ge.stopPropagation();
+  ge.preventDefault();
   // TODO : Calculate final size here
   this.dispatchResizableEvent_(pear.ui.Resizable.EventType.END_RESIZE,null);
 };

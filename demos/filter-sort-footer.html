@@ -120,9 +120,12 @@
 
   function dateFormatter(gridcell){
     var fmt = new goog.i18n.DateTimeFormat (goog.i18n.DateTimeFormat.Format.SHORT_DATE);
-    var text = fmt.format(gridcell.getCellData());
-
-    goog.dom.setTextContent(gridcell.getContentElement(),text);
+    if (gridcell.getCellData()){
+      var text = fmt.format(gridcell.getCellData());
+      goog.dom.setTextContent(gridcell.getContentElement(),text);
+    }else{
+      goog.dom.setTextContent(gridcell.getContentElement(),'');
+    }
   };
   
   function isChecked(id,name){

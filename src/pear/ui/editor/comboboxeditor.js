@@ -83,7 +83,7 @@ pear.ui.editor.ComboBoxEditor.prototype.createEditorDom = function() {
   goog.events.listen(this.input_, 'change', function(ge){
           this.setValueFromEditor();
           this.commit();
-          ge.stopPropagation();
+          ge.preventDefault();
         },false,this);
 };
 

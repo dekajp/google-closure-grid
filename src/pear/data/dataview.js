@@ -144,6 +144,11 @@ pear.data.DataView.prototype.originalDataRowViews_ = [];
  */
 pear.data.DataView.prototype.selectedRowViewsIds_ = [];
 
+/**
+ * @private
+ * @type {boolean}
+ */
+pear.data.DataView.prototype.datasourceChanged = false;
 
 /**
  * get All Columns info 
@@ -164,6 +169,24 @@ pear.data.DataView.prototype.setColumns = function(dc) {
   this.dataTable_.setColumns(dc);
 };
 
+
+/**
+ * 
+ * @return {boolean}
+ * @public
+ */
+pear.data.DataView.prototype.isDatasourceChanged = function() {
+  return this.datasourceChanged;
+};
+
+
+/**
+ * 
+ * @public
+ */
+pear.data.DataView.prototype.resetDatasourceChangeIndicator = function() {
+  this.datasourceChanged=false;
+};
 
 /**
  * Get DataRows
@@ -197,6 +220,7 @@ pear.data.DataView.prototype.getDataRows = function() {
  */
 pear.data.DataView.prototype.setDataRows = function(data) {
   this.dataTable_.setDataRows(data);
+  this.datasourceChanged = true;
   this.dispatchDataSourceChange_();
   this.initDataRowViews_();
   this.dispatchDataViewChange_();
@@ -233,6 +257,7 @@ pear.data.DataView.prototype.initDataRowViews_ = function() {
  */
 pear.data.DataView.prototype.setDataRowViews = function(rowViews) {
   this.dataRowViews_ = rowViews;
+  this.datasourceChanged = true;
   this.dispatchDataViewChange_();
 };
 

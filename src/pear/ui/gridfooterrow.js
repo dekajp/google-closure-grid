@@ -1,6 +1,5 @@
 goog.provide('pear.ui.GridFooterRow');
 
-goog.require('pear.ui.GridFooterRowRenderer');
 goog.require('pear.ui.Row');
 
 
@@ -12,22 +11,21 @@ goog.require('pear.ui.Row');
  * @extends {pear.ui.Row}
  * @param {pear.ui.Grid} grid
  * @param {number} height
- * @param {?goog.ui.Container.Orientation=} opt_orientation Container
- *     orientation; defaults to {@code VERTICAL}.
- * @param {goog.ui.ContainerRenderer=} opt_renderer Renderer used to render or
- *     decorate the container; defaults to {@link goog.ui.ContainerRenderer}.
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.GridFooterRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
-
-  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL,
-      pear.ui.GridFooterRowRenderer.getInstance(),
-      opt_domHelper);
-  this.setFocusable(false);
+pear.ui.GridFooterRow = function(grid, height, opt_domHelper) {
+  pear.ui.Row.call(this, grid, height,opt_domHelper);
 };
 goog.inherits(pear.ui.GridFooterRow, pear.ui.Row);
 
+/**
+ * Default CSS class to be applied to the root element of containers rendered
+ * by this renderer.
+ * @type {string}
+ */
+pear.ui.GridFooterRow.CSS_CLASS =
+    goog.getCssName('pear-grid-row-footer');
 
 /**
  * @inheritDoc
@@ -65,5 +63,9 @@ pear.ui.GridFooterRow.prototype.disposeInternal = function() {
 pear.ui.GridFooterRow.prototype.enterDocument = function() {
   pear.ui.GridFooterRow.superClass_.enterDocument.call(this);
   
+  var elem = this.getElement();
+  var baseClass = pear.ui.GridFooterRow.CSS_CLASS;
+
+  goog.dom.classes.add(elem, pear.ui.GridFooterRow.CSS_CLASS);
 };
 

@@ -1,38 +1,30 @@
 goog.provide('pear.ui.Row');
 
-goog.require('goog.ui.Container');
+goog.require('goog.ui.Component');
 goog.require('pear.data.RowView');
-goog.require('pear.ui.RowRenderer');
 
 
 
 /**
- * Row
+ * Row - represent row in a grid. All kind of rows (datarow,footerrow)
+ * must inherit this class
  *
  * @constructor
- * @extends {goog.ui.Container}
+ * @extends {goog.ui.Component}
  * @param {pear.ui.Grid} grid
  * @param {number} height
- * @param {?goog.ui.Container.Orientation=} opt_orientation Container
- *     orientation; defaults to {@code VERTICAL}.
- * @param {goog.ui.ContainerRenderer=} opt_renderer Renderer used to render or
- *     decorate the container; defaults to {@link goog.ui.ContainerRenderer}.
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.Row = function(grid, height, opt_orientation,
-    opt_renderer, opt_domHelper) {
+pear.ui.Row = function(grid, height,opt_domHelper) {
 
-  goog.ui.Container.call(this, goog.ui.Container.Orientation.HORIZONTAL,
-      opt_renderer || pear.ui.RowRenderer.getInstance(),
-      opt_domHelper);
+  goog.ui.Component.call(this, opt_domHelper);
 
   // To avoid Blur Event on Header cells
-  this.setFocusable(false);
   this.setHeight(height);
   this.setGrid(grid);
 };
-goog.inherits(pear.ui.Row, goog.ui.Container);
+goog.inherits(pear.ui.Row, goog.ui.Component);
 
 
 /**
@@ -58,6 +50,12 @@ pear.ui.Row.prototype.height_ = -1;
 */
 pear.ui.Row.prototype.rowPosition_ = -1;
 
+/**
+ * Default CSS class to be applied to the root element 
+ * @type {string}
+ */
+pear.ui.Row.CSS_CLASS =
+    goog.getCssName('pear-grid-row');
 
 /**
   @override
@@ -67,6 +65,7 @@ pear.ui.Row.prototype.enterDocument = function() {
   var elem = this.getElement();
 
   this.setPosition();
+  goog.dom.classes.add(elem, pear.ui.Row.CSS_CLASS);
 };
 
 
@@ -232,9 +231,7 @@ pear.ui.Row.prototype.setPosition = function() {
   @param {goog.events.BrowserEvent} be
 */
 pear.ui.Row.prototype.handleScroll_ = function(be) {
-
   var cell = this.getChild(be.target.id);
-  be.stopPropagation();
   be.preventDefault();
 };
 
@@ -255,12 +252,21 @@ pear.ui.Row.prototype.handleClickEvent_ = function(be) {
  * Returns the child control that owns the given DOM node, or null if no such
  * control is found.
  * @param {Node} node DOM node whose owner is to be returned.
- * @return {goog.ui.Control?} Control hosted in the container to which the node
+ * @return {pear.ui.GridCell?} Control hosted in the Component to which the node
  *     belongs (if found)
  * @public
  */
 pear.ui.Row.prototype.getNodeOwnerControl = function(node) {
-  return pear.ui.Row.superClass_.getOwnerControl.call(this,node);
+  var elem = this.getElement();
+  while (node && node !== elem) {
+    var id = node.id;
+    var cell = this.getChild(id)
+    if (cell){
+      return (/** @type {pear.ui.GridCell} */ (cell));
+    }
+    node = node.parentNode;
+  }
+  return null;
 };
 
 /**

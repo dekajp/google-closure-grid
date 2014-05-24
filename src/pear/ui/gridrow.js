@@ -1,6 +1,5 @@
 goog.provide('pear.ui.GridRow');
 
-goog.require('pear.ui.GridRowRenderer');
 goog.require('pear.ui.Row');
 
 
@@ -12,17 +11,11 @@ goog.require('pear.ui.Row');
  * @extends {pear.ui.Row}
  * @param {pear.ui.Grid} grid
  * @param {number} height
- * @param {?goog.ui.Container.Orientation=} opt_orientation Container
- *     orientation; defaults to {@code VERTICAL}.
- * @param {goog.ui.ContainerRenderer=} opt_renderer Renderer used to render or
- *     decorate the container; defaults to {@link goog.ui.ContainerRenderer}.
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.GridRow = function(grid, height, opt_orientation, opt_renderer, opt_domHelper) {
-  pear.ui.Row.call(this, grid, height, goog.ui.Container.Orientation.HORIZONTAL,
-                        pear.ui.GridRowRenderer.getInstance(),
-                        opt_domHelper);
+pear.ui.GridRow = function(grid, height, opt_domHelper) {
+  pear.ui.Row.call(this, grid, height, opt_domHelper);
 
   
 };
@@ -49,6 +42,13 @@ pear.ui.GridRow.prototype.selected_ = false;
  */
 pear.ui.GridRow.prototype.highlighted_ = false;
 
+/**
+ * Default CSS class to be applied to the root element of containers rendered
+ * by this renderer.
+ * @type {string}
+ */
+pear.ui.GridRow.CSS_CLASS =
+    goog.getCssName('pear-grid-row-data');
 
 /**
  * [getLocationTop description]
@@ -85,22 +85,45 @@ pear.ui.GridRow.prototype.isSelected = function() {
   return this.selected_;
 };
 
+pear.ui.GridRow.prototype.isVisible = function() {
+  return true;
+};
+
+
+pear.ui.GridRow.prototype.isEnabled = function() {
+  return true;
+};
+
 
 /**
  * [setHighlight description]
  * @param {boolean} highlight
  */
 pear.ui.GridRow.prototype.setHighlight = function(highlight) {
+  
   if (highlight) {
     goog.dom.classes.add(this.getElement(), 'pear-grid-row-highlight');
     this.highlighted_ = true;
   }else {
     goog.dom.classes.remove(this.getElement(), 'pear-grid-row-highlight');
-    this.setHighlightedIndex(-1);
     this.highlighted_ = false;
+    this.clearHighlight();
   }
 };
 
+pear.ui.GridRow.prototype.clearHighlight = function(){
+  this.forEachChild(function(child){
+    child.setHighlight(false);
+  });
+  this.highlightedCellIndex_ = -1;
+};
+
+pear.ui.GridRow.prototype.highlightChildAt = function(index){
+  this.clearHighlight();
+  var child = this.getChildAt(index);
+  child.setHighlight(true);
+  this.highlightedCellIndex_ = index;
+};
 
 /**
  * [setSelect description]
@@ -137,45 +160,28 @@ pear.ui.GridRow.prototype.repositionCells = function() {
 pear.ui.GridRow.prototype.enterDocument = function() {
   pear.ui.Row.superClass_.enterDocument.call(this);
   var elem = this.getElement();
+  var baseClass = pear.ui.GridRow.CSS_CLASS;
+
+  goog.dom.classes.add(elem, pear.ui.GridRow.CSS_CLASS);
+
+  var even = this.getRowPosition() % 2 == 0;
+  if (this.isAllowAlternateRowHighlight()) {
+    goog.dom.classes.add(elem,even ? goog.getCssName(baseClass, 'even') :
+                        goog.getCssName(baseClass, 'odd'));
+  }else {
+    // No Alternate Color Highlight
+  }
+
+  // if (!this.isEnabled()) {
+  //  goog.dom.classes.add(elem,goog.getCssName(baseClass, 'disabled'));
+  //}
 
   this.setPosition();
-
-  // Unlisten Key Handling - All Key Handling will be done at Grid Level
-  var handler = this.getHandler();
-  handler.
-      unlisten(this.getKeyHandler(), goog.events.KeyHandler.EventType.KEY,
-      this.handleKeyEvent);
 
   // Sync GridRow root element ID with DataRow ID
   this.setId(this.getDataRowId());
   this.getElement().id = this.getId();
 };
-
-
-/**
- * [handleEnterItem description]
- * @param  {goog.events.Event} ge
- * @return {boolean}
- */
-pear.ui.GridRow.prototype.handleEnterItem = function(ge) {
-  return true;
-};
-
-/**
- * Handles blur events raised when the container's key event target loses
- * keyboard focus.  The default implementation clears the highlight index.
- * @param {goog.events.BrowserEvent} e Blur event to handle.
- */
-pear.ui.GridRow.prototype.handleBlur = function(e) {
-  // this.setHighlightedIndex(-1);
-  this.setMouseButtonPressed(false);
-  // If the container loses focus, and one of its children is open, close it.
-  //if (this.openItem_) {
-  //  this.openItem_.setOpen(false);
-  //}
-};
-
-
 
 /**
  * [getDataRowId description]
@@ -195,42 +201,10 @@ pear.ui.GridRow.prototype.isAllowAlternateRowHighlight = function() {
   return this.getGrid().getConfiguration().AllowAlternateRowHighlight;
 };
 
-/**
- * 
- */
-pear.ui.Row.prototype.setPosition = function() {
-  var left, top;
-  left = 0;
-  top = 0;
-  left = 0;
-  top = this.getLocationTop();
-
-  goog.style.setPosition(this.getElement(), left, top);
-};
-
-/**
- * @inheritDoc
- */
-pear.ui.Row.prototype.handleKeyEventInternal = function(e) {
-  var returnResult = pear.ui.Row.superClass_.handleKeyEventInternal.call(this,e);
-  switch(e.keyCode) {
-    case goog.events.KeyCodes.TAB:
-      if (this.getOrientation() == goog.ui.Container.Orientation.HORIZONTAL) {
-        this.highlightNext();
-      } else {
-        return false;
-      }
-      break;
-    default:
-      return false;
-  }
-  return true;
-};
 
 /**
  * @override
  */
 pear.ui.GridRow.prototype.disposeInternal = function() {
-  this.setFocusable(false);
   pear.ui.GridRow.superClass_.disposeInternal.call(this);
 };

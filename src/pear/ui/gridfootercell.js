@@ -1,28 +1,19 @@
 goog.provide('pear.ui.GridFooterCell');
 
 goog.require('pear.ui.Cell');
-goog.require('pear.ui.GridFooterCellRenderer');
 
 
 
 /**
  * grid footer cell
  *
- * @param {goog.ui.ControlRenderer=} opt_renderer Renderer used to render or
- *     decorate the component; defaults to {@link goog.ui.ControlRenderer}.
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper, used for
  *     document interaction.
  * @constructor
  * @extends {pear.ui.Cell}
  */
-pear.ui.GridFooterCell = function(opt_domHelper, opt_renderer) {
-  pear.ui.Cell.call(this, pear.ui.GridFooterCellRenderer.getInstance(),
-      opt_domHelper);
-
-  // Allow Row Highlight on MouseOver and Keyboard navigation
-  this.setSupportedState(goog.ui.Component.State.HOVER, true);
-  this.setSupportedState(goog.ui.Component.State.SELECTED, true);
-  this.setSupportedState(goog.ui.Component.State.ACTIVE, true);
+pear.ui.GridFooterCell  = function(opt_domHelper) {
+  pear.ui.Cell.call(this,opt_domHelper);
 };
 goog.inherits(pear.ui.GridFooterCell, pear.ui.Cell);
 
@@ -32,6 +23,12 @@ goog.inherits(pear.ui.GridFooterCell, pear.ui.Cell);
  */
 pear.ui.GridFooterCell.prototype.contentElement_ = null;
 
+/**
+ * Default CSS class to be applied to the root element of cell
+ * @type {string}
+ */
+pear.ui.GridFooterCell.CSS_CLASS =
+    goog.getCssName('pear-grid-cell-footer');
 
 /**
  * set Content Element 
@@ -112,53 +109,39 @@ pear.ui.GridFooterCell.prototype.applyFooterAggregrates = function() {
  */
 pear.ui.GridFooterCell.prototype.enterDocument = function() {
   pear.ui.GridFooterCell.superClass_.enterDocument.call(this);
-};
 
 
-/**
- * @override
- */
-pear.ui.GridFooterCell.prototype.performActionInternal = function(e) {
-  if (this.isAutoState(goog.ui.Component.State.CHECKED)) {
-    this.setChecked(!this.isChecked());
-  }
-  if (this.isAutoState(goog.ui.Component.State.SELECTED) &&
-      this.getGrid().getConfiguration().SelectionMode ===
-      pear.ui.Grid.SelectionMode.CELL) {
-    this.setSelected(true);
-  }
-  if (this.isAutoState(goog.ui.Component.State.OPENED)) {
-    this.setOpen(!this.isOpen());
-  }
+  goog.dom.classes.add(this.getElement(), pear.ui.GridFooterCell.CSS_CLASS);
+  goog.dom.classes.add(this.getElement(), 'col'+this.getCellIndex());
 
-  var actionEvent = new goog.events.Event(goog.ui.Component.EventType.ACTION,
-      this);
-  if (e) {
-    actionEvent.altKey = e.altKey;
-    actionEvent.ctrlKey = e.ctrlKey;
-    actionEvent.metaKey = e.metaKey;
-    actionEvent.shiftKey = e.shiftKey;
-    actionEvent.platformModifierKey = e.platformModifierKey;
-  }
-  return this.dispatchEvent(actionEvent);
+  var cellElement = this.getDomHelper().createDom(
+      'div', ' '+goog.getCssName(pear.ui.GridFooterCell.CSS_CLASS,'content')+'  overflowhidden', this.getContent());
+
+  var align = this.getDataColumn().getAlign();
+  var aligncss = (align === pear.data.Column.Align.LEFT)? 
+      goog.getCssName(pear.ui.GridCell.CSS_CLASS,'left'):
+      goog.getCssName(pear.ui.GridCell.CSS_CLASS,'right');
+  goog.dom.classes.add(cellElement, aligncss);
+
+  this.setContentElement(cellElement);
+  this.getDomHelper().appendChild(this.getElement(),cellElement);
+  // Set Size of Content Element
+  this.applyFormatting();
 };
 
 /**
- * Checks if a mouse event (mouseover or mouseout) occured below an element.
- * @param {goog.events.BrowserEvent} e Mouse event (should be mouseover or
- *     mouseout).
- * @param {Element} elem The ancestor element.
- * @return {boolean} Whether the event has a relatedTarget (the element the
- *     mouse is coming from) and it's a descendent of elem.
- * 
- * @private
+ * Returns the text caption or DOM structure displayed in the component.
+ * @public
  */
-pear.ui.GridFooterCell.prototype.isMouseEventWithinElement_ = function(e, elem) {
-  // If relatedTarget is null, it means there was no previous element (e.g.
-  // the mouse moved out of the window).  Assume this means that the mouse
-  // event was not within the element.
-  return !!e.relatedTarget && goog.dom.contains(elem, e.relatedTarget);
+pear.ui.GridFooterCell.prototype.applyFormatting = function() {
+  var columnObject = this.getDataColumn();
+  var formatter = columnObject.getColumnFormatter();
+  var handler = formatter.handler || this;
+  if (formatter && formatter.fn){
+    formatter.fn.call(handler,this);
+  }
 };
+
 
 
 /**

@@ -1,28 +1,18 @@
 goog.provide('pear.ui.GridCell');
 
 goog.require('pear.ui.Cell');
-goog.require('pear.ui.GridCellRenderer');
-
 
 
 /**
  * GridCell
  * 
- * @param {goog.ui.ControlRenderer=} opt_renderer Renderer used to render or
- *     decorate the component; defaults to {@link goog.ui.ControlRenderer}.
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper, used for
  *     document interaction.
  * @constructor
  * @extends {pear.ui.Cell}
  */
-pear.ui.GridCell = function(opt_domHelper, opt_renderer) {
-  pear.ui.Cell.call(this, pear.ui.GridCellRenderer.getInstance(),
-      opt_domHelper);
-
-  // Allow Row Highlight on MouseOver and Keyboard navigation
-  this.setSupportedState(goog.ui.Component.State.HOVER, true);
-  this.setSupportedState(goog.ui.Component.State.SELECTED, true);
-  this.setSupportedState(goog.ui.Component.State.ACTIVE, true);
+pear.ui.GridCell = function(opt_domHelper) {
+  pear.ui.Cell.call(this,opt_domHelper);
 };
 goog.inherits(pear.ui.GridCell, pear.ui.Cell);
 
@@ -33,6 +23,12 @@ goog.inherits(pear.ui.GridCell, pear.ui.Cell);
  */
 pear.ui.GridCell.prototype.contentElement_ = null;
 
+/**
+ * Default CSS class to be applied to the root element of cell
+ * @type {string}
+ */
+pear.ui.GridCell.CSS_CLASS =
+    goog.getCssName('pear-grid-cell-data');
 
 /**
  * set Content Element 
@@ -50,22 +46,6 @@ pear.ui.GridCell.prototype.getContentElement = function(){
   return this.contentElement_;
 };
 
-/**
- * Get Cell Data
- * @return {*} data
- */
-//pear.ui.GridCell.prototype.getCellContent = function() {
-//  return this.getModel();
-//};
-
-
-/**
- * Set Data
- * @param  {*} data
- */
-//pear.ui.GridCell.prototype.setCellContent = function(data) {
-//  this.setModel(data);
-//};
 
 /**
  * Get Cell Data
@@ -75,16 +55,6 @@ pear.ui.GridCell.prototype.getCellData = function() {
   var rowview = this.getRow().getDataRowView();
   var model = rowview.getRowData();
   return model[this.getDataColumn().getDataField()];
-  //return this.getModel();
-};
-
-
-/**
- * Set Data
- * @param  {*} data
- */
-pear.ui.GridCell.prototype.setCellData = function(data) {
-  //this.setModel(data);
 };
 
 /**
@@ -111,6 +81,20 @@ pear.ui.GridCell.prototype.applyFormatting = function() {
 };
 
 /**
+ * [setHighlight description]
+ * @param {boolean} highlight
+ */
+pear.ui.GridCell.prototype.setHighlight = function(highlight) {
+  if (highlight) {
+    goog.dom.classes.add(this.getElement(), pear.ui.GridCell.CSS_CLASS+'-highlight');
+    this.highlighted_ = true;
+  }else {
+    goog.dom.classes.remove(this.getElement(),  pear.ui.GridCell.CSS_CLASS+'-highlight');
+    this.highlighted_ = false;
+  }
+};
+
+/**
  * Configures the component after its DOM has been rendered, and sets up event
  * handling.  Overrides {@link goog.ui.Component#enterDocument}.
  * @override
@@ -118,6 +102,11 @@ pear.ui.GridCell.prototype.applyFormatting = function() {
 pear.ui.GridCell.prototype.enterDocument = function() {
   pear.ui.GridCell.superClass_.enterDocument.call(this);
 
+  goog.dom.classes.add(this.getElement(), pear.ui.GridCell.CSS_CLASS);
+  goog.dom.classes.add(this.getElement(), 'col'+this.getCellIndex());
+
+  this.createContentElement();
+  
   // Set Size of Content Element
   this.applyFormatting();
 };
@@ -134,85 +123,20 @@ pear.ui.GridCell.prototype.removeContent = function() {
  * Create Content Element
  */
 pear.ui.GridCell.prototype.createContentElement = function() {
-  this.getRenderer().createContentDom(this,this.getElement());
+  var cellElement = this.getDomHelper().createDom(
+      'div', ' '+goog.getCssName(pear.ui.GridCell.CSS_CLASS,'content')+'  overflowhidden', this.getContent());
+
+  var align = this.getDataColumn().getAlign();
+  var aligncss = (align === pear.data.Column.Align.LEFT)? 
+      goog.getCssName(pear.ui.GridCell.CSS_CLASS,'left'):
+      goog.getCssName(pear.ui.GridCell.CSS_CLASS,'right');
+
+  goog.dom.classes.add(cellElement, aligncss);
+  this.getDomHelper().appendChild(this.getElement(),cellElement);
+
+  this.setContentElement(cellElement);
 };
 
-/**
- * @override
- */
-pear.ui.GridCell.prototype.performActionInternal = function(e) {
-  if (this.isAutoState(goog.ui.Component.State.CHECKED)) {
-    this.setChecked(!this.isChecked());
-  }
-  if (this.isAutoState(goog.ui.Component.State.SELECTED) &&
-      this.getGrid().getConfiguration().SelectionMode ===
-      pear.ui.Grid.SelectionMode.CELL) {
-    this.setSelected(true);
-  }
-  if (this.isAutoState(goog.ui.Component.State.OPENED)) {
-    this.setOpen(!this.isOpen());
-  }
-
-  var actionEvent = new goog.events.Event(goog.ui.Component.EventType.ACTION,
-      this);
-  if (e) {
-    actionEvent.altKey = e.altKey;
-    actionEvent.ctrlKey = e.ctrlKey;
-    actionEvent.metaKey = e.metaKey;
-    actionEvent.shiftKey = e.shiftKey;
-    actionEvent.platformModifierKey = e.platformModifierKey;
-  }
-  return this.dispatchEvent(actionEvent);
-};
-
-/**
- * Checks if a mouse event (mouseover or mouseout) occured below an element.
- * @param {goog.events.BrowserEvent} e Mouse event (should be mouseover or
- *     mouseout).
- * @param {Element} elem The ancestor element.
- * @return {boolean} Whether the event has a relatedTarget (the element the
- *     mouse is coming from) and it's a descendent of elem.
- * 
- * @private
- */
-pear.ui.GridCell.prototype.isMouseEventWithinElement_ = function(e, elem) {
-  // If relatedTarget is null, it means there was no previous element (e.g.
-  // the mouse moved out of the window).  Assume this means that the mouse
-  // event was not within the element.
-  return !!e.relatedTarget && goog.dom.contains(elem, e.relatedTarget);
-};
-
-/**
- * @inheritDoc
- */
-pear.ui.GridCell.prototype.handleMouseOver = function(be) {
-  if (!this.isMouseEventWithinElement_(be, this.getElement()) &&
-      (this.dispatchEvent(goog.ui.Component.EventType.ENTER) &&
-      (this.isEnabled() &&
-          this.isAutoState(goog.ui.Component.State.HOVER))
-      ) 
-  ) {
-    // Cell Highlight
-    // this.setHighlighted(true);
-  }
-};
-
-/**
- * @inheritDoc
- */
-pear.ui.GridCell.prototype.handleMouseOut = function(be) {
-  if (!this.isMouseEventWithinElement_(be, this.getElement()) &&
-       this.dispatchEvent(goog.ui.Component.EventType.LEAVE) ) {
-    if (this.isAutoState(goog.ui.Component.State.ACTIVE)) {
-      // Cell Active
-      this.setActive(false);
-    }
-    if (this.isAutoState(goog.ui.Component.State.HOVER)) {
-      // Cell Highlight
-      // this.setHighlighted(false);
-    }
-  }
-};
 
 /**
  * [disposeInternal description]

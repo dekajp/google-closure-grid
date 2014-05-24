@@ -2,34 +2,25 @@ goog.provide('pear.ui.GridHeaderCell');
 
 goog.require('pear.fx.dom.HeaderMenuSlide');
 goog.require('pear.ui.Cell');
-goog.require('pear.ui.GridHeaderCellContentRenderer');
-goog.require('pear.ui.GridHeaderCellMenuRenderer');
-goog.require('pear.ui.GridHeaderCellRenderer');
 goog.require('pear.ui.Resizable');
 
 /**
  * HeaderCell
  *
- * @param {goog.ui.ControlRenderer=} opt_renderer Renderer used to render or
- *     decorate the component; defaults to {@link goog.ui.ControlRenderer}.
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper, used for
  *     document interaction.
  * @constructor
  * @extends {pear.ui.Cell}
  */
-pear.ui.GridHeaderCell = function(opt_renderer, opt_domHelper) {
-  pear.ui.Cell.call(this,
-                    opt_renderer ||
-      pear.ui.GridHeaderCellRenderer.getInstance(),
-                    opt_domHelper);
-  this.setSupportedState(goog.ui.Component.State.ACTIVE, true);
+pear.ui.GridHeaderCell = function(opt_domHelper) {
+  pear.ui.Cell.call(this,opt_domHelper);
 };
 goog.inherits(pear.ui.GridHeaderCell, pear.ui.Cell);
 
 
 /**
  * @private
- * @type {goog.ui.Control}
+ * @type {?Element}
  */
 pear.ui.GridHeaderCell.prototype.headerMenuContainer_ = null;
 
@@ -85,6 +76,13 @@ pear.ui.GridHeaderCell.prototype.getResizable = function() {
 };
 
 /**
+ * Default CSS class to be applied to the root element of cell
+ * @type {string}
+ */
+pear.ui.GridHeaderCell.CSS_CLASS =
+    goog.getCssName('pear-grid-cell-header');
+
+/**
  * get Sort Direction {@link pear.ui.Grid.SortDirection}
  * @return {pear.ui.Grid.SortDirection}
  * @public
@@ -119,10 +117,10 @@ pear.ui.GridHeaderCell.prototype.setsortDirection = function(value) {
 
 /**
  * Get Menu Control Container
- * @return {goog.ui.Control}
+ * @return {Element}
  * @public
  */
-pear.ui.GridHeaderCell.prototype.getMenuControl = function() {
+pear.ui.GridHeaderCell.prototype.getMenuElement = function() {
   return this.headerMenuContainer_;
 };
 
@@ -144,7 +142,6 @@ pear.ui.GridHeaderCell.prototype.setMenuState = function(open) {
  *     comprising the component's contents.
  */
 pear.ui.GridHeaderCell.prototype.getContent = function() {
-  //return this.getModel()['headerText'];
   return '';
 };
 
@@ -208,24 +205,76 @@ pear.ui.GridHeaderCell.prototype.clearContent = function() {
  */
 pear.ui.GridHeaderCell.prototype.enterDocument = function() {
   pear.ui.GridHeaderCell.superClass_.enterDocument.call(this);
-  this.splitHeaderCell_();
-  this.registerEvent_();
-};
 
+  goog.dom.classes.add(this.getElement(),pear.ui.GridHeaderCell.CSS_CLASS);
+  goog.dom.classes.add(this.getElement(),'col'+this.getCellIndex());
+  goog.dom.classes.add(this.getElement(),'overflowhidden');
+
+  this.splitHeaderCell_();
+  this.registerEvent_(true);
+};
 
 /**
+ * [registerEvent_ description]
+ * @param  {boolean} enable [description]
  * @private
  */
-pear.ui.GridHeaderCell.prototype.registerEvent_ = function() {
-  this.getHandler().
-      listenWithScope(this, goog.ui.Component.EventType.ENTER,
-          this.handleEnter_, false, this).
-      listenWithScope(this, goog.ui.Component.EventType.LEAVE,
-          this.handleLeave_, false, this).
-      listenWithScope(this.getElement(), goog.events.EventType.CLICK,
-          this.handleActive_, false, this);
+pear.ui.GridHeaderCell.prototype.registerEvent_ = function(enable) {
+  var handler = this.getHandler();
+  var element = this.getElement();
+  if (enable) {
+    handler.
+        listen(element, goog.events.EventType.MOUSEENTER, this.handleEnter_).
+        listen(element, goog.events.EventType.MOUSEDOWN, this.handleMouseDown).
+        listen(element, goog.events.EventType.MOUSELEAVE, this.handleLeave_).
+        listen(this.contentCell_, [
+            goog.events.EventType.MOUSEENTER,
+            goog.events.EventType.MOUSELEAVE
+            ],function(be){
+              be.preventDefault();
+            });
+    
+  } else {
+    handler.
+        unlisten(element, goog.events.EventType.MOUSEENTER,
+            this.handleEnter_).
+        unlisten(element, goog.events.EventType.MOUSEDOWN,
+            this.handleMouseDown).
+        unlisten(element, goog.events.EventType.MOUSELEAVE, this.handleLeave_).
+        unlisten(this.contentCell_, [
+            goog.events.EventType.MOUSEENTER,
+            goog.events.EventType.MOUSELEAVE
+            ],function(be){
+              be.preventDefault();
+            });;
+  }
 };
 
+/**
+ * [registerEventOnMenuContainer_ description]
+ * @param  {boolean} enable [description]
+ * @private
+ */
+pear.ui.GridHeaderCell.prototype.registerEventOnMenuContainer_ = function(enable) {
+  var handler = this.getHandler();
+  var element = this.getElement();
+  if (enable) {
+    handler.
+        listen(element, goog.events.EventType.MOUSELEAVE, this.handleLeave_).
+        listen(this.headerMenuContainer_, 
+          goog.events.EventType.MOUSEENTER, function(e){
+            e.preventDefault();
+        });
+    
+  } else {
+     handler.
+        unlisten(element, goog.events.EventType.MOUSELEAVE, this.handleLeave_).
+        unlisten(this.headerMenuContainer_, 
+          goog.events.EventType.MOUSEENTER, function(e){
+            e.preventDefault();
+        });
+  }
+};
 
 /**
  * Header cell is divided into 3 content , indicators and sliding menu
@@ -242,6 +291,7 @@ pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function() {
   // Header Menu
   if (grid.getConfiguration().AllowColumnHeaderMenu) {
     this.createHeaderCellMenu_();
+    this.registerEventOnMenuContainer_(true);
   }
 
   // Sort Indicators
@@ -267,11 +317,15 @@ pear.ui.GridHeaderCell.prototype.splitHeaderCell_ = function() {
 pear.ui.GridHeaderCell.prototype.createHeaderCellContent_ = function(){
   // Header Cell Content
   var contentElem = goog.dom.createDom('div',
-        'pear-grid-cell-header-content',
+        goog.getCssName(pear.ui.GridHeaderCell.CSS_CLASS,'content'),
         this.getContentText()
         );
+
   var align = this.getDataColumn().getAlign();
-  var aligncss = (align === pear.data.Column.Align.LEFT)? 'pear-grid-align-left':'pear-grid-align-right';
+  var aligncss = (align === pear.data.Column.Align.LEFT)? 
+      goog.getCssName(pear.ui.GridHeaderCell.CSS_CLASS,'left'):
+      goog.getCssName(pear.ui.GridHeaderCell.CSS_CLASS,'right');
+
   goog.dom.classes.add(contentElem, aligncss);
 
   if(align === pear.data.Column.Align.RIGHT ){
@@ -306,11 +360,8 @@ pear.ui.GridHeaderCell.prototype.createHeaderCellIndicatorPlaceHolder_
  */
 pear.ui.GridHeaderCell.prototype.createHeaderCellMenu_ = function() {
   // Header Menu Control
-  this.headerMenuContainer_ =
-      new goog.ui.Control(null, pear.ui.GridHeaderCellMenuRenderer.getInstance());
-  this.headerMenuContainer_.
-      setSupportedState(goog.ui.Component.State.ALL, false);
-  this.headerMenuContainer_.render(this.getElement());
+  this.headerMenuContainer_ = this.getDomHelper().createDom('div','pear-grid-cell-header-slidemenu')
+  this.getDomHelper().appendChild(this.getElement(),this.headerMenuContainer_);
 };
 
 
@@ -371,9 +422,9 @@ pear.ui.GridHeaderCell.prototype.syncContentCellOnResize_ = function() {
   var grid = this.getGrid();
   if (grid.getConfiguration().AllowColumnHeaderMenu) {
     boundSlideMenu = goog.style.getBounds(
-        this.headerMenuContainer_.getElement());
+        this.headerMenuContainer_);
     marginBox = goog.style.getMarginBox(
-        this.headerMenuContainer_.getElement());
+        this.headerMenuContainer_);
     if (marginBox.left < 0) {
       lessWidth = lessWidth + boundSlideMenu.width;
     }
@@ -403,7 +454,7 @@ pear.ui.GridHeaderCell.prototype.syncContentCellOnResize_ = function() {
  */
 pear.ui.GridHeaderCell.prototype.getHeaderMenuContainerWidth = function() {
   // TODO
-  var bounds = goog.style.getBounds(this.headerMenuContainer_.getElement());
+  var bounds = goog.style.getBounds(this.headerMenuContainer_);
   return bounds.width;
 };
 
@@ -413,6 +464,11 @@ pear.ui.GridHeaderCell.prototype.getHeaderMenuContainerWidth = function() {
  * @param  {boolean} display
  */
 pear.ui.GridHeaderCell.prototype.slideMenuOpen = function(display) {
+  if (display && this.slideMenuOpenState){
+    this.slideMenuOpenState = true;
+    return ;
+  }
+  this.slideMenuOpenState = display;
   var marginleft = 0;
   var left = 0;
   var width = this.getHeaderMenuContainerWidth();
@@ -422,28 +478,10 @@ pear.ui.GridHeaderCell.prototype.slideMenuOpen = function(display) {
     marginleft = marginleft + 0;
   }
   marginleft = marginleft * -1;
-  this.handleMenuSlide_(this.headerMenuContainer_.getElement(), [marginleft]);
+  this.handleMenuSlide_(this.headerMenuContainer_, [marginleft]);
   this.adjustContentCellSize();
 };
 
-
-/**
- * @override
- * Header and Footer row - Postion is Relative 
- */
-pear.ui.GridHeaderCell.prototype.setPosition = function() {
-  var left, top;
-  left = 0;
-  top = 0;
-  left = 0;
-  top = 0;
-  var i = 0;
-  ////for (;i<this.getCellIndex();i++ ){
-  //  left = left + this.getRow().getCellWidth(i);
-  //}
-
-  goog.style.setPosition(this.getElement(), left, top);
-};
 
 
 /**
@@ -459,43 +497,36 @@ pear.ui.GridHeaderCell.prototype.handleMenuSlide_ = function(el, value) {
   anim.play();
 };
 
-
 /**
- * [handleChildMouseEvents_ description]
- * @param  {goog.events.Event} ge [description]
+ * [handleMouseDown description]
+ * @param  {goog.events.BrowserEvent} be [description]
  * @private
  */
-pear.ui.GridHeaderCell.prototype.handleChildMouseEvents_ = function(ge) {
-  ge.stopPropagation();
-};
+pear.ui.GridHeaderCell.prototype.handleMouseDown = function(be) {
+  if (be.defaultPrevented) {return };
 
-/**
- * [handleActive_ description]
- * @param  {goog.events.Event} ge [description]
- * @private
- */
-pear.ui.GridHeaderCell.prototype.handleActive_ = function(ge) {
-  ge.stopPropagation();
-  if (this.resizable_ && 
-      this.resizable_.getResizehandle(pear.ui.Resizable.Position.RIGHT) ===
-      ge.target) {
-    // Ignore
+  if (be.isMouseActionButton()) {
+    if (this.resizable_ && 
+        this.resizable_.getResizehandle(pear.ui.Resizable.Position.RIGHT) ===
+        be.target) {
+      // Ignore
 
-  }else {
-    if (this.getGrid().getConfiguration().AllowSorting) {
-      var clickEvent = new goog.events.Event(pear.ui.Cell.EventType.CLICK,
-          this);
-      this.dispatchEvent(clickEvent);
-    }
+    }else {
+      if (this.getGrid().getConfiguration().AllowSorting) {
+        this.dispatchEvent(goog.ui.Component.EventType.ACTION);
+      }
+    } 
   }
+
+  be.preventDefault();
 };
 
-
 /**
- * @private
+ * [handleEnter_ description]
+ * @param  {goog.events.BrowserEvent} be [description]
  */
-pear.ui.GridHeaderCell.prototype.handleEnter_ = function() {
-  if (this.getGrid().getConfiguration().AllowColumnHeaderMenu) {
+pear.ui.GridHeaderCell.prototype.handleEnter_ = function(be) {
+  if (this.getGrid().getConfiguration().AllowColumnHeaderMenu ) {
     this.slideMenuOpen(true);
   }
 };
@@ -503,23 +534,16 @@ pear.ui.GridHeaderCell.prototype.handleEnter_ = function() {
 
 /**
  * @private
+ * @param  {goog.events.BrowserEvent} be [description]
  */
-pear.ui.GridHeaderCell.prototype.handleLeave_ = function() {
-  if (this.getGrid().getConfiguration().AllowColumnHeaderMenu && !this.keepSlideMenuOpen_) {
+pear.ui.GridHeaderCell.prototype.handleLeave_ = function(be) {
+ if (  be.target === this.getElement() && 
+      this.getGrid().getConfiguration().AllowColumnHeaderMenu && 
+      !this.keepSlideMenuOpen_) {
     this.slideMenuOpen(false);
   }
+  be.preventDefault();
 };
-
-/**
- * @private
- */
-//pear.ui.GridHeaderCell.prototype.handleOptionClick_ = function(be){
-//  be.stopPropagation();
-//  var clickEvent = new goog.events.Event(pear.ui.Cell.EventType.OPTION_CLICK,
-//      this);
-// this.dispatchEvent(clickEvent);
-//};
-
 
 /**
  * [handleResize_ description]
@@ -527,7 +551,7 @@ pear.ui.GridHeaderCell.prototype.handleLeave_ = function() {
  * @private
  */
 pear.ui.GridHeaderCell.prototype.handleResize_ = function(ge) {
-  ge.stopPropagation();
+  ge.preventDefault();
   var pos = this.getCellIndex();
   var grid = this.getGrid();
   grid.setColumnWidth(pos, ge.size.width);
@@ -543,7 +567,7 @@ pear.ui.GridHeaderCell.prototype.handleResize_ = function(ge) {
  * @private
  */
 pear.ui.GridHeaderCell.prototype.handleResizeEnd_ = function(ge) {
-  ge.stopPropagation();
+  ge.preventDefault();
   var grid = this.getGrid();
   // clear style
   goog.style.setSize(this.getElement(), '','');
@@ -575,8 +599,8 @@ pear.ui.GridHeaderCell.prototype.toggleSortDirection = function() {
 };
 
 pear.ui.GridHeaderCell.prototype.disposeEvents = function(){
-  goog.events.unlisten(this.getElement(), goog.events.EventType.CLICK,
-          this.handleActive_);
+  this.registerEvent_(false);
+  this.registerEventOnMenuContainer_(false);
 };
   
 
@@ -607,7 +631,7 @@ pear.ui.GridHeaderCell.prototype.disposeInternal = function() {
   this.sortDescIndicator_ = null;
 
   if(this.headerMenuContainer_){
-    this.headerMenuContainer_.dispose();
+    goog.dom.removeNode(this.headerMenuContainer_);
   }
   this.headerMenuContainer_ = null;
   

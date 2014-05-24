@@ -48,6 +48,7 @@ goog.require('goog.log');
 goog.require('goog.object');
 goog.require('goog.cssom');
 goog.require('goog.cssom.CssRuleType');
+goog.require('goog.async.Throttle');
 goog.require('pear.data.DataTable');
 goog.require('pear.data.DataView');
 goog.require('pear.data.Column');
@@ -382,6 +383,11 @@ pear.ui.Grid.EventType = {
 	
 };
 
+/**
+ * Throttle Delay in ms
+ * @type {number}
+ */
+pear.ui.Grid.THROTTLE_DELAY = 25;
 
 /**
  * header row instance
@@ -446,20 +452,16 @@ pear.ui.Grid.prototype.sortColumnId_ = '';
 pear.ui.Grid.prototype.currentPageIndex_ = -1;
 
 
-/**
- * highligted row index
- * @private
- * @type {number}
- */
-pear.ui.Grid.prototype.highlightedGridRowIndex_ = -1;
-
 
 /**
- * highlighted cell index
+ * Highlighted GridRow Index and Cell Index
+ * @struct
  * @private
- * @type {number}
  */
-pear.ui.Grid.prototype.highlightedCellIndex_ = -1;
+pear.ui.Grid.prototype.highligtedGridrow_ = {
+	rowIndex : -1,
+	cellIndex: -1
+}
 
 
 /**
@@ -482,6 +484,8 @@ pear.ui.Grid.prototype.showFooter_ = false;
  * @type { pear.ui.editor.CellEditorMediator }
  */
 pear.ui.Grid.prototype.editorMediator_ = null;
+
+pear.ui.Grid.prototype.cachedDatarowViews_ = null;
 
 /**
  * title of Grid
@@ -740,7 +744,7 @@ pear.ui.Grid.prototype.getCellBorderBox = function(uniqClass) {
   	outerDiv.style.cssText = 'overflow:auto;' +
       'position:absolute;top:0;width:100px;height:100px';
   	var innerDiv = goog.dom.createElement('div');
-  	innerDiv.className = pear.ui.CellRenderer.CSS_CLASS;
+  	innerDiv.className = pear.ui.Cell.CSS_CLASS;
   	goog.style.setSize(innerDiv, '200px', '200px');
   	outerDiv.appendChild(innerDiv);
   	goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
@@ -768,15 +772,15 @@ pear.ui.Grid.prototype.getCellContentPaddingBox = function(uniqClass) {
   	
   	// Cell
   	var innerDiv = goog.dom.createElement('div');
-  	goog.dom.classes.add(innerDiv, pear.ui.CellRenderer.CSS_CLASS);
-  	goog.dom.classes.add(innerDiv, pear.ui.GridCellRenderer.CSS_CLASS);
+  	goog.dom.classes.add(innerDiv, pear.ui.Cell.CSS_CLASS);
+  	goog.dom.classes.add(innerDiv, pear.ui.GridCell.CSS_CLASS);
   	goog.style.setSize(innerDiv, '25px', '25px');
   	outerDiv.appendChild(innerDiv);
   	goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
 		
 		// Cell Content
 		var cellContentDiv = goog.dom.createElement('div');
-  	goog.dom.classes.add(cellContentDiv, pear.ui.GridCellRenderer.CSS_CLASS+'-content');
+  	goog.dom.classes.add(cellContentDiv, pear.ui.GridCell.CSS_CLASS+'-content');
   	goog.style.setSize(innerDiv, '20px', '20px');
   	innerDiv.appendChild(cellContentDiv);
   	goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
@@ -937,8 +941,11 @@ pear.ui.Grid.prototype.getClonedDataViews = function() {
  * @public
  */
 pear.ui.Grid.prototype.getDataRowViews = function() {
-	var rows = this.getDataView().getDataRowViews();
-	return rows;
+	// TODO : add IsChanged in DataView
+	if (this.getDataView().isDatasourceChanged() || !this.cachedDatarowViews_  ){
+		this.cachedDatarowViews_ = this.getDataView().getDataRowViews();
+	}
+	return this.cachedDatarowViews_ ;
 };
 
 /**
@@ -1092,6 +1099,8 @@ pear.ui.Grid.prototype.getPageSize = function() {
  * @public
  */
 pear.ui.Grid.prototype.setPageSize = function(size) {
+	// Reset Canvas Size
+	this.bodyCanvasSize_ = null;
 	this.getConfiguration().PageSize = size;
 	if (this.currentPageIndex_ === 0 ){
 		this.refreshBody();
@@ -1193,29 +1202,6 @@ pear.ui.Grid.prototype.gotoLastPage = function() {
  */
 pear.ui.Grid.prototype.getSortedHeaderCell = function() {
 	var cell = this.headerRow_.getHeaderCellByColumnId(this.getSortColumnId());
-	return cell;
-};
-
-
-/**
- * get current highlighted Row
- * @return {pear.ui.GridRow}
- * @public
- */
-pear.ui.Grid.prototype.getCurrentHighlightedRow = function() {
-	var row = this.getGridRowAt(this.highlightedGridRowIndex_);
-	return row;
-};
-
-
-/**
- * get current highlighted Cell
- * @return {pear.ui.GridCell}
- * @public
- */
-pear.ui.Grid.prototype.getCurrentHighlightedCell = function() {
-	var cell = ( /** @type {pear.ui.GridCell} */ (this.getCurrentHighlightedRow().
-										getHighlighted()));
 	return cell;
 };
 
@@ -1765,7 +1751,7 @@ pear.ui.Grid.prototype.renderHeader_ = function() {
 pear.ui.Grid.prototype.createSingleRowHeader_ = function() {
 	this.headerRow_ = this.headerRow_ ||
 			new pear.ui.GridHeaderRow(this,
-			this.Configuration_.HeaderRowHeight);
+			this.Configuration_.HeaderRowHeight,this.getDomHelper());
 	this.header_.addChild(this.headerRow_, true);
 	this.headerRow_.setHeight(this.Configuration_.HeaderRowHeight);
 	
@@ -1784,7 +1770,7 @@ pear.ui.Grid.prototype.createHeaderCells_ = function() {
 	goog.array.forEach(columns, function(column, index) {
 		if (column.getVisibility()){
 			// create header cells here
-			var headerCell = new pear.ui.GridHeaderCell();
+			var headerCell = new pear.ui.GridHeaderCell(this.getDomHelper());
 			headerCell.setDataColumn(column);
 			headerCell.setCellIndex(index);
 			this.headerRow_.addCell(headerCell, true);
@@ -2020,7 +2006,7 @@ pear.ui.Grid.prototype.transformDataRowsToGridRows_ = function() {
 	this.setGridRows_([]);
 
 	goog.array.forEach(rows, function(rowview, index) {
-		var row = new pear.ui.GridRow(this, rowHeight);
+		var row = new pear.ui.GridRow(this, rowHeight,this.getDomHelper());
 		row.setDataRowView(rowview);
 		row.setHeight(rowHeight)
 		row.setRowPosition(index);
@@ -2041,12 +2027,12 @@ pear.ui.Grid.prototype.transformDataRowsToGridRows_ = function() {
  */
 pear.ui.Grid.prototype.restoreHighlightedRow_ = function() {
 	// restore highlighted row
-	if (this.highlightedGridRowIndex_ > -1 &&
-			this.highlightedGridRowIndex_ < this.getGridRowsCount_() &&
+	if (this.highligtedGridrow_.rowIndex > -1 &&
+			this.highligtedGridrow_.rowIndex < this.getGridRowsCount_() &&
 			this.getGridRowsCount_() > 0) {
-		var gridrow = this.getGridRowAt(this.highlightedGridRowIndex_);
+		var gridrow = this.getGridRowAt(this.getHighlightedGridRowIndex());
 		this.setHighlighted(gridrow,true,false);
-		this.setHighlightedCellIndex(this.highlightedCellIndex_)
+		this.setHighlightedCellByIndex(this.getHighlightedCellIndex());
 	}
 };
 
@@ -2080,7 +2066,7 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
 	}
 	goog.array.forEach(columns, function(datacolumn, index) {
 		if (datacolumn.getVisibility()){
-			var c = new pear.ui.GridCell();
+			var c = new pear.ui.GridCell(this.getDomHelper());
 			c.setDataColumn(datacolumn);
 			c.setCellIndex(index);
 			row.addCell(c, true);
@@ -2094,6 +2080,7 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
  * @private
  * @param {number} start
  * @param {number} end
+ * @todo - Performance Sucker ....
  */
 pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
 	for (var i in this.renderedGridRowsCache_) {
@@ -2101,11 +2088,10 @@ pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
 			if (this.isActiveEditorGridRow(this.renderedGridRowsCache_[i])){
 				// Row is Active Editor
 			}else{
-				this.renderedGridRowsCache_[i].removeChildren(true);
+				//this.renderedGridRowsCache_[i].removeChildren(true);
 				this.bodyCanvas_.removeChild(this.renderedGridRowsCache_[i], true);
 				delete this.renderedGridRowsCache_[i];
 			}
-			
 		}
 	}
 };
@@ -2124,6 +2110,25 @@ pear.ui.Grid.prototype.debugRendering_ = function(start, end) {
 };
 
 /**
+ * get size of Viewport
+ * @return {goog.math.Size} 
+ */
+pear.ui.Grid.prototype.getViewportSize = function(){
+	this.viewportSize_ = this.viewportSize_ || goog.style.getSize(this.viewport_.getElement());
+	return this.viewportSize_;
+};
+
+/**
+ * get size of Body Canvas
+ * @return {goog.math.Size} 
+ */
+pear.ui.Grid.prototype.getBodyCanvasSize = function(){
+	this.bodyCanvasSize_ = this.bodyCanvasSize_ || goog.style.getSize(this.bodyCanvas_.getElement());
+	return this.bodyCanvasSize_;
+};
+
+
+/**
  * calculate Start and End Row index - depends on viewport within BodyCanvas
  * @return {Object} [description]
  * @private
@@ -2131,14 +2136,13 @@ pear.ui.Grid.prototype.debugRendering_ = function(start, end) {
 pear.ui.Grid.prototype.calculateViewRange_ = function (){
 	var rowCount = this.getDataViewRowCount();
 	var rowHeight = this.getComputedRowHeight();
-	var canvasVisibleBeginPx = (this.viewport_.getElement().scrollTop >
-			(rowHeight * 10))
-															? (this.viewport_.getElement().scrollTop -
-			(rowHeight * 10))
+	var scrollTop = this.viewport_.getElement().scrollTop;
+	var canvasVisibleBeginPx = (scrollTop > (rowHeight * 10))
+															? (scrollTop -(rowHeight * 10))
 															: 0;
 
-	var size = goog.style.getSize(this.viewport_.getElement());
-	var canvasSize = goog.style.getSize(this.bodyCanvas_.getElement());
+	var size = this.getViewportSize();
+	var canvasSize = this.getBodyCanvasSize();
 
 	var modulo = canvasVisibleBeginPx % rowHeight;
 	canvasVisibleBeginPx = canvasVisibleBeginPx - modulo;
@@ -2166,6 +2170,7 @@ pear.ui.Grid.prototype.calculateViewRange_ = function (){
  */
 pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function(startIndex,endIndex) {
 	var i = 0;
+	
 	var gridrows = this.getGridRows();
 	for (i = startIndex; (i < endIndex && i < gridrows.length); i++) {
 		if (!this.renderedGridRowsCache_[i]) {
@@ -2184,12 +2189,14 @@ pear.ui.Grid.prototype.cacheGridRowsReadyForViewport_ = function(startIndex,endI
  * Render Cached GridRows for Viewport in BodyCanvas Element 
  * @param  {boolean=} opt_redraw [description]
  * @private
+ * @todo Performance Sucker ....
  */
 pear.ui.Grid.prototype.renderCachedGridRowsInBodyCanvas_ = function(opt_redraw) {
 	// var dv = this.getDataView();
 	if (opt_redraw && this.bodyCanvas_.getChildCount() > 0) {
 		this.bodyCanvas_.removeChildren(true);
 	}
+
 	goog.array.forEach(this.renderReadyGridRows_, function(gridrow, index) {
 		// Render Cell on Canvas on demand for Performance
 		this.bodyCanvas_.addChild(gridrow, true);
@@ -2266,6 +2273,31 @@ pear.ui.Grid.prototype.refreshOnColumnResize = function() {
 	this.refreshCssStyle();
 };
 
+/**
+ * Throttle for Viewport Update
+ * @private
+ */
+pear.ui.Grid.prototype.createViewportThrottle  = function() {
+  // Get rid of an old one, if it exists.
+  if (this.viewportthrottle_) {
+    this.viewportthrottle_.dispose();
+  }
+  // Create the throttle object for the given time.
+  this.viewportthrottle_ = new goog.async.Throttle(this.updateViewport_,pear.ui.Grid.THROTTLE_DELAY,this);
+};
+
+/**
+ * Fire Viewport Update Throttle
+ * @private
+ */
+pear.ui.Grid.prototype.fireViewportThrottle = function(){
+  if (this.viewportthrottle_) {
+    this.viewportthrottle_.fire();
+ 	}else{
+ 		this.createViewportThrottle();
+ 		this.viewportthrottle_.fire();
+ 	}
+};
 
 /**
  * update the Viewable area of the Body Canvas element
@@ -2275,25 +2307,18 @@ pear.ui.Grid.prototype.refreshOnColumnResize = function() {
  *     remove each gridrow from canvas
  */
 pear.ui.Grid.prototype.updateViewport_ = function(opt_redrawCanvas) {
+
 	var self = this;var viewportRange;
-	if ( Math.abs(this.previousScrollTop_ - this.viewport_.getElement().scrollTop)<50){
-		viewportRange = self.calculateViewRange_ ();
-		self.cacheGridRowsReadyForViewport_(viewportRange.startRowIndex, viewportRange.endRowIndex);
-		self.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
-		self.removeRowsFromRowModelCache_(viewportRange.startRowIndex, viewportRange.endRowIndex);
-	}else{
-		if (this.updateViewportTimer_){
-			clearTimeout(this.updateViewportTimer_);    
-		}
-		this.updateViewportTimer_ = setTimeout (function(){
-			viewportRange = self.calculateViewRange_ ();
-			self.cacheGridRowsReadyForViewport_(viewportRange.startRowIndex, viewportRange.endRowIndex);
-			self.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
-			self.removeRowsFromRowModelCache_(viewportRange.startRowIndex, viewportRange.endRowIndex);
-		},50);
-	}
+	viewportRange = self.calculateViewRange_ ();
+	self.cacheGridRowsReadyForViewport_(viewportRange.startRowIndex, viewportRange.endRowIndex);
+	self.renderCachedGridRowsInBodyCanvas_(opt_redrawCanvas);
+	self.removeRowsFromRowModelCache_(viewportRange.startRowIndex, viewportRange.endRowIndex);
+	
 	this.restoreHighlightedRow_();
+	logger.info ('finished restoreHighlightedRow_');
 	this.restoreSelectedRows_();
+	logger.info ('finished restoreSelectedRows_');
+	
 };
 
 /**
@@ -2310,7 +2335,7 @@ pear.ui.Grid.prototype.refreshBody = function(opt_keepeditoralive) {
 	if (opt_keepeditoralive){
 		this.closeActiveEditor();
 	}
-
+	this.cachedDatarowViews_ = null;
 	this.renderedGridRowsCache_ = [];
 	this.renderReadyGridRows_ = [];
 	this.transformDataRowsToGridRows_();
@@ -2324,7 +2349,7 @@ pear.ui.Grid.prototype.refreshBody = function(opt_keepeditoralive) {
 
 /**
  * Entire Body of Grid is refreshed - header , footer , body and CSS Style
- * @param  {boolean} opt_redrawStyle  if true , rebuild CSS Styles
+ * @param  {boolean=} opt_redrawStyle  if true , rebuild CSS Styles
  * @public
  */
 pear.ui.Grid.prototype.refreshAll = function(opt_redrawStyle) {
@@ -2398,14 +2423,12 @@ pear.ui.Grid.prototype.scrollCellIntoView = function(gridrow,opt_gridcell) {
 	var positionRow = goog.style.getPosition(gridrow.getElement());
 	var boundViewport = goog.style.getBounds(this.getViewport().getElement());
 	var boundRow = goog.style.getBorderBoxSize(gridrow.getElement());
-	var cell = opt_gridcell || gridrow.getHighlighted() || gridrow.getChildAt(0);
+	var cell = opt_gridcell || gridrow.getChildAt(this.getHighlightedCellIndex());
 	var positionCell = goog.style.getPosition(cell.getElement());
 	var boundCell = goog.style.getBorderBoxSize(cell.getElement());
 	var scrollVWidth = this.isBodyHasVScroll() ? this.getScrollbarWidth() : 0;
 	var scrollHWidth = this.isBodyHasHScroll() ? this.getScrollbarWidth() : 0;
 	
-	
-
 
 	if ((positionRow.y + boundRow.height ) >= (boundViewport.height + scrollTopViewport - scrollHWidth)) {
 		scrollTopViewport = positionRow.y + boundRow.height + scrollHWidth - boundViewport.height;
@@ -2535,53 +2558,6 @@ pear.ui.Grid.prototype.selectGridRow = function() {
 		}
 };
 
-// Key Handling - Highlight Management
-
-
-/**
- * Highlighted Row
- * @return {pear.ui.GridRow?}
- */
-pear.ui.Grid.prototype.getHighlightedGridRow = function() {
-	return this.getGridRowAt(this.getHighlightedGridRowIndex());
-};
-
-
-/**
- * Returns the index of the currently highlighted item (-1 if none).
- * @return {number} Index of the currently highlighted item.
- */
-pear.ui.Grid.prototype.getHighlightedGridRowIndex = function() {
-	return this.highlightedGridRowIndex_ ;
-};
-
-
-/**
- * Returns the index of the currently highlighted item (-1 if none).
- * @return {number} Index of the currently highlighted item.
- */
-pear.ui.Grid.prototype.getHighlightedCellIndex = function() {
-	var gridrow = this.getHighlightedGridRow();
-	if (gridrow) {
-		return gridrow.getHighlightedIndex();
-	}else{
-		return 0;
-	}
-};
-
-
-/**
- * Returns the index of the currently highlighted item (-1 if none).
- * @param {number} index of the currently highlighted item.
- */
-pear.ui.Grid.prototype.setHighlightedCellIndex = function(index) {
-	var gridrow = (/** @type {goog.ui.Container} */
-									(this.getHighlightedGridRow()));
-	gridrow.setHighlightedIndex(index);
-	this.highlightedCellIndex_ = index;
-};
-
-
 /**
  * Returns the 0-based index of the given gridrow
  * @param {pear.ui.GridRow} gridrow
@@ -2591,6 +2567,124 @@ pear.ui.Grid.prototype.indexOfGridRow = function(gridrow) {
 	return (this.getGridRows && gridrow) ?
 			goog.array.indexOf(this.getGridRows(), gridrow) : -1;
 };
+
+// Key Handling - Highlight Management
+
+
+
+/**
+ * get current highlighted Row
+ * @return {pear.ui.GridRow}
+ * @public
+ */
+pear.ui.Grid.prototype.getHighlightedGridRow = function() {
+	var row = this.getGridRowAt(this.getHighlightedGridRowIndex());
+	return row;
+};
+
+
+/**
+ * get current highlighted Cell
+ * @return {pear.ui.GridCell}
+ * @public
+ */
+pear.ui.Grid.prototype.getHighlightedCell = function() {
+	var cellIndex = this.getHighlightedCellIndex();
+	var highlightedRow = this.getHighlightedGridRow();
+
+	var cell = ( /** @type {pear.ui.GridCell} */ (highlightedRow.getChildAt(cellIndex)));
+	return cell;
+};
+
+/**
+ * Returns the index of the currently highlighted item (-1 if none).
+ * @return {number} Index of the currently highlighted item.
+ */
+pear.ui.Grid.prototype.getHighlightedGridRowIndex = function() {
+	return this.highligtedGridrow_.rowIndex = 
+		this.highligtedGridrow_.rowIndex < 0 ? 0 : 
+		this.highligtedGridrow_.rowIndex ;
+};
+
+
+/**
+ * Returns the index of the currently highlighted item (-1 if none).
+ * @return {number} Index of the currently highlighted item.
+ */
+pear.ui.Grid.prototype.getHighlightedCellIndex = function() {
+	return this.highligtedGridrow_.cellIndex = 
+		this.highligtedGridrow_.cellIndex < 0 ? 0 : 
+		this.highligtedGridrow_.cellIndex ;
+};
+
+pear.ui.Grid.prototype.resetHighlightedIndex = function() {
+	this.highligtedGridrow_.rowIndex = -1;
+	this.highligtedGridrow_.cellIndex = -1;
+	this.clearHighlightedRow();
+};
+	
+pear.ui.Grid.prototype.clearHighlightedRow = function() {
+	var gridrow = this.getHighlightedGridRow();
+	gridrow.clearHighlight();
+};
+
+/**
+ * Highlight GridRow and Set Highlighted Index
+ * @param {pear.ui.GridRow} gridrow [description]
+ */
+pear.ui.Grid.prototype.highlightGridRow = function(gridrow) {
+	this.clearHighlightedRow();
+	var highlightIndex = this.indexOfGridRow(gridrow);
+	this.setHighlightedGridRowByIndex(highlightIndex);
+};
+
+
+/**
+ * Highlight GridCell
+ * @param {pear.ui.GridCell} gridcell [description]
+ */
+pear.ui.Grid.prototype.highlightGridCell = function(gridcell) {
+	this.clearHighlightedRow();
+	var gridrow = (/** @type {pear.ui.GridRow} */ (gridcell.getParent()));
+	var cellIndex = gridrow.indexOfChild(gridcell);
+	var rowIndex = this.indexOfGridRow(gridrow);
+	this.setHighlightedCellByIndex(cellIndex);
+	this.setHighlightedGridRowByIndex(rowIndex);
+};
+
+/**
+ * Returns the index of the currently highlighted item (-1 if none).
+ * @param {number} index of the currently highlighted item.
+ */
+pear.ui.Grid.prototype.setHighlightedCellByIndex = function(index) {
+	var gridrow = (/** @type {goog.ui.Component} */
+									(this.getHighlightedGridRow()));
+	index = index < 0 ? 0:index;
+	gridrow.highlightChildAt(index,true);
+	this.highligtedGridrow_.cellIndex = index;
+};
+
+/**
+ * Highlights the item at the given 0-based index (if any).  If another item
+ * was previously highlighted, it is un-highlighted.
+ * @param {number} index Index of item to highlight (-1 removes the current
+ *     highlight).
+ */
+pear.ui.Grid.prototype.setHighlightedGridRowByIndex = function(index) {
+	if (this.highligtedGridrow_.rowIndex > -1 &&
+			this.highligtedGridrow_.rowIndex < this.getGridRowsCount_() &&
+			this.getGridRowsCount_() > 0) {
+		this.setHighlighted(this.getHighlightedGridRow(), false,true);
+	}
+
+	var gridrow = this.getGridRowAt(index);
+	this.highligtedGridrow_.rowIndex = index;
+	if (gridrow) {
+		gridrow.highlightChildAt(this.getHighlightedCellIndex());
+		this.setHighlighted(gridrow, true,true);
+	}
+};
+
 
 
 /**
@@ -2604,34 +2698,9 @@ pear.ui.Grid.prototype.getGridRowById = function(id) {
 };
 
 
-/**
- * Highlights the item at the given 0-based index (if any).  If another item
- * was previously highlighted, it is un-highlighted.
- * @param {number} index Index of item to highlight (-1 removes the current
- *     highlight).
- */
-pear.ui.Grid.prototype.setHighlightedGridRowIndex = function(index) {
-	if (this.highlightedGridRowIndex_ > -1 &&
-			this.highlightedGridRowIndex_ < this.getGridRowsCount_() &&
-			this.getGridRowsCount_() > 0) {
-		this.setHighlighted(this.getHighlightedGridRow(), false,true);
-	}
 
-	var gridRow = this.getGridRowAt(index);
-	if (gridRow) {
-		this.setHighlighted(gridRow, true,true);
-		this.highlightedGridRowIndex_ = index;
-	}
-};
 
-/**
- * Highlight GridRow and Set Highlighted Index
- * @param {pear.ui.GridRow?} gridrow [description]
- */
-pear.ui.Grid.prototype.highlightGridRow = function(gridrow) {
-	var highlightIndex = this.indexOfGridRow(gridrow);
-	this.setHighlightedGridRowIndex(highlightIndex);
-};
+
 
 
 /**
@@ -2680,8 +2749,84 @@ pear.ui.Grid.prototype.isFocusOnGrid = function() {
 /**
  * Highlights the first highlightable item in the container
  */
+pear.ui.Grid.prototype.highlightFirstCell = function() {
+	this.cellHighlightHelper(function(index, max) {
+		return (index + 1) % max;
+	}, this.getGridRowsCount_() - 1);
+};
+
+
+/**
+ * Highlights the last highlightable item in the container.
+ */
+pear.ui.Grid.prototype.highlightLastCell = function() {
+	this.cellHighlightHelper(function(index, max) {
+		index--;
+		return index < 0 ? max - 1 : index;
+	}, 0);
+};
+
+
+/**
+ * Highlights the next highlightable item (or the first if nothing is currently
+ * highlighted).
+ * @param  {boolean=} opt_gotonextrow if true , highlight next row first cell
+ */
+pear.ui.Grid.prototype.highlightNextCell = function(opt_gotonextrow) {
+	this.cellHighlightHelper(function(index, max) {
+
+		if (((index + 1) % max)===0){
+			if (opt_gotonextrow){
+				this.highlightNextRow();
+			}
+			index = 0;
+			return index;
+		}else{
+			return (index + 1) ;
+		}
+		
+	}, this.getHighlightedCellIndex());
+};
+
+
+/**
+ * Highlights the previous highlightable item (or the last if nothing is
+ * currently highlighted).
+ * @param  {boolean=} opt_gotonextrow if true , highlight previous row last cell
+ */
+pear.ui.Grid.prototype.highlightPreviousCell = function(opt_gotonextrow) {
+	this.cellHighlightHelper(function(index, max) {
+		index--;
+		if (index < 0){
+			if (opt_gotonextrow){
+				this.highlightPreviousRow();
+			}
+			index = max-1;
+		}
+		return index;
+	}, this.getHighlightedCellIndex());
+};
+
+/**
+ * Helper function that manages the details of moving the highlight among
+ * child controls in response to keyboard events.
+ * @param {function(number, number) : number} fn Function that accepts the
+ *     current and maximum indices, and returns the next index to check.
+ * @param {number} startCellIndex Start index.
+ * @protected
+ */
+pear.ui.Grid.prototype.cellHighlightHelper = function(fn, startCellIndex) {
+	var curIndex = startCellIndex < 0 ? 0 : startCellIndex;
+	var numItems = this.getHighlightedGridRow().getChildCount();
+	curIndex = fn.call(this, curIndex, numItems);
+	this.setHighlightedCellByIndex(curIndex);
+};
+
+/**
+ * Highlights the first highlightable item in the container
+ */
 pear.ui.Grid.prototype.highlightFirstRow = function() {
-	this.highlightHelper(function(index, max) {
+	this.rowHighlightHelper(function(index, max) {
 		return (index + 1) % max;
 	}, this.getGridRowsCount_() - 1);
 };
@@ -2691,7 +2836,7 @@ pear.ui.Grid.prototype.highlightFirstRow = function() {
  * Highlights the last highlightable item in the container.
  */
 pear.ui.Grid.prototype.highlightLastRow = function() {
-	this.highlightHelper(function(index, max) {
+	this.rowHighlightHelper(function(index, max) {
 		index--;
 		return index < 0 ? max - 1 : index;
 	}, 0);
@@ -2703,7 +2848,7 @@ pear.ui.Grid.prototype.highlightLastRow = function() {
  * highlighted).
  */
 pear.ui.Grid.prototype.highlightNextRow = function() {
-	this.highlightHelper(function(index, max) {
+	this.rowHighlightHelper(function(index, max) {
 		return ((index + 1) % max)===0 ? index : ((index + 1) % max);
 	}, this.getHighlightedGridRowIndex());
 };
@@ -2714,7 +2859,7 @@ pear.ui.Grid.prototype.highlightNextRow = function() {
  * currently highlighted).
  */
 pear.ui.Grid.prototype.highlightPreviousRow = function() {
-	this.highlightHelper(function(index, max) {
+	this.rowHighlightHelper(function(index, max) {
 		index--;
 		return index < 0 ? 0 : index;
 	}, this.getHighlightedGridRowIndex());
@@ -2730,22 +2875,17 @@ pear.ui.Grid.prototype.highlightPreviousRow = function() {
  * @return {boolean} Whether the highlight has changed.
  * @protected
  */
-pear.ui.Grid.prototype.highlightHelper = function(fn, startRowIndex) {
+pear.ui.Grid.prototype.rowHighlightHelper = function(fn, startRowIndex) {
 	var curIndex = startRowIndex < 0 ? 0 : startRowIndex;
 	var numItems = this.getGridRowsCount_();
 	curIndex = fn.call(this, curIndex, numItems);
 	this.highligtedCellIndex_ = this.getHighlightedCellIndex() ;
 	this.highligtedCellIndex_ = this.highligtedCellIndex_  < 0 ? 0 : this.highligtedCellIndex_;
-	var visited = 0;
-	while (visited <= numItems) {
-		var gridrow = this.getGridRowAt(curIndex);
-		if (gridrow && this.canHighlightGridRow(gridrow)) {
-
-			this.setHighlightedIndexFromKeyEvent(curIndex);
-			this.setHighlightedCellIndex(this.highligtedCellIndex_);
-			return true;
-		}
-		visited++;
+	var gridrow = this.getGridRowAt(curIndex);
+	if (gridrow && this.canHighlightGridRow(gridrow)) {
+		this.setHighlightedIndexFromKeyEvent(curIndex);
+		this.setHighlightedCellByIndex(this.highligtedCellIndex_);
+		return true;
 	}
 	return false;
 };
@@ -2775,7 +2915,7 @@ pear.ui.Grid.prototype.canHighlightGridRow = function(gridrow) {
  * @protected
  */
 pear.ui.Grid.prototype.setHighlightedIndexFromKeyEvent = function(index) {
-	this.setHighlightedGridRowIndex(index);
+	this.setHighlightedGridRowByIndex(index);
 };
 
 
@@ -2787,15 +2927,15 @@ pear.ui.Grid.prototype.setHighlightedIndexFromKeyEvent = function(index) {
  * @protected
  */
 pear.ui.Grid.prototype.getOwnerGridRow = function(node) {
-    var elem = this.getElement();
-    while (node && node !== elem) {
-      var id = node.id;
-      var row = this.bodyCanvas_.getChild(id)
-      if (row){
-      	return (/** @type {pear.ui.GridRow} */ (row));
-      }
-      node = node.parentNode;
+  var elem = this.getElement();
+  while (node && node !== elem) {
+    var id = node.id;
+    var row = this.bodyCanvas_.getChild(id)
+    if (row){
+    	return (/** @type {pear.ui.GridRow} */ (row));
     }
+    node = node.parentNode;
+  }
   return null;
 };
 
@@ -2889,7 +3029,7 @@ pear.ui.Grid.prototype.registerEventsOnGrid = function(){
  * @protected
  */
 pear.ui.Grid.prototype.registerEventsOnHeaderRow = function() {
-	this.forEachChild(function(cell) {
+	this.headerRow_.forEachChild(function(cell) {
 		if (this.Configuration_.AllowSorting) {
 			this.getHandler().
 					listenWithScope(cell, goog.ui.Component.EventType.ACTION,
@@ -2935,8 +3075,8 @@ pear.ui.Grid.prototype.registerEventsOnBodyCanvas = function() {
       listenWithScope(this.getKeyHandler(),
 					goog.events.KeyHandler.EventType.KEY,
 						this.handleKeyEventOnBodyCanvas, false, this).
-			listenWithScope(this.bodyCanvas_, 
-					goog.ui.Component.EventType.ACTION,
+			listenWithScope(this.bodyCanvas_.getElement(), 
+					"click",
 						this.handleAction, false, self).
 			listenWithScope(this.bodyCanvas_.getElement(), 
 					goog.events.EventType.DBLCLICK,
@@ -2945,30 +3085,27 @@ pear.ui.Grid.prototype.registerEventsOnBodyCanvas = function() {
 
 /**
  * [description]
- * @param  {goog.events.BrowserEvent} ge [description]
+ * @param  {goog.events.BrowserEvent} be [description]
  * @protected
  */
-pear.ui.Grid.prototype.handleBlur =  function(ge) {
+pear.ui.Grid.prototype.handleBlur =  function(be) {
+	logger.info( 'handleBlur - Received event ' + be.type);
 };
 
 /**
  * Handles focus events raised when the key event target receives
  * keyboard focus.
- * @param {goog.events.BrowserEvent} ge Focus event to handle.
+ * @param {goog.events.BrowserEvent} be Focus event to handle.
  * @protected
  */
-pear.ui.Grid.prototype.handleFocus = function(ge) {
-	logger.info( 'Received event ' + ge.type);
+pear.ui.Grid.prototype.handleFocus = function(be) {
+	logger.info( 'handleFocus - Received event ' + be.type);
 	//this.debugRendering_();
+	if (be.defaultPrevented) return ;
+
 	var gridrow = this.getHighlightedGridRow();
-  var cellIndex = -1;
-	if (gridrow){
-		cellIndex = this.getHighlightedCellIndex();
-	}else{
-		this.setHighlightedGridRowIndex(this.getViewportTopRowIndex());
-		gridrow = this.getHighlightedGridRow();
-	}
-	gridrow.setHighlightedIndex((cellIndex > 0 ? cellIndex :0) );
+	this.setHighlighted(gridrow,true,false);
+	this.setHighlightedCellByIndex(this.getHighlightedCellIndex());
 	this.scrollCellIntoView(gridrow);
 };
 
@@ -2979,7 +3116,7 @@ pear.ui.Grid.prototype.handleFocus = function(ge) {
  * @param {goog.events.BrowserEvent} e
  */
 pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
-	logger.info( 'Received event ' + e.type);
+	logger.info( 'handleBodyCanvasScroll Received event ' + e.type);
 	if (this.previousScrollTop_ <= this.viewport_.getElement().scrollTop) {
 		this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.DOWN;
 	}else {
@@ -2989,7 +3126,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
 	if (this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.DOWN ||
 			this.bodyScrollTriggerDirection_ === pear.ui.Grid.ScrollDirection.UP
 	) {
-		this.updateViewport_();
+			this.fireViewportThrottle();
 	}
 
 	if (this.previousScrollLeft_ <= this.viewport_.getElement().scrollLeft) {
@@ -3009,7 +3146,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
 	this.previousScrollTop_ = this.viewport_.getElement().scrollTop;
 
 	if (e) {
-		e.stopPropagation();
+		e.preventDefault();
 	}
 };
 
@@ -3020,8 +3157,9 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
  * @protected
  */
 pear.ui.Grid.prototype.handleHeaderCellClick = function(ge) {
-	logger.info( 'Received event ' + ge.type);
+	logger.info( 'handleHeaderCellClick Received event ' + ge.type);
 	
+	if (ge.defaultPrevented) {return };
 
 	var headerCell = ( /** @type {pear.ui.GridHeaderCell} */ (ge.target));
 	var grid = ge.currentTarget;
@@ -3045,7 +3183,7 @@ pear.ui.Grid.prototype.handleHeaderCellClick = function(ge) {
 			pear.ui.Grid.EventType.HEADER_CELL_ON_CLICK, this, headerCell);
 	this.dispatchEvent(evt);
 
-	ge.stopPropagation();
+	ge.preventDefault();
 };
 
 /**
@@ -3054,41 +3192,48 @@ pear.ui.Grid.prototype.handleHeaderCellClick = function(ge) {
  * @protected
  */
 pear.ui.Grid.prototype.handleHeaderCellOptionClick = function(ge) {
-	logger.info( 'Received event ' + ge.type);
-	
+	logger.info( 'handleHeaderCellOptionClick Received event ' + ge.type);
+	if (ge.defaultPrevented) {return };
+
 	var headerCell = ( /** @type {pear.ui.GridHeaderCell} */ (ge.target));
 	var evt = new pear.ui.Grid.GridHeaderCellEvent(
 			pear.ui.Grid.EventType.HEADER_CELL_MENU_CLICK, this, headerCell);
 	this.dispatchEvent(evt);
 
-	ge.stopPropagation();
+	ge.preventDefault();
 };
 
 /**
  * Handle Action on Body - Mainly to Capture Action on GridCell
- * @param  {goog.events.Event} ge [description]
+ * @param  {goog.events.BrowserEvent} be [description]
  * @protected
  */
-pear.ui.Grid.prototype.handleAction = function(ge) {
-	logger.info( 'handleAction - ' + ge.type);
+pear.ui.Grid.prototype.handleAction = function(be) {
+	logger.info( 'handleAction - ' + be.type);
+	if (be.defaultPrevented) {return }; 
+	var gridcell = this.getOwnerGridCell(be.target);
+	var gridrow = this.getOwnerGridRow(be.target);
 	
-	var cell = ( /** @type {pear.ui.GridCell} */(ge.target));
-	if (cell){
-		this.handleDataCellAction(cell);
+	if (gridcell){
+		this.handleDataCellAction(gridcell);
 	}
-	ge.stopPropagation();
+	be.preventDefault();
 };
 
-
-pear.ui.Grid.prototype.handleDoubleClick = function(ge){
-	logger.info( 'handleDoubleClick -  ' + ge.type);
+/**
+ * Handle Double Click
+ * @param  {goog.events.BrowserEvent} be [description]
+ * @protected
+ */
+pear.ui.Grid.prototype.handleDoubleClick = function(be){
+	logger.info( 'handleDoubleClick -  ' + be.type);
 	
-	var gridcell = this.getOwnerGridCell(ge.target);
-	var gridrow = this.getOwnerGridRow(ge.target);
+	var gridcell = this.getOwnerGridCell(be.target);
+	var gridrow = this.getOwnerGridRow(be.target);
 	if (gridcell && gridrow){
 		 this.showCellEditor(gridcell);
 	}
-	ge.stopPropagation();
+	be.preventDefault();
 };
 
 /**
@@ -3103,9 +3248,9 @@ pear.ui.Grid.prototype.handleDataCellAction = function(cell) {
 	var evt;
 
 	// Highlight
+	this.setHighlightedCellByIndex(gridrow.indexOfChild(cell));
 	this.highlightGridRow(gridrow);
-	gridrow.setHighlighted(cell);
-	this.setHighlightedCellIndex(gridrow.indexOfChild(cell));
+	
 
 	// Focus 
 	if (!this.isFocusOnGrid()){
@@ -3150,13 +3295,12 @@ pear.ui.Grid.prototype.handleKeyEvent = function(e) {
 			this.handleKeyEventInternal(e))
 	{
 		e.preventDefault();
-		e.stopPropagation();
 
 		var gridrow = this.getHighlightedGridRow();
 		if (gridrow.isInDocument()){
 			// Good
 		}else{
-			this.setHighlightedGridRowIndex(this.getViewportTopRowIndex());
+			this.setHighlightedGridRowByIndex(this.getViewportTopRowIndex());
 			gridrow = this.getHighlightedGridRow();
 		}
 		this.updateViewport_();
@@ -3183,11 +3327,7 @@ pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 	// the key event, so attempt to handle it here.
 	switch (e.keyCode) {
 		case goog.events.KeyCodes.ESC:
-			/*if (this.isFocusable()) {
-				this.getKeyEventTarget().blur();
-			} else {
-				return false;
-			}*/
+			
 			break;
 		case goog.events.KeyCodes.HOME:
 			this.highlightFirstRow();
@@ -3202,18 +3342,13 @@ pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 			this.highlightNextRow();
 			break;
 		case goog.events.KeyCodes.TAB:
-			if (this.getHighlightedCellIndex() === this.getColumns().length-1){
-				this.setHighlightedCellIndex(0);
-				this.highlightNextRow();
-			}else{
-				this.getHighlightedGridRow().handleKeyEvent(e);
-				this.setHighlightedCellIndex(this.getHighlightedGridRow().getHighlightedIndex());
-			}
+			this.highlightNextCell(true);
 			break;
 		case goog.events.KeyCodes.RIGHT:
+				this.highlightNextCell();
+			break;
 		case goog.events.KeyCodes.LEFT:
-				this.getHighlightedGridRow().handleKeyEvent(e);
-				this.setHighlightedCellIndex(this.getHighlightedGridRow().getHighlightedIndex());
+				this.highlightPreviousCell();
 			break;
 		case goog.events.KeyCodes.ENTER:
 			if (this.isSelectionModeOn()) {
@@ -3221,7 +3356,7 @@ pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
 			}
 			break;
 		case goog.events.KeyCodes.F2:
-			this.showCellEditor(this.getHighlightedGridRow().getHighlighted());
+			this.showCellEditor(this.getHighlightedCell());
 			break;
 		default:
 			return false;
@@ -3301,15 +3436,18 @@ pear.ui.Grid.prototype.disposeInternal = function() {
   }
   this.focusHandler_ = null;
 
-  if (this.updateViewportTimer_){
-		clearTimeout(this.updateViewportTimer_);    
+  if (this.viewportthrottle_){
+		this.viewportthrottle_.dispose();    
 	}
-	this.updateViewportTimer_=null;
+	this.viewportthrottle_=null;
 
 	delete this.width_;
 	delete this.height_;
 	delete this.sortColumnId_;
 	delete this.currentPageIndex_;
+	this.cachedDatarowViews_ = null;
+	this.viewportSize_ = null;
+	this.bodyCanvasSize_ = null;
 
 	
 	this.bodyScrollTriggerDirection_ = null;

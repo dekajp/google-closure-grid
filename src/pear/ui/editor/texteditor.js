@@ -57,7 +57,7 @@ pear.ui.editor.TextEditor.prototype.createEditorDom = function() {
 
   goog.events.listen(this.input_, goog.ui.Component.EventType.ACTION,
         function (ge){
-          ge.stopPropagation();
+          ge.preventDefault();
         });
 };
 
