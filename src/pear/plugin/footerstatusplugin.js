@@ -4,11 +4,10 @@ goog.require('pear.ui.Plugin');
 
 
 
-
 /**
  * @class  pear.plugin.FooterStatus
- * @classdesc 
- * FooterStatus Plugin - very basic plugin to show total rows as 
+ * @classdesc
+ * FooterStatus Plugin - very basic plugin to show total rows as
  * footer row
  * @constructor
  * @extends {pear.ui.Plugin}
@@ -18,6 +17,7 @@ pear.plugin.FooterStatus = function() {
 };
 goog.inherits(pear.plugin.FooterStatus, pear.ui.Plugin);
 
+
 /**
  * class id
  * @return {string} [description]
@@ -26,14 +26,15 @@ pear.plugin.FooterStatus.prototype.getClassId = function() {
   return 'FooterStatus';
 };
 
+
 /**
- * init plugin
- * @private
+ * Init plugin
  */
 pear.plugin.FooterStatus.prototype.init = function() {
   var grid = this.getGrid();
-  this.createFooterStatus();
+  this.createFooterStatus_();
 };
+
 
 /**
  * @override
@@ -53,12 +54,13 @@ pear.plugin.FooterStatus.prototype.disposeInternal = function() {
  * @private
  *
  */
-pear.plugin.FooterStatus.prototype.createFooterStatus = function() {
+pear.plugin.FooterStatus.prototype.createFooterStatus_ = function() {
 
   var grid = this.getGrid();
   var parentElem = grid.getElement();
   this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
-  if (this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer-panel')) {
+  if (this.footer_ &&
+      goog.dom.classes.has(this.footer_, 'pear-grid-footer-panel')) {
 
   }else {
     this.footer_ = goog.dom.createDom('div', 'pear-grid-footer-panel');
@@ -73,8 +75,9 @@ pear.plugin.FooterStatus.prototype.createFooterStatus = function() {
   this.handleDataSourceChange_();
 
   goog.events.listen(grid, pear.ui.Grid.EventType.DATAROWS_CHANGED,
-                                             this.handleDataSourceChange_, false, this);
+      this.handleDataSourceChange_, false, this);
 };
+
 
 /**
  * Update Footer Status

@@ -17,7 +17,8 @@ goog.require('pear.ui.Row');
 pear.ui.GridRow = function(grid, height, opt_domHelper) {
   pear.ui.Row.call(this, grid, height, opt_domHelper);
 
-  
+  this.selected_ = false;
+  this.highlighted_ = false;
 };
 goog.inherits(pear.ui.GridRow, pear.ui.Row);
 
@@ -29,18 +30,22 @@ goog.inherits(pear.ui.GridRow, pear.ui.Row);
  */
 pear.ui.GridRow.prototype.top_ = 0;
 
+
 /**
- * [selected_ description]
+ * Selected
  * @type {boolean}
+ * @private
  */
-pear.ui.GridRow.prototype.selected_ = false;
+pear.ui.GridRow.prototype.selected_;
 
 
 /**
- * [highlighted_ description]
+ * Highlighted
  * @type {boolean}
+ * @private
  */
-pear.ui.GridRow.prototype.highlighted_ = false;
+pear.ui.GridRow.prototype.highlighted_;
+
 
 /**
  * Default CSS class to be applied to the root element of containers rendered
@@ -49,6 +54,7 @@ pear.ui.GridRow.prototype.highlighted_ = false;
  */
 pear.ui.GridRow.CSS_CLASS =
     goog.getCssName('pear-grid-row-data');
+
 
 /**
  * [getLocationTop description]
@@ -85,11 +91,20 @@ pear.ui.GridRow.prototype.isSelected = function() {
   return this.selected_;
 };
 
+
+/**
+ * IsVisible
+ * @return {boolean} [description]
+ */
 pear.ui.GridRow.prototype.isVisible = function() {
   return true;
 };
 
 
+/**
+ * IsEnabled
+ * @return {boolean} [description]
+ */
 pear.ui.GridRow.prototype.isEnabled = function() {
   return true;
 };
@@ -100,7 +115,7 @@ pear.ui.GridRow.prototype.isEnabled = function() {
  * @param {boolean} highlight
  */
 pear.ui.GridRow.prototype.setHighlight = function(highlight) {
-  
+
   if (highlight) {
     goog.dom.classes.add(this.getElement(), 'pear-grid-row-highlight');
     this.highlighted_ = true;
@@ -111,19 +126,29 @@ pear.ui.GridRow.prototype.setHighlight = function(highlight) {
   }
 };
 
-pear.ui.GridRow.prototype.clearHighlight = function(){
-  this.forEachChild(function(child){
+
+/**
+ * Clear row highlight
+ */
+pear.ui.GridRow.prototype.clearHighlight = function() {
+  this.forEachChild(function(child) {
     child.setHighlight(false);
   });
   this.highlightedCellIndex_ = -1;
 };
 
-pear.ui.GridRow.prototype.highlightChildAt = function(index){
+
+/**
+ * Highlight Child (GridCell)
+ * @param  {number} index
+ */
+pear.ui.GridRow.prototype.highlightChildAt = function(index) {
   this.clearHighlight();
   var child = this.getChildAt(index);
   child.setHighlight(true);
   this.highlightedCellIndex_ = index;
 };
+
 
 /**
  * [setSelect description]
@@ -149,9 +174,10 @@ pear.ui.GridRow.prototype.setSelect = function(select) {
  */
 pear.ui.GridRow.prototype.repositionCells = function() {
   this.forEachChild(function(child) {
-//    child.updateSizeAndPosition();
+    //    child.updateSizeAndPosition();
   },this);
 };
+
 
 /**
  * @override
@@ -166,8 +192,8 @@ pear.ui.GridRow.prototype.enterDocument = function() {
 
   var even = this.getRowPosition() % 2 == 0;
   if (this.isAllowAlternateRowHighlight()) {
-    goog.dom.classes.add(elem,even ? goog.getCssName(baseClass, 'even') :
-                        goog.getCssName(baseClass, 'odd'));
+    goog.dom.classes.add(elem, even ? goog.getCssName(baseClass, 'even') :
+        goog.getCssName(baseClass, 'odd'));
   }else {
     // No Alternate Color Highlight
   }
@@ -182,6 +208,7 @@ pear.ui.GridRow.prototype.enterDocument = function() {
   this.setId(this.getDataRowId());
   this.getElement().id = this.getId();
 };
+
 
 /**
  * [getDataRowId description]

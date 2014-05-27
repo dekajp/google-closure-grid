@@ -27,15 +27,19 @@ pear.plugin.Pager = function() {
 };
 goog.inherits(pear.plugin.Pager, pear.ui.Plugin);
 
+
 /**
  * Navigation Control Array
  * @type {Array.<goog.ui.Control>?}
+ * @private
  */
 pear.plugin.Pager.prototype.navControl_ = null;
+
 
 /**
  * Pager Dropdown control
  * @type {goog.ui.ComboBox?}
+ * @private
  */
 pear.plugin.Pager.prototype.pagerComboBox_ = null;
 
@@ -47,14 +51,16 @@ pear.plugin.Pager.prototype.getClassId = function() {
   return 'Pager';
 };
 
+
 /**
  * Navigation Controls (goog.ui.Control) [left,right]
  * @public
- * @return {Array.<goog.ui.Control>?} Navigation Controls 
+ * @return {Array.<goog.ui.Control>?} Navigation Controls
  */
 pear.plugin.Pager.prototype.getNavigationControls = function() {
   return this.navControl_;
 };
+
 
 /**
  * get the pager dropdown
@@ -64,38 +70,51 @@ pear.plugin.Pager.prototype.getPagerDropdown = function() {
   return this.pagerComboBox_;
 };
 
+
 /**
- * [init description]
- *  
+ * init
+ *
  */
 pear.plugin.Pager.prototype.init = function() {
   var grid = this.getGrid();
   this.createPager_();
 
-  goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, function(ge) {
-    this.handleRowCountChange_(ge);
-    this.updateMsg_();
-  },false, this);
+  goog.events.listen(grid.getDataView(),
+      pear.data.DataView.EventType.DATAVIEW_CHANGED,
+      function(ge) {
+        this.handleRowCountChange_(ge);
+        this.updateMsg_();
+      },false, this);
 
-  goog.events.listen(grid, pear.ui.Grid.EventType.PAGE_INDEX_CHANGED, function(ge) {
-    this.trigger_ = false;
-    this.updateMsg_();
-    this.updatePagerDropdown_(this.getGrid().getPageIndex());
-    this.trigger_ = true;
-  },false, this);
+  goog.events.listen(grid,
+      pear.ui.Grid.EventType.PAGE_INDEX_CHANGED,
+      function(ge) {
+        this.trigger_ = false;
+        this.updateMsg_();
+        this.updatePagerDropdown_(this.getGrid().getPageIndex());
+        this.trigger_ = true;
+      },false, this);
 
-  goog.events.listen(grid, pear.ui.Grid.EventType.PAGE_SIZE_CHANGED, function(ge) {
-    this.trigger_ = false;
-    this.handleRowCountChange_(ge);
-    this.updateMsg_();
-    this.trigger_ = true;
-  },false, this);
+  goog.events.listen(grid,
+      pear.ui.Grid.EventType.PAGE_SIZE_CHANGED,
+      function(ge) {
+        this.trigger_ = false;
+        this.handleRowCountChange_(ge);
+        this.updateMsg_();
+        this.trigger_ = true;
+      },false, this);
 
   this.trigger_ = true;
 };
 
+
+/**
+ * Get Element
+ * @return {Element}
+ */
 pear.plugin.Pager.prototype.getElement = function() {
-  this.element_ = this.element_ || goog.dom.createDom('div', 'pear-grid-pager');
+  this.element_ = this.element_ ||
+      goog.dom.createDom('div', 'pear-grid-pager');
   return this.element_;
 };
 
@@ -109,15 +128,13 @@ pear.plugin.Pager.prototype.createPager_ = function() {
   this.createFooter_();
   goog.dom.appendChild(this.footer_, this.getElement());
 
-
-  
   this.createPagerNavControls_();
   this.createPagerDropDown_();
   this.createPageSizeDropDown_();
 
-  this.updatePagerDropdown_(this.getPageIndex());
-
+  this.updatePagerDropdown_(grid.getPageIndex());
 };
+
 
 /**
  * @inheritDoc
@@ -135,15 +152,6 @@ pear.plugin.Pager.prototype.disposeInternal = function() {
   pear.plugin.Pager.superClass_.disposeInternal.call(this);
 };
 
-/**
- * Get Page Index
- * @private
- * 
- * @return {number} [description]
- */
-pear.plugin.Pager.prototype.getPageIndex = function() {
-  return this.getGrid().getPageIndex();
-};
 
 /**
  * Create footer DOM
@@ -153,8 +161,9 @@ pear.plugin.Pager.prototype.createFooter_ = function() {
   var grid = this.getGrid();
   var parentElem = grid.getElement();
   this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
-  if (this.footer_ && goog.dom.classes.has(this.footer_, 'pear-grid-footer-panel')) {
-
+  if (this.footer_ &&
+      goog.dom.classes.has(this.footer_, 'pear-grid-footer-panel')) {
+    // do nothing
   }else {
     this.footer_ = goog.dom.createDom('div', 'pear-grid-footer-panel');
     goog.dom.insertSiblingAfter(this.footer_, parentElem);
@@ -169,9 +178,8 @@ pear.plugin.Pager.prototype.createFooter_ = function() {
 };
 
 
-
 /**
- * Create Pager Dropdown List 
+ * Create Pager Dropdown List
  * @private
  */
 pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
@@ -184,12 +192,13 @@ pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
   this.pagerComboBox_.setUseDropdownArrow(true);
   var i = 0;
   do {
-    this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i + 1)));
+    this.pagerComboBox_.addItem(
+        new goog.ui.ComboBoxItem(goog.string.buildString(i + 1)));
     i++;
   }while (i * rowsPerPage < totalRows);
-  
-  var text = goog.dom.createDom('span', 'label','Go to Page:');
-  goog.dom.appendChild(this.getElement(),text);
+
+  var text = goog.dom.createDom('span', 'label', 'Go to Page:');
+  goog.dom.appendChild(this.getElement(), text);
 
   this.pagerComboBox_.render(this.getElement());
   goog.style.setWidth(this.pagerComboBox_.getInputElement(), 30);
@@ -197,31 +206,33 @@ pear.plugin.Pager.prototype.createPagerDropDown_ = function() {
   this.pagerComboBox_.getMenu().getElement().style.overflowY = 'auto';
 
   goog.events.
-      listen(this.pagerComboBox_, goog.ui.Component.EventType.CHANGE, this.handleChange_, false, this);
+      listen(this.pagerComboBox_,
+      goog.ui.Component.EventType.CHANGE,
+      this.handleChange_, false, this);
 };
 
 
 /**
- * Create Pager-size Dropdown List 
+ * Create Pager-size Dropdown List
  * @private
  */
 pear.plugin.Pager.prototype.createPageSizeDropDown_ = function() {
   var elem = this.getElement();
   var grid = this.getGrid();
   var rowsPerPage = grid.getConfiguration().PageSize;
-  
+
 
   this.pageSizeComboBox_ = new goog.ui.ComboBox();
   this.pageSizeComboBox_.setUseDropdownArrow(true);
- 
-  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("10"));
-  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("25"));
-  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("50"));
-  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("100"));
-  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem("500"));
-   
-  var text = goog.dom.createDom('span', 'label','Show rows:');
-  goog.dom.appendChild(this.getElement(),text);
+
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem('10'));
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem('25'));
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem('50'));
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem('100'));
+  this.pageSizeComboBox_.addItem(new goog.ui.ComboBoxItem('500'));
+
+  var text = goog.dom.createDom('span', 'label', 'Show rows:');
+  goog.dom.appendChild(this.getElement(), text);
 
   this.pageSizeComboBox_.render(this.getElement());
 
@@ -229,10 +240,12 @@ pear.plugin.Pager.prototype.createPageSizeDropDown_ = function() {
   goog.style.setHeight(this.pageSizeComboBox_.getMenu().getElement(), 150);
   this.pageSizeComboBox_.getMenu().getElement().style.overflowY = 'auto';
 
-  this.pageSizeComboBox_.setValue(''+grid.getPageSize());
+  this.pageSizeComboBox_.setValue('' + grid.getPageSize());
 
   goog.events.
-      listen(this.pageSizeComboBox_, goog.ui.Component.EventType.CHANGE, this.handlePageSizeChange_, false, this);
+      listen(this.pageSizeComboBox_,
+      goog.ui.Component.EventType.CHANGE,
+      this.handlePageSizeChange_, false, this);
 };
 
 
@@ -261,9 +274,14 @@ pear.plugin.Pager.prototype.createPagerNavControls_ = function() {
   goog.array.forEach(this.navControl_, function(value) {
     value.setHandleMouseEvents(true);
     goog.events.
-        listen(value, goog.ui.Component.EventType.ACTION, this.handleAction_, false, this);
+        listen(value,
+        goog.ui.Component.EventType.ACTION,
+        this.handleAction_,
+        false,
+        this);
   },this);
 };
+
 
 /**
  * Handle Navigation Events
@@ -272,7 +290,7 @@ pear.plugin.Pager.prototype.createPagerNavControls_ = function() {
  */
 pear.plugin.Pager.prototype.handleAction_ = function(ge) {
   var grid = this.getGrid();
-  var index = this.getPageIndex();
+  var index = grid.getPageIndex();
   if (ge.target === this.navControl_[0]) {
     grid.gotoPreviousPage();
   }else if (ge.target === this.navControl_[1]) {
@@ -290,8 +308,9 @@ pear.plugin.Pager.prototype.handleAction_ = function(ge) {
 pear.plugin.Pager.prototype.updatePagerDropdown_ = function(index) {
   // TODO : check for boundary
   index = (index < 0) ? 0 : index;
-  index = index <= this.pagerComboBox_.getItemCount() - 1 ? index : (this.pagerComboBox_.getItemCount() - 1);
-  var s = ''+(index + 1);
+  index = index <= this.pagerComboBox_.getItemCount() - 1 ?
+      index : (this.pagerComboBox_.getItemCount() - 1);
+  var s = '' + (index + 1);
   this.pagerComboBox_.setValue(s);
 };
 
@@ -304,13 +323,14 @@ pear.plugin.Pager.prototype.updatePagerDropdown_ = function(index) {
 pear.plugin.Pager.prototype.handleChange_ = function(ge) {
   var grid = this.getGrid();
   if (this.trigger_) {
-    var cbValue = parseInt(this.pagerComboBox_.getValue(),10);
-    if (cbValue && cbValue >0){
-      var index = parseInt(this.pagerComboBox_.getValue(),10) - 1;
+    var cbValue = parseInt(this.pagerComboBox_.getValue(), 10);
+    if (cbValue && cbValue > 0) {
+      var index = parseInt(this.pagerComboBox_.getValue(), 10) - 1;
       grid.setPageIndex(index);
     }
   }
 };
+
 
 /**
  * Handle Page Size Change
@@ -319,12 +339,13 @@ pear.plugin.Pager.prototype.handleChange_ = function(ge) {
  */
 pear.plugin.Pager.prototype.handlePageSizeChange_ = function(ge) {
   var grid = this.getGrid();
-  var cbValue = parseInt(this.pageSizeComboBox_.getValue(),10);
-  if (cbValue && cbValue >0){
-    var size = parseInt(this.pageSizeComboBox_.getValue(),10);
+  var cbValue = parseInt(this.pageSizeComboBox_.getValue(), 10);
+  if (cbValue && cbValue > 0) {
+    var size = parseInt(this.pageSizeComboBox_.getValue(), 10);
     grid.setPageSize(size);
   }
 };
+
 
 /**
  * Handle Page Index Change
@@ -336,14 +357,15 @@ pear.plugin.Pager.prototype.handlePageIndexChange_ = function(ge) {
   // THIS WILL ALSO CAUSE COMBOBOX CHANGE EVENT
   // setPageIndex are fired 2 times , this could be avoided by directly calling
   // handlePageIndexChange_ from handleChange_
-  
-  var s = ''+(index + 1);
+
+  var s = '' + (index + 1);
   this.pagerComboBox_.setValue(s);
 };
 
+
 /**
- * Handle Row Count Change 
- * @param  {pear.data.DataViewEvent} ge  
+ * Handle Row Count Change
+ * @param  {pear.data.DataViewEvent} ge
  * @private
  */
 pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge) {
@@ -355,14 +377,16 @@ pear.plugin.Pager.prototype.handleRowCountChange_ = function(ge) {
   this.pagerComboBox_.removeAllItems();
   var i = 0;
   do {
-    this.pagerComboBox_.addItem(new goog.ui.ComboBoxItem(goog.string.buildString(i + 1)));
+    this.pagerComboBox_.addItem(
+        new goog.ui.ComboBoxItem(goog.string.buildString(i + 1)));
     i++;
   }while (i * rowsPerPage < totalRows);
 
   var index = this.getGrid().getPageIndex();
-  var s = ''+(index + 1);
+  var s = '' + (index + 1);
   this.pagerComboBox_.setValue(s);
 };
+
 
 /**
  * Update Footer Message
@@ -378,13 +402,16 @@ pear.plugin.Pager.prototype.updateMsg_ = function() {
 
   if (configuration.AllowPaging) {
     startRowIndex = (currentPageIndex) * configuration.PageSize;
-    endRowIndex = (startRowIndex + configuration.PageSize) > rowCount ? rowCount : (startRowIndex + configuration.PageSize);
+    endRowIndex = (startRowIndex + configuration.PageSize) >
+        rowCount ?
+        rowCount : (startRowIndex + configuration.PageSize);
   }
   startRowIndex = (rowCount > 0) ?
                       (startRowIndex ? startRowIndex : 1) :
                       0;
   endRowIndex = endRowIndex ? endRowIndex : rowCount;
-  this.footerStatus_.setContent('[' + startRowIndex + ' - ' + endRowIndex + '] of ' + rowCount + '');
+  this.footerStatus_.setContent(
+      '[' + startRowIndex + ' - ' + endRowIndex + '] of ' + rowCount + '');
 };
 
 
@@ -411,7 +438,8 @@ goog.addSingletonGetter(pear.plugin.PagerCellRenderer);
  * by this renderer.
  * @type {string}
  */
-pear.plugin.PagerCellRenderer.CSS_CLASS = goog.getCssName('pear-grid-pager-cell');
+pear.plugin.PagerCellRenderer.CSS_CLASS =
+    goog.getCssName('pear-grid-pager-cell');
 
 
 /**
@@ -435,7 +463,9 @@ pear.plugin.PagerCellRenderer.prototype.getCssClass = function() {
 pear.plugin.PagerCellRenderer.prototype.createDom = function(cellControl) {
   // Create and return DIV wrapping contents.
   var element = cellControl.getDomHelper().createDom(
-      'div', this.getClassNames(cellControl).join(' '), cellControl.getContent());
+      'div',
+      this.getClassNames(cellControl).join(' '),
+      cellControl.getContent());
 
   this.setAriaStates(cellControl, element);
   return element;

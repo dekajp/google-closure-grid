@@ -18,9 +18,9 @@ goog.require('pear.ui.Row');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.GridHeaderRow = function(grid, height,opt_domHelper) {
+pear.ui.GridHeaderRow = function(grid, height, opt_domHelper) {
 
-  pear.ui.Row.call(this, grid, height,opt_domHelper);
+  pear.ui.Row.call(this, grid, height, opt_domHelper);
 };
 goog.inherits(pear.ui.GridHeaderRow, pear.ui.Row);
 
@@ -32,7 +32,8 @@ goog.inherits(pear.ui.GridHeaderRow, pear.ui.Row);
  */
 pear.ui.GridHeaderRow.CSS_CLASS =
     goog.getCssName('pear-grid-row-header');
-    
+
+
 /**
  * @inheritDoc
  */
@@ -42,9 +43,10 @@ pear.ui.GridHeaderRow.prototype.addCell = function(cell, opt_render) {
 
 
 /**
-  @public
-  @param {string} id
-*/
+ * Get Header Cell
+ * @param  {string} id Column Id
+ * @return {pear.ui.GridHeaderCell}
+ */
 pear.ui.Row.prototype.getHeaderCellByColumnId = function(id) {
   var cell;
   this.forEachChild(function(child) {
@@ -55,10 +57,12 @@ pear.ui.Row.prototype.getHeaderCellByColumnId = function(id) {
   return cell;
 };
 
+
 /**
-  @public
-  @param {string} fieldName
-*/
+ * Get Header Cell By Data Field
+ * @param  {string} fieldName
+ * @return {pear.ui.GridHeaderCell}
+ */
 pear.ui.Row.prototype.getHeaderCellByDataField = function(fieldName) {
   var cell;
   this.forEachChild(function(child) {
@@ -80,8 +84,9 @@ pear.ui.GridHeaderRow.prototype.enterDocument = function() {
   goog.dom.classes.add(this.getElement(), pear.ui.GridHeaderRow.CSS_CLASS);
 };
 
+
 /**
- * 
+ *
  * @inheritDoc
  */
 pear.ui.GridHeaderRow.prototype.disposeInternal = function() {

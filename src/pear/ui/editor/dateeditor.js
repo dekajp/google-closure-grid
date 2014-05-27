@@ -1,11 +1,13 @@
 goog.provide('pear.ui.editor.DatePickerEditor');
 
-goog.require('pear.ui.editor.EditorBase');
 goog.require('goog.dom');
 goog.require('goog.i18n.DateTimeFormat');
 goog.require('goog.i18n.DateTimeParse');
 goog.require('goog.ui.InputDatePicker');
 goog.require('goog.ui.LabelInput');
+goog.require('pear.ui.editor.EditorBase');
+
+
 
 /**
  * Class that provides the basic text editor , implements
@@ -15,9 +17,10 @@ goog.require('goog.ui.LabelInput');
  */
 pear.ui.editor.DatePickerEditor = function() {
   pear.ui.editor.EditorBase.call(this);
-  
+
 };
-goog.inherits(pear.ui.editor.DatePickerEditor, pear.ui.editor.EditorBase );
+goog.inherits(pear.ui.editor.DatePickerEditor, pear.ui.editor.EditorBase);
+
 
 /**
  * set Focus on Editor
@@ -27,17 +30,19 @@ pear.ui.editor.DatePickerEditor.prototype.setFocus = function() {
   this.input_.getElement().focus();
 };
 
+
 /**
- * Set new Value 
+ * Set new Value
  */
 pear.ui.editor.DatePickerEditor.prototype.setValueFromEditor = function() {
   var datatype = this.getMediator().getGridCell().getDataColumn().getDataType();
-  if (datatype === pear.data.Column.DataType.NUMBER){
-     this.setNewValue(parseInt(this.input_.getValue(),10));
-  }else{
+  if (datatype === pear.data.Column.DataType.NUMBER) {
+    this.setNewValue(parseInt(this.input_.getValue(), 10));
+  }else {
     this.setNewValue(this.input_.getValue());
   }
 };
+
 
 /**
  * Close this editor
@@ -65,6 +70,7 @@ pear.ui.editor.DatePickerEditor.prototype.createEditorDom = function() {
   this.idatepicker_ = new goog.ui.InputDatePicker(formatter, parser);
   this.idatepicker_.decorate(this.input_.getElement());
 };
+
 
 /**
  * Deletes or nulls out any references to COM objects, DOM nodes, or other

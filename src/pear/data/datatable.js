@@ -4,6 +4,7 @@ goog.require('goog.events.EventTarget');
 goog.require('pear.data.Column');
 
 
+
 /**
  * @class  pear.data.DataTable
  * @classdesc
@@ -11,12 +12,13 @@ goog.require('pear.data.Column');
  * Any operations Directly done on DataTable will
  * affect Grid expected behaviour. All operations on DataTable should be done
  * thru DataView {@link pear.data.DataView}
- *  
- * @param {Array.<pear.data.Column>} datacolumns -Each Column in 
+ *
+ * @param {Array.<pear.data.Column>} datacolumns -Each Column in
  * dataColumns must have unique id
- * @param {Array.<Object.<string,*>>} datarows a datarow is a array of Objects , where each object 
- * should have property  @link pear.data.Datacolumn.Id from DataColumn Collection
- * 
+ * @param {Array.<Object.<string,*>>} datarows a datarow is a array of Objects,
+ * where each object should have property  @link pear.data.Datacolumn.Id from
+ * DataColumn Collection
+ *
  * @example
  *   var datarows = [
  *     {orderno:1,item:'Samsung-Galaxy',unitprice:200,...,...,...},
@@ -40,7 +42,6 @@ pear.data.DataTable = function(datacolumns, datarows) {
 goog.inherits(pear.data.DataTable, goog.events.EventTarget);
 
 
-
 /**
  * Generator for unique IDs.
  * @type {goog.ui.IdGenerator}
@@ -53,14 +54,14 @@ pear.data.DataTable.prototype.idGenerator_ = goog.ui.IdGenerator.getInstance();
  * @type {Array.<pear.data.Column>}
  * @private
  */
-pear.data.DataTable.prototype.dataColumns_ = [];
+pear.data.DataTable.prototype.dataColumns_;
 
 
 /**
  * @type {Array.<Object.<string,*>>}
  * @private
  */
-pear.data.DataTable.prototype.dataRows_ = [];
+pear.data.DataTable.prototype.dataRows_;
 
 
 /**
@@ -69,6 +70,7 @@ pear.data.DataTable.prototype.dataRows_ = [];
  * @private
  */
 pear.data.DataTable.prototype.dataRowsMap_ = null;
+
 
 /**
  * struct to keep mapping between DataRow and RowId (RowView Id)
@@ -108,7 +110,7 @@ pear.data.DataTable.prototype.getDataRows = function() {
 
 
 /**
- * Set DataRows 
+ * Set DataRows
  * @example
  *   var data = [
  *     {orderno:1,item:'Samsung-Galaxy',unitprice:200,...,...,...},
@@ -121,7 +123,7 @@ pear.data.DataTable.prototype.getDataRows = function() {
  *
  *  // Set DataRows
  *  mydataTable.setDataRows(data);
- *     
+ *
  * @param {Array.<Object.<string,*>>} rows
  */
 pear.data.DataTable.prototype.setDataRows = function(rows) {
@@ -131,7 +133,7 @@ pear.data.DataTable.prototype.setDataRows = function(rows) {
 
 
 /**
- * Initialize the dataRowsMap for DataRows - each 
+ * Initialize the dataRowsMap for DataRows - each
  * row is assigned a ID and it is stored in the dataRowsMap
  * @private
  */

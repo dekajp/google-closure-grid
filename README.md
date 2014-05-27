@@ -1,6 +1,6 @@
 #google-closure-grid (pear.ui.Grid)
 
-version 0.1 (unstable)
+version 0.1
 
 * Demo : http://dekajp.github.io/demos/index.html
 * API  : http://dekajp.github.io/docs/ 
@@ -27,4 +27,11 @@ version 0.1 (unstable)
 
 ##License
 MIT-License
+
+
+##Build
+* gjslint and fixjsstyle [more](https://developers.google.com/closure/utilities/docs/linter_howto)
+
+* $/python src/bin/build/pearbuildlint.py
+* $/python src/bin/build/build.py
 

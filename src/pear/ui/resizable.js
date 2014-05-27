@@ -26,19 +26,71 @@ pear.ui.Resizable = function(element, opt_data, opt_domHelper) {
 
   opt_data = opt_data || {};
 
+  /**
+   * Root Element
+   * @type {Element}
+   * @private
+   */
   this.rootElement_ = goog.dom.getElement(element);
 
+  /**
+   * @type {number}
+   * @private
+   */
   this.minWidth_ = goog.isNumber(opt_data.minWidth) ? opt_data.minWidth : 0;
+  /**
+   * @type {number}
+   * @private
+   */
   this.maxWidth_ = goog.isNumber(opt_data.maxWidth) ? opt_data.maxWidth : 0;
+  /**
+   * @type {number}
+   * @private
+   */
   this.minHeight_ = goog.isNumber(opt_data.minHeight) ? opt_data.minHeight : 0;
+  /**
+   * @type {number}
+   * @private
+   */
   this.maxHeight_ = goog.isNumber(opt_data.maxHeight) ? opt_data.maxHeight : 0;
 
-  this.handles_ = opt_data.handles || pear.ui.Resizable.Position.ALL;
+  /**
+   * @type {number}
+   * @private
+   */
+  this.handles_ = opt_data['handles'] || pear.ui.Resizable.Position.ALL;
 
+  /**
+   * List of resizable handle draggers
+   * @type {Object.<number,goog.fx.Dragger>}
+   * @private
+   */
   this.handleDraggers_ = {};
+
+  /**
+   * List of resizable handles
+   * @type {Object.<number,Element>}
+   * @private
+   */
   this.handlers_ = {};
 
   this.setupResizableHandler_();
+
+  /**
+   * @private
+   * @type {goog.math.Coordinate?}
+   */
+  this.handlerOffsetCoord_ = null;
+  /**
+   * @private
+   * @type {goog.math.Coordinate?}
+   */
+  this.elementCoord_ = null;
+  /**
+   * @private
+   * @type {goog.math.Size?}
+   */
+  this.elementSize_ = null;
 
 };
 goog.inherits(pear.ui.Resizable, goog.ui.Component);
@@ -68,14 +120,15 @@ pear.ui.Resizable.Position = {
   TOP_RIGHT: 64, //NE
   BOTTOM_RIGHT: 128, //SE
   BOTTOM_LEFT: 256, //SW
-  ALL: 511
+  ALL: 511,
+  NONE: 0
 };
 
 
 /**
- * Handle - to drag and resize
- * @return {Element}
- * 
+ * Get Resizable Handle by Position
+ * @param  {pear.ui.Resizable.Position} position handle position
+ * @return {Element} Resizable Handle
  */
 pear.ui.Resizable.prototype.getResizehandle = function(position) {
   return this.handlers_[position];
@@ -126,7 +179,7 @@ pear.ui.Resizable.prototype.setupResizableHandler_ = function() {
 /**
  *
  * Add handle
- * @param {number} position
+ * @param {pear.ui.Resizable.Position} position
  * @param {Array} classNames
  * @private
  */
@@ -166,11 +219,11 @@ pear.ui.Resizable.prototype.addResizableHandler_ =
  * Setup Limits
  * @param {goog.math.Coordinate} coord
  * @param {goog.math.Size} size
- * @param {number} position
+ * @param {pear.ui.Resizable.Position} position
  * @private
  */
 pear.ui.Resizable.prototype.setupMinAndMaxCoord_ =
-    function(coord, size, position ) {
+    function(coord, size, position) {
 
   this.leftX_ = 0;
   this.rightX_ = 0;
@@ -207,10 +260,11 @@ pear.ui.Resizable.prototype.getCSSClassName = function() {
 
 /**
  * Retrieves the computed value of the position CSS attribute.
+ * @param {Element} el  Element
  * @return {string}
  * @private
  */
-pear.ui.Resizable.prototype.getComputedPosition_ = function(el ) {
+pear.ui.Resizable.prototype.getComputedPosition_ = function(el) {
   var positionStyle = goog.style.getComputedPosition(el);
   return positionStyle;
 };
@@ -221,12 +275,12 @@ pear.ui.Resizable.prototype.getComputedPosition_ = function(el ) {
  * @return {goog.math.Coordinate}
  * @private
  */
-pear.ui.Resizable.prototype.getPosition_ = function(el ) {
+pear.ui.Resizable.prototype.getPosition_ = function(el) {
   var coord;
   var positionStyle = this.getComputedPosition_(el);
-  //if (positionStyle === 'absolute'){
+  //if (positionStyle === 'absolute') {
   coord = goog.style.getPosition(this.rootElement_);
-  // }else if (positionStyle === 'relative'){
+  // }else if (positionStyle === 'relative') {
   //  coord = goog.style.getRelativePosition(this.rootElement_);
   //}
   return coord;
@@ -238,7 +292,7 @@ pear.ui.Resizable.prototype.getPosition_ = function(el ) {
  * @return {goog.math.Size}
  * @private
  */
-pear.ui.Resizable.prototype.getSize_ = function(el ) {
+pear.ui.Resizable.prototype.getSize_ = function(el) {
   //var size = goog.style.getSize(el);
   // Expensive - clousre getSize returns the border box size
   // and setHeight actually set the
@@ -278,13 +332,14 @@ pear.ui.Resizable.prototype.handleDragStart_ = function(ge) {
   this.elementSize_ = new goog.math.Size(size.width, size.height);
 
   // TODO : Calculate final size here
-  this.dispatchResizableEvent_(pear.ui.Resizable.EventType.START_RESIZE,null);
+  this.dispatchResizableEvent_(pear.ui.Resizable.EventType.START_RESIZE, null);
 };
 
 
 /**
  * @param {goog.events.Event} ge
  * @private
+ * @return {boolean}
  */
 pear.ui.Resizable.prototype.handleDrag_ = function(ge) {
   var deltaWidth = 0, deltaHeight = 0, newX = 0, newY = 0;
@@ -348,15 +403,15 @@ pear.ui.Resizable.prototype.handleDrag_ = function(ge) {
 pear.ui.Resizable.prototype.handleDragEnd_ = function(ge) {
   ge.preventDefault();
   // TODO : Calculate final size here
-  this.dispatchResizableEvent_(pear.ui.Resizable.EventType.END_RESIZE,null);
+  this.dispatchResizableEvent_(pear.ui.Resizable.EventType.END_RESIZE, null);
 };
 
 
 /**
  * @param {Element} element
- * @param {goog.math.Coordinate} coord
  * @param {goog.math.Size} size
- * @param {number} position
+ * @param {goog.math.Coordinate} coord
+ * @param {pear.ui.Resizable.Position} position
  * @private
  */
 pear.ui.Resizable.prototype.resize_ = function(element, size, coord, position) {
@@ -385,8 +440,8 @@ pear.ui.Resizable.prototype.resize_ = function(element, size, coord, position) {
   }
 
   this.dispatchResizableEvent_(pear.ui.Resizable.EventType.RESIZE,
-                                newSize.clone());
-  
+      newSize.clone());
+
   // TODO: this needs to be fixed
   //goog.style.setBorderBoxSize(element, newSize);
   goog.style.setWidth(element, newSize.width);
@@ -406,15 +461,17 @@ pear.ui.Resizable.prototype.resize_ = function(element, size, coord, position) {
 
 /**
  * @param {goog.fx.Dragger} dragger
+ * @return {pear.ui.Resizable.Position}
  * @private
  */
 pear.ui.Resizable.prototype.getDraggerPosition_ = function(dragger) {
   for (var position in this.handleDraggers_) {
-    if (this.handleDraggers_[position] === dragger) {
-      return goog.string.toNumber(position);
+    var p = goog.string.toNumber(position);
+    if (this.handleDraggers_[p] === dragger) {
+      return (/** @type {pear.ui.Resizable.Position} */(p));
     }
   }
-  return null;
+  return pear.ui.Resizable.Position.NONE;
 };
 
 
@@ -484,12 +541,13 @@ pear.ui.Resizable.prototype.setMaxHeight = function(height) {
 
 /**
  * get handle instance
- * @param {number} position
- * @return
+ * @param {pear.ui.Resizable.Position} position
+ * @return {Element}
  */
 pear.ui.Resizable.prototype.getHandle = function(position) {
   return this.handlers_[position];
 };
+
 
 /**
  * [dispatchResizableEvent description]
@@ -497,26 +555,30 @@ pear.ui.Resizable.prototype.getHandle = function(position) {
  * @param  {?goog.math.Size} size [description]
  * @private
  */
-pear.ui.Resizable.prototype.dispatchResizableEvent_ = function(type,size) {
-  var evt = new pear.ui.ResizableEvent (type,this,size);
+pear.ui.Resizable.prototype.dispatchResizableEvent_ = function(type, size) {
+  var evt = new pear.ui.ResizableEvent(type, this, size);
   this.dispatchEvent(evt);
 };
+
 
 /** @inheritDoc */
 pear.ui.Resizable.prototype.disposeInternal = function() {
   pear.ui.Resizable.superClass_.disposeInternal.call(this);
 
   for (var position in this.handleDraggers_) {
-    this.handleDraggers_[position].dispose();
+    var p = goog.string.toNumber(position);
+    this.handleDraggers_[p].dispose();
   }
   this.handleDraggers_ = {};
   for (var position in this.handlers_) {
-    goog.events.unlisten(this.handlers_[position], goog.events.EventType.MOUSEDOWN,
-          this.handleEvents_);
-    goog.dom.removeNode(this.handlers_[position]);
+    var p = goog.string.toNumber(position);
+    goog.events.unlisten(this.handlers_[p], goog.events.EventType.MOUSEDOWN,
+        this.handleEvents_);
+    goog.dom.removeNode(this.handlers_[p]);
   }
   this.handlers_ = {};
 };
+
 
 
 /**
@@ -528,7 +590,7 @@ pear.ui.Resizable.prototype.disposeInternal = function() {
  * @extends {goog.events.Event}
  * @constructor
  */
-pear.ui.ResizableEvent = function(type, target, size ) {
+pear.ui.ResizableEvent = function(type, target, size) {
   goog.events.Event.call(this, type, target);
 
   /**

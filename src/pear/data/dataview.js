@@ -8,14 +8,16 @@ goog.require('pear.data.RowView');
 
 /**
  * @class
- * @classdesc
  * DataView is a View on top of DataTable , all CRUD operations on datatable
- * are done thru DataView . 
+ * are done thru DataView .
  * @example
  *     var columns = [
- *       new pear.data.Column("Order No",'orderno','orderno',75,pear.data.Column.DataType.NUMBER),
- *       new pear.data.Column("Item",'item','item',115,pear.data.Column.DataType.TEXT),
- *       new pear.data.Column("Unit Price",'unitprice','unitprice',75,pear.data.Column.DataType.NUMBER),
+ *       new pear.data.Column("Order No",'orderno','orderno',75,
+ *             pear.data.Column.DataType.NUMBER),
+ *       new pear.data.Column("Item",'item','item',115,
+ *             pear.data.Column.DataType.TEXT),
+ *       new pear.data.Column("Unit Price",'unitprice','unitprice',
+ *             75,pear.data.Column.DataType.NUMBER),
  *       ...
  *       ...
  *     ];
@@ -32,21 +34,22 @@ goog.require('pear.data.RowView');
  *
  *    // Create DataView Object
  *    var dataView = new pear.data.DataView(columns,data);
- * 
+ *
  * @param {Array.<pear.data.Column>} datacolumns Array of pear.data.Column
- * @param {Array.<Object.<string,*>>} datarows 
+ * @param {Array.<Object.<string,*>>} datarows
  * @constructor
  * @extends {goog.events.EventTarget}
  */
 pear.data.DataView = function(datacolumns, datarows) {
   goog.events.EventTarget.call(this);
 
-  this.dataTable_ = new pear.data.DataTable(datacolumns, datarows);
+  this.selectedRowViewsIds_ = [];
+  this.datasourceChanged_ = false;
 
+  this.dataTable_ = new pear.data.DataTable(datacolumns, datarows);
   if (datacolumns && datarows) {
     this.initDataRowViews_();
   }
-  // this.attachEvents_();
 };
 goog.inherits(pear.data.DataView, goog.events.EventTarget);
 
@@ -75,28 +78,28 @@ pear.data.DataView.EventType = {
    */
   DATAVIEW_CHANGED: 'dataview-changed',
   /**
-   * When DataView is initialized - this is primarily when DataRows are 
+   * When DataView is initialized - this is primarily when DataRows are
    * changed
    * @type {String}
    */
   DATASOURCE_CHANGED: 'datasource-changed',
-  
+
   /**
-   * This event is fired for each Row Added/Updated/Removed 
+   * This event is fired for each Row Added/Updated/Removed
    * Note : not yet implemented
    * @type {String}
    */
   ROWVIEW_CHANGED: 'rowview-changed',
 
-   /**
-   * This event is fired when a rowview is added to "rowview select" 
+  /**
+   * This event is fired when a rowview is added to "rowview select"
    * collection
    * @type {String}
    */
   ROWVIEW_SELECT: 'rowview-select',
 
-   /**
-   * This event is fired when a rowview is removed from "rowview select" 
+  /**
+   * This event is fired when a rowview is removed from "rowview select"
    * collection
    * @type {String}
    */
@@ -128,30 +131,32 @@ pear.data.DataView.prototype.grid_ = null;
  * @private
  * @type {Array.<pear.data.RowView>}
  */
-pear.data.DataView.prototype.dataRowViews_ = [];
+pear.data.DataView.prototype.dataRowViews_;
 
 
 /**
  * @private
  * @type {Array.<pear.data.RowView>}
  */
-pear.data.DataView.prototype.originalDataRowViews_ = [];
+pear.data.DataView.prototype.originalDataRowViews_;
 
 
 /**
  * @private
  * @type {?Array.<string>}
  */
-pear.data.DataView.prototype.selectedRowViewsIds_ = [];
+pear.data.DataView.prototype.selectedRowViewsIds_;
+
 
 /**
  * @private
  * @type {boolean}
  */
-pear.data.DataView.prototype.datasourceChanged = false;
+pear.data.DataView.prototype.datasourceChanged_ = false;
+
 
 /**
- * get All Columns info 
+ * get All Columns info
  * @return {Array.<pear.data.Column>}
  * @public
  */
@@ -171,22 +176,23 @@ pear.data.DataView.prototype.setColumns = function(dc) {
 
 
 /**
- * 
+ *
  * @return {boolean}
  * @public
  */
 pear.data.DataView.prototype.isDatasourceChanged = function() {
-  return this.datasourceChanged;
+  return this.datasourceChanged_;
 };
 
 
 /**
- * 
+ *
  * @public
  */
 pear.data.DataView.prototype.resetDatasourceChangeIndicator = function() {
-  this.datasourceChanged=false;
+  this.datasourceChanged_ = false;
 };
+
 
 /**
  * Get DataRows
@@ -251,7 +257,7 @@ pear.data.DataView.prototype.initDataRowViews_ = function() {
 
 
 /**
- * Set DataView 
+ * Set DataView
  * @param {Array.<pear.data.RowView>} rowViews
  * @public
  */
@@ -275,13 +281,13 @@ pear.data.DataView.prototype.selectRowView = function(rowview, select) {
   this.selectedRowViewsIds_.push(rowview.getRowId());
   rowview.setSelected(select);
   var evt;
-  if (select){
+  if (select) {
     evt = new pear.data.DataRowViewEvent(
-      pear.data.DataView.EventType.ROWVIEW_SELECT, this ,rowview);
-    
-  }else{
+        pear.data.DataView.EventType.ROWVIEW_SELECT, this, rowview);
+
+  }else {
     evt = new pear.data.DataRowViewEvent(
-      pear.data.DataView.EventType.ROWVIEW_UNSELECT, this ,rowview);
+        pear.data.DataView.EventType.ROWVIEW_UNSELECT, this, rowview);
   }
   this.dispatchEvent(evt);
 };
@@ -318,7 +324,7 @@ pear.data.DataView.prototype.getRowCount = function() {
 
 /**
  * Get DataRowView count this could be different than DataRow Count
- * e.g if you set Filter on Grid , DataRowView count will return 
+ * e.g if you set Filter on Grid , DataRowView count will return
  * all the rows which are result of filter being applied
  * where as , getDataRowCount will return all rows available
  * @return {number}
@@ -365,7 +371,7 @@ pear.data.DataView.prototype.addDataRow = function(datarow) {
 
   this.updateDataRowViews_();
   this.dispatchDataViewChange_();
-  
+
 };
 
 
@@ -380,7 +386,7 @@ pear.data.DataView.prototype.removeDataRow = function(id) {
 
   this.updateDataRowViews_();
   this.dispatchDataViewChange_();
-  
+
 };
 
 
@@ -397,12 +403,12 @@ pear.data.DataView.prototype.updateDataRow = function(uniqueid, datarow) {
 
   this.updateDataRowViews_();
   this.dispatchDataViewChange_();
-  
+
 };
 
 
 /**
- * 
+ *
  * Add a filter expression for a datacolumn , currently grid support one filter
  * expression per column
  * @param {pear.data.Column} dataColumn
@@ -412,7 +418,7 @@ pear.data.DataView.prototype.updateDataRow = function(uniqueid, datarow) {
 pear.data.DataView.prototype.addColumnFilter = function(dataColumn, filter) {
   var columns = this.getColumns();
   goog.array.forEach(columns, function(column, index) {
-    if (column.getId() === dataColumn.getId())  {
+    if (column.getId() === dataColumn.getId()) {
       column.filter = column.filter || [];
       // @todo - Multiple Filter support not yet complete
       column.filter = [];
@@ -458,9 +464,10 @@ pear.data.DataView.prototype.clearColumnFilter = function(dataColumn) {
 
 
 /**
- * Apply filter on DataView , it uses {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter Array.filter }
+ * Apply filter on DataView , it uses {@link http://goo.gl/USG5xs}
  * @param  {function(pear.data.RowView)} fnFilter
  * @param  {Object} op_context
+ * @return {Array.<pear.data.RowView>}
  * @example
  *
  *  var filteredRows = dv.applyFilter(filterfn,this);
@@ -480,20 +487,19 @@ pear.data.DataView.prototype.clearColumnFilter = function(dataColumn) {
         }else{
           str = String(rowdata[column.id]);
         }
-          
+
         if (str.toLowerCase().indexOf(filter.toLowerCase()) >=0) {
           match = match && true;
         }else{
           match = match && false;
         }
       }else{
-  
+
       }
     },this);
     return match;
   };
  * @public
- * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter Array.filter }
  */
 pear.data.DataView.prototype.applyFilter = function(fnFilter, op_context) {
   this.initDataRowViews_();
@@ -503,7 +509,7 @@ pear.data.DataView.prototype.applyFilter = function(fnFilter, op_context) {
 
 
 /**
- * Get DataRow by RowView Id i.e RowId 
+ * Get DataRow by RowView Id i.e RowId
  * @param  {string} rowid
  * @return {Object.<string,*>}
  * @public
@@ -561,21 +567,22 @@ pear.data.DataView.prototype.updateDataRowViews_ = function() {
  * @param  {pear.ui.Grid.SortDirection} sortDirection SortDirection
  * @param  {string} columnid      pear.data.Column.id
  */
-pear.data.DataView.prototype.sort = function(sortDirection,columnid) {
+pear.data.DataView.prototype.sort = function(sortDirection, columnid) {
   goog.array.sort(this.dataRowViews_,
-    function (a, b) {
-      if (a.getRowData()[columnid] > b.getRowData()[columnid]){
-        return ( sortDirection === pear.ui.Grid.SortDirection.ASC ) ? -1 : 1
-      }
-      
-      if (a.getRowData()[columnid] < b.getRowData()[columnid]){
-          return ( sortDirection === pear.ui.Grid.SortDirection.ASC ) ? 1 : -1
+      function(a, b) {
+        if (a.getRowData()[columnid] > b.getRowData()[columnid]) {
+          return (sortDirection === pear.ui.Grid.SortDirection.ASC) ? -1 : 1;
+        }
+
+        if (a.getRowData()[columnid] < b.getRowData()[columnid]) {
+          return (sortDirection === pear.ui.Grid.SortDirection.ASC) ? 1 : -1;
         }
         // a must be equal to b
-      return 0;
-    });
+        return 0;
+      });
   this.setDataRowViews(this.dataRowViews_);
 };
+
 
 /**
  * @override
@@ -609,6 +616,7 @@ pear.data.DataViewEvent = function(type, target) {
 goog.inherits(pear.data.DataViewEvent, goog.events.Event);
 
 
+
 /**
  * Object representing DataRowEvent.
  *
@@ -625,6 +633,8 @@ pear.data.DataRowEvent = function(type, target, row) {
 };
 goog.inherits(pear.data.DataRowEvent, goog.events.Event);
 
+
+
 /**
  * DataRowView Event - represent a DataRowView
  * @param {string} type    [description]
@@ -638,6 +648,8 @@ pear.data.DataRowViewEvent = function(type, target, rowview) {
   this.rowview = rowview;
 };
 goog.inherits(pear.data.DataRowViewEvent, goog.events.Event);
+
+
 
 /**
  * Object representing DataTableEvent.

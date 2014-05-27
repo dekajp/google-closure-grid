@@ -16,7 +16,7 @@ goog.require('pear.data.RowView');
  * @param {goog.dom.DomHelper=} opt_domHelper DOM helper, used for document
  *     interaction.
  */
-pear.ui.Row = function(grid, height,opt_domHelper) {
+pear.ui.Row = function(grid, height, opt_domHelper) {
 
   goog.ui.Component.call(this, opt_domHelper);
 
@@ -50,12 +50,14 @@ pear.ui.Row.prototype.height_ = -1;
 */
 pear.ui.Row.prototype.rowPosition_ = -1;
 
+
 /**
- * Default CSS class to be applied to the root element 
+ * Default CSS class to be applied to the root element
  * @type {string}
  */
 pear.ui.Row.CSS_CLASS =
     goog.getCssName('pear-grid-row');
+
 
 /**
   @override
@@ -76,14 +78,16 @@ pear.ui.Row.prototype.getDataRowView = function() {
   return (/** @type {pear.data.RowView} */ (this.getModel()));
 };
 
+
 /**
  * set Data RowView
- * @param {pear.data.RowView} rowview 
+ * @param {pear.data.RowView} rowview
  */
 pear.ui.Row.prototype.setDataRowView = function(rowview) {
   var rv = (/** @type {pear.data.RowView} */ (rowview));
   this.setModel(rv);
 };
+
 
 /**
  * add Cell
@@ -98,8 +102,8 @@ pear.ui.Row.prototype.addCell = function(cell, opt_render) {
 
 /**
  * get Child Cell at
- * @param  {number} index  
- * @return {pear.ui.Cell}  
+ * @param  {number} index
+ * @return {pear.ui.Cell}
  * @public
  */
 pear.ui.Row.prototype.getCellAt = function(index) {
@@ -115,13 +119,15 @@ pear.ui.Row.prototype.getGrid = function() {
   return this.grid_;
 };
 
+
 /**
  * setGrid
  * @param {pear.ui.Grid} grid [description]
  */
 pear.ui.Row.prototype.setGrid = function(grid) {
-  this.grid_=grid;
+  this.grid_ = grid;
 };
+
 
 /**
  * set height of row
@@ -196,10 +202,10 @@ pear.ui.Row.prototype.getLocationTop = function() {
  * @param {number} index of cell
  * @return {number}
  */
-pear.ui.Row.prototype.getCellWidth = function(index) {
-  var child = this.getChildAt(index);
-  return child.getCellWidth();
-};
+//pear.ui.Row.prototype.getCellWidth = function(index) {
+// var child = this.getChildAt(index);
+//  return child.getCellWidth();
+//};
 
 
 /**
@@ -214,7 +220,7 @@ pear.ui.Row.prototype.getCellComputedWidth = function(index) {
 
 
 /**
- * 
+ *
  */
 pear.ui.Row.prototype.setPosition = function() {
   var left, top;
@@ -248,6 +254,7 @@ pear.ui.Row.prototype.handleClickEvent_ = function(be) {
   }
 };
 
+
 /**
  * Returns the child control that owns the given DOM node, or null if no such
  * control is found.
@@ -260,14 +267,15 @@ pear.ui.Row.prototype.getNodeOwnerControl = function(node) {
   var elem = this.getElement();
   while (node && node !== elem) {
     var id = node.id;
-    var cell = this.getChild(id)
-    if (cell){
+    var cell = this.getChild(id);
+    if (cell) {
       return (/** @type {pear.ui.GridCell} */ (cell));
     }
     node = node.parentNode;
   }
   return null;
 };
+
 
 /**
  * @override

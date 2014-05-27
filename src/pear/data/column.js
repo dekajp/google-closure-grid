@@ -5,32 +5,36 @@ goog.require('goog.Disposable');
 goog.require('goog.ui.IdGenerator');
 
 
+
 /**
- * @classdesc  Represent the Column of Grid
+ * @class
+ * Represent the Column of Grid
  * @example
- * new pear.data.Column("header Text",'column-id',275,pear.data.Column.DataType.NUMBER)
- * 
- * @param {string} content   header Text 
- * @param {string} id       column id should be unique , if not class 
+ * new pear.data.Column("header Text",'column-id',275,
+ *                         pear.data.Column.DataType.NUMBER)
+ *
+ * @param {string} content   header Text
+ * @param {string} id       column id should be unique , if not class
  * will generate a unique id for each column
- * @param {pear.data.Column.DataType=} opt_datatype DataType , default DataType
- * is pear.data.Column.DataType.TEXT
  * @param {string=} opt_datafield    field mapping to DataRow field name
  * @param {number=} opt_width    width of column , defaults to 75
+ * @param {pear.data.Column.DataType=} opt_datatype DataType , default DataType
+ * is pear.data.Column.DataType.TEXT
  * @param {pear.data.Column.Align=} opt_align    text Align of column data ,
  * defaults to pear.data.Column.Align.LEFT
 
  * @constructor
  * @extends {goog.events.EventTarget}
  */
-pear.data.Column = function(content,id,opt_datafield,opt_width,opt_datatype,opt_align) {
+pear.data.Column = function(content, id, opt_datafield, opt_width,
+    opt_datatype, opt_align) {
   goog.Disposable.call(this);
-  this.headerText_=content;
-  this.id = id;
-  this.dataType = opt_datatype || pear.data.Column.DataType.TEXT;
-  this.width_=opt_width || 75;
+  this.headerText_ = content;
+  this.id_ = id;
+  this.dataType_ = opt_datatype || pear.data.Column.DataType.TEXT;
+  this.width_ = opt_width || 75;
   this.align_ = opt_align || pear.data.Column.Align.LEFT;
-  this.dataField_ = opt_datafield || this.id;
+  this.dataField_ = opt_datafield || this.id_;
 };
 goog.inherits(pear.data.Column, goog.events.EventTarget);
 
@@ -47,6 +51,7 @@ pear.data.Column.DataType = {
   DATETIME: 'datetime'
 };
 
+
 /**
  * Align of Column
  * @enum {string}
@@ -57,11 +62,9 @@ pear.data.Column.Align = {
    * Default Alignment , if align is not specified
    * @type {String}
    */
-  LEFT:'left',
-  RIGHT:'right'
+  LEFT: 'left',
+  RIGHT: 'right'
 };
-
-
 
 
 /**
@@ -77,7 +80,7 @@ pear.data.Column.prototype.headerText_ = '';
  * @type {string}
  * @private
  */
-pear.data.Column.prototype.id = '';
+pear.data.Column.prototype.id_ = '';
 
 
 /**
@@ -96,12 +99,14 @@ pear.data.Column.prototype.dataField_ = '';
 
 pear.data.Column.prototype.align_ = pear.data.Column.Align.LEFT;
 
+
 /**
  * datatype of column
  * @type {pear.data.Column.DataType}
  * @private
  */
-pear.data.Column.prototype.dataType = pear.data.Column.DataType.TEXT;
+pear.data.Column.prototype.dataType_ = pear.data.Column.DataType.TEXT;
+
 
 /**
  * width_ of column
@@ -110,12 +115,14 @@ pear.data.Column.prototype.dataType = pear.data.Column.DataType.TEXT;
  */
 pear.data.Column.prototype.width_ = -1;
 
+
 /**
  * set visibility of column
  * @type {boolean}
  * @private
  */
 pear.data.Column.prototype.visible_ = true;
+
 
 /**
  * set freeze of column
@@ -124,55 +131,62 @@ pear.data.Column.prototype.visible_ = true;
  */
 pear.data.Column.prototype.freeze_ = false;
 
+
 /**
- * formatting function 
+ * formatting function
  * @type {function(pear.ui.GridCell)|null}
  * @private
  */
-pear.data.Column.prototype.formatterFn = null;
+pear.data.Column.prototype.formatterFn_ = null;
+
 
 /**
  * formatting function execution scope
  * @type {?Object}
  * @private
  */
-pear.data.Column.prototype.formatterFnScope = null;
+pear.data.Column.prototype.formatterFnScope_ = null;
+
 
 /**
  * get Header Text of Column
  * @return {string} header text of column
  * @public
  */
-pear.data.Column.prototype.getHeaderText=function(){
+pear.data.Column.prototype.getHeaderText = function() {
   return this.headerText_;
 };
 
+
 /**
  * get Column Id
- * @return {string} [description]
+ * @return {string}
  * @public
  */
-pear.data.Column.prototype.getId=function(){
-  return this.id;
+pear.data.Column.prototype.getId = function() {
+  return this.id_;
 };
+
 
 /**
  * get Data Field , bound to this column
- * @return {string} [description]
+ * @return {string}
  * @public
  */
-pear.data.Column.prototype.getDataField=function(){
+pear.data.Column.prototype.getDataField = function() {
   return this.dataField_;
 };
+
 
 /**
  * Get DataType of Column
  * @return {pear.data.Column.DataType} DataType of Column
  * @public
  */
-pear.data.Column.prototype.getDataType=function(){
-  return this.dataType;
+pear.data.Column.prototype.getDataType = function() {
+  return this.dataType_;
 };
+
 
 /**
 
@@ -180,16 +194,17 @@ pear.data.Column.prototype.getDataType=function(){
  * @return {pear.data.Column.Align} Text Align of Column
  * @public
  */
-pear.data.Column.prototype.getAlign=function(){
+pear.data.Column.prototype.getAlign = function() {
   return this.align_;
 };
 
+
 /**
- * get Column width_
- * @return {number} [description]
+ * get Column width
+ * @return {number}
  * @public
  */
-pear.data.Column.prototype.getWidth=function(){
+pear.data.Column.prototype.getWidth = function() {
   return this.width_;
 };
 
@@ -198,101 +213,105 @@ pear.data.Column.prototype.getWidth=function(){
  * set width
  * @param {number} width  width of column
  */
-pear.data.Column.prototype.setWidth=function(width){
-  return this.width_=width;
+pear.data.Column.prototype.setWidth = function(width) {
+  this.width_ = width;
 };
-
 
 
 /**
  * set column freeze
- * @param {boolean} freeze 
+ * @param {boolean} freeze
  */
-pear.data.Column.prototype.setFrozen=function(freeze){
-  return this.freeze_ = freeze;
+pear.data.Column.prototype.setFrozen = function(freeze) {
+  this.freeze_ = freeze;
 };
+
 
 /**
  * Is Column Frozen
  * @return {boolean}
  * @public
  */
-pear.data.Column.prototype.isFrozen=function(){
+pear.data.Column.prototype.isFrozen = function() {
   return this.freeze_;
 };
 
 
 /**
  * set column visibility
- * @param {boolean} visible 
+ * @param {boolean} visible
  */
-pear.data.Column.prototype.setVisibility=function(visible){
-  return this.visible_ = visible;
+pear.data.Column.prototype.setVisibility = function(visible) {
+  this.visible_ = visible;
 };
+
 
 /**
  * get Column visibility
  * @return {boolean}
  * @public
  */
-pear.data.Column.prototype.getVisibility=function(){
+pear.data.Column.prototype.getVisibility = function() {
   return this.visible_;
 };
+
 
 /**
  * Get the column formatting function - this function will be called
  * for each DataCell for the column it belong to
- * @return {Object.<function(pear.ui.GridCell),Object>} [description]
+ * @return {Object.<function(pear.ui.GridCell),Object>}
  * @public
  */
-pear.data.Column.prototype.getColumnFormatter = function(){
+pear.data.Column.prototype.getColumnFormatter = function() {
   return {
-    fn: this.formatterFn,
-    handler: this.formatterFnScope
+    fn: this.formatterFn_,
+    handler: this.formatterFnScope_
   };
 };
+
 
 /**
  * Set callback function for formatting all GridCell Data which belongs
  * to this column
  * @example
  * function myformatter (GridCell) {
- *   
- *   // this function is called for every cell 
+ *
+ *   // this function is called for every cell
  *   // for given column
  * }
  * ...
  * ...
  * column.setColumnFormatter(myformatter);
- * 
- * @param {function(pear.ui.GridCell)} fn formatting function - which will be 
- *   called for every GridCell which belongs to this column 
+ *
+ * @param {function(pear.ui.GridCell)} fn formatting function - which will be
+ *   called for every GridCell which belongs to this column
  * @param {Object=} opt_scope  whose scope to call the formatter function.
  * @public
  */
-pear.data.Column.prototype.setColumnFormatter = function(fn,opt_scope){
-  this.formatterFn = fn;
-  if (opt_scope){
-    this.formatterFnScope = opt_scope ;
+pear.data.Column.prototype.setColumnFormatter = function(fn, opt_scope) {
+  this.formatterFn_ = fn;
+  if (opt_scope) {
+    this.formatterFnScope_ = opt_scope;
   }
 };
 
 
 /**
  * set the Callback function for Footer Aggregates Calculation
- * @param {Function} fn Aggregate Function - this function fn will be called 
+ * @param {Function} fn Aggregate Function - this function fn will be called
  * if footer row is enabled/show and will be called for GridFooterCell which
- * belongs to this Column 
+ * belongs to this Column
  */
-pear.data.Column.prototype.setColumnFooterAggregatesFn = function(fn){
+pear.data.Column.prototype.setColumnFooterAggregatesFn = function(fn) {
   this.fnFooterAggregate_ = fn;
 };
+
 
 /**
  * get the Aggregate function
  * @return {Function} Callback function for Footer Aggregate
  */
-pear.data.Column.prototype.getColumnFooterAggregatesFn = function(){
+pear.data.Column.prototype.getColumnFooterAggregatesFn = function() {
   return this.fnFooterAggregate_;
 };
 
@@ -304,13 +323,13 @@ pear.data.Column.prototype.getColumnFooterAggregatesFn = function(){
  */
 pear.data.Column.prototype.disposeInternal = function() {
   delete this.headerText_;
-  delete this.id;
-  delete this.dataType;
+  delete this.id_;
+  delete this.dataType_;
   delete this.align_;
 
-  this.formatter =null;
-  this.formatterFn=null;
-  this.fnFooterAggregate_ =null;
+  this.formatter_ = null;
+  this.formatterFn_ = null;
+  this.fnFooterAggregate_ = null;
 
   pear.data.Column.superClass_.disposeInternal.call(this);
 };

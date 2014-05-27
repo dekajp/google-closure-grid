@@ -3,8 +3,9 @@ goog.provide('pear.ui.Cell');
 goog.require('goog.ui.Component');
 
 
+
 /**
- * @classdesc Represent a Cell of Grid , this is a base class for All different 
+ * @classdesc Represent a Cell of Grid , this is a base class for All different
  * types of cells e.g GridHeaderCell , GridCell
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper, used for
  *     document interaction.
@@ -12,7 +13,7 @@ goog.require('goog.ui.Component');
  * @extends {goog.ui.Component}
  */
 pear.ui.Cell = function(opt_domHelper) {
-  goog.ui.Component.call(this,opt_domHelper);
+  goog.ui.Component.call(this, opt_domHelper);
 
 };
 goog.inherits(pear.ui.Cell, goog.ui.Component);
@@ -82,13 +83,14 @@ pear.ui.Cell.prototype.enterDocument = function() {
   goog.dom.classes.add(this.getElement(), pear.ui.Cell.CSS_CLASS);
   pear.ui.Cell.superClass_.
       enterDocument.call(this);
-  
-   // Frozen Column
-  if (this.getDataColumn().isFrozen()){
-    goog.dom.classes.add(this.getElement(), goog.getCssName(pear.ui.Cell.CSS_CLASS,'frozen'));
+
+  // Frozen Column
+  if (this.getDataColumn().isFrozen()) {
+    goog.dom.classes.add(this.getElement(),
+        goog.getCssName(pear.ui.Cell.CSS_CLASS, 'frozen'));
   }
 
-  
+
   var id = this.getId();
   this.getElement().id = id;
 };
@@ -131,6 +133,7 @@ pear.ui.Cell.prototype.getCellIndex = function() {
   return this.columnIndex_;
 };
 
+
 /**
  * Get Data Column Associated with the Cell
  * @return {pear.data.Column} Data Column
@@ -142,11 +145,12 @@ pear.ui.Cell.prototype.getDataColumn = function() {
 
 /**
  * Set Data Column
- * @param  {pear.data.Column} datacolumn 
+ * @param  {pear.data.Column} datacolumn
  */
 pear.ui.Cell.prototype.setDataColumn = function(datacolumn) {
- this.datacolumn_ = datacolumn;
+  this.datacolumn_ = datacolumn;
 };
+
 
 /**
  * @return  {number}
@@ -155,10 +159,11 @@ pear.ui.Cell.prototype.getRowPosition = function() {
   return this.getRow().getRowPosition();
 };
 
+
 /**
  * @private
  * @return  {number}
  */
-pear.ui.Cell.prototype.getCellWidth = function() {
-  return this.getDataColumn().getWidth();
-};
+//pear.ui.Cell.prototype.getCellWidth = function() {
+//  return this.getDataColumn().getWidth();
+//};

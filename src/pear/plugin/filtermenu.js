@@ -6,8 +6,9 @@ goog.require('goog.events.Event');
 goog.require('goog.positioning.AbsolutePosition');
 goog.require('goog.ui.Control');
 goog.require('goog.ui.FlatButtonRenderer');
-goog.require('pear.ui.Plugin');
 goog.require('pear.ui.GridHeaderCell');
+goog.require('pear.ui.Plugin');
+
 
 
 /**
@@ -41,13 +42,13 @@ pear.plugin.FilterMenu.EventType = {
 };
 
 
-
-
 /**
- * Label Input for Filter 
+ * Label Input for Filter
  * @type {goog.ui.LabelInput?}
+ * @private
  */
 pear.plugin.FilterMenu.prototype.filterInput_ = null;
+
 
 /**
  * list of header menu buttons
@@ -56,12 +57,14 @@ pear.plugin.FilterMenu.prototype.filterInput_ = null;
  */
 pear.plugin.FilterMenu.prototype.headerMenuBtns_ = null;
 
+
 /**
  * header cell
  * @type {?pear.ui.GridHeaderCell}
  * @private
  */
-pear.plugin.FilterMenu.prototype.headerCell_ =null;
+pear.plugin.FilterMenu.prototype.headerCell_ = null;
+
 
 /**
  * title of filter UI window
@@ -69,6 +72,7 @@ pear.plugin.FilterMenu.prototype.headerCell_ =null;
  * @private
  */
 pear.plugin.FilterMenu.prototype.titleContent_ = null;
+
 
 /**
  * close element at top right corner to close the UI
@@ -79,7 +83,7 @@ pear.plugin.FilterMenu.prototype.closeElement_ = null;
 
 
 /**
- * Root element 
+ * Root element
  * @type {?Element}
  * @private
  */
@@ -93,15 +97,16 @@ pear.plugin.FilterMenu.prototype.getClassId = function() {
   return 'FilterMenu';
 };
 
+
 /**
- * init 
- * @private
+ * init
  */
 pear.plugin.FilterMenu.prototype.init = function() {
   var grid = this.getGrid();
-  this.createHeaderMenuDom();
-  this.createFilterUIBody();
+  this.createHeaderMenuDom_();
+  this.createFilterUIBody_();
 };
+
 
 /**
  * @inheritDoc
@@ -116,7 +121,7 @@ pear.plugin.FilterMenu.prototype.disposeInternal = function() {
   goog.dom.removeNode(this.closeElement_);
   this.closeElement_ = null;
   goog.events.unlisten(this.closeElement_, goog.events.EventType.CLICK,
-                         this.close_);
+      this.close_);
 
   goog.dom.removeNode(this.element_);
   this.element_ = null;
@@ -128,18 +133,20 @@ pear.plugin.FilterMenu.prototype.disposeInternal = function() {
   pear.plugin.FilterMenu.superClass_.disposeInternal.call(this);
 };
 
+
 /**
  * Get the list of header menu button
- * @return {Array.<pear.plugin.FilterMenuButton>?} 
+ * @return {Array.<pear.plugin.FilterMenuButton>?}
  * @public
  */
 pear.plugin.FilterMenu.prototype.getHeaderMenuButtons = function() {
   return this.headerMenuBtns_;
 };
 
+
 /**
  * get the label input for Filter UI
- * @return {goog.ui.LabelInput} 
+ * @return {goog.ui.LabelInput}
  * @public
  */
 pear.plugin.FilterMenu.prototype.getLabelInput = function() {
@@ -149,25 +156,25 @@ pear.plugin.FilterMenu.prototype.getLabelInput = function() {
 
 /**
  * get root element
- * @return {Element} 
- * @private
+ * @return {Element}
  */
 pear.plugin.FilterMenu.prototype.getElement = function() {
   return this.element_;
 };
+
 
 /**
  * create the menu dropdown DOM and render in GridHeaderCell
  * menu placeholder
  * @private
  */
-pear.plugin.FilterMenu.prototype.createHeaderMenuDom = function() {
+pear.plugin.FilterMenu.prototype.createHeaderMenuDom_ = function() {
   var grid = this.getGrid();
   var headerRow = grid.getHeaderRow();
   this.headerMenuBtns_ = [];
   headerRow.forEachChild(function(headercell) {
     var mb = new pear.plugin.FilterMenuButton(goog.dom.createDom('div',
-                       'fa fa-caret-square-o-down'));
+        'fa fa-caret-square-o-down'));
     mb.setHeaderCell(headercell);
     mb.render(headercell.getMenuElement());
     //goog.dom.appendChild(headercell.getMenuControl().getElement(),mb);
@@ -175,11 +182,13 @@ pear.plugin.FilterMenu.prototype.createHeaderMenuDom = function() {
   },this);
 
   goog.array.forEach(this.headerMenuBtns_, function(mb) {
-    goog.events.listen(mb, goog.ui.Component.EventType.ACTION, 
-                                              this.showFilterUI_, false, this);
-    goog.events.listen(mb.getElement(), goog.events.EventType.MOUSEDOWN,function(e){
-      e.preventDefault();
-    });
+    goog.events.listen(mb, goog.ui.Component.EventType.ACTION,
+        this.showFilterUI_, false, this);
+    goog.events.listen(mb.getElement(),
+        goog.events.EventType.MOUSEDOWN,
+        function(e) {
+          e.preventDefault();
+        });
   },this);
 };
 
@@ -188,7 +197,7 @@ pear.plugin.FilterMenu.prototype.createHeaderMenuDom = function() {
  * create the Filter UI body
  * @private
  */
-pear.plugin.FilterMenu.prototype.createFilterUIBody = function() {
+pear.plugin.FilterMenu.prototype.createFilterUIBody_ = function() {
   var grid = this.getGrid();
 
   this.element_ = goog.dom.createDom('div', this.getCSSClassName());
@@ -198,11 +207,11 @@ pear.plugin.FilterMenu.prototype.createFilterUIBody = function() {
   goog.dom.appendChild(this.getElement(), titleBar);
 
   this.titleContent_ = goog.dom.createDom('div',
-                                this.getCSSClassName() + '-title-content');
+      this.getCSSClassName() + '-title-content');
   goog.dom.appendChild(titleBar, this.titleContent_);
 
   this.closeElement_ = goog.dom.createDom('div',
-                      'pear-grid-header-cell-menu-title-close fa fa-times');
+      'pear-grid-header-cell-menu-title-close fa fa-times');
   goog.dom.appendChild(titleBar, this.closeElement_);
 
   var breakElem = goog.dom.createDom('div',
@@ -214,7 +223,7 @@ pear.plugin.FilterMenu.prototype.createFilterUIBody = function() {
   this.createFilterMenu_();
 
   goog.events.listen(this.closeElement_,
-                   goog.events.EventType.CLICK, this.close_, false, this);
+      goog.events.EventType.CLICK, this.close_, false, this);
 };
 
 
@@ -224,7 +233,7 @@ pear.plugin.FilterMenu.prototype.createFilterUIBody = function() {
  */
 pear.plugin.FilterMenu.prototype.createFilterMenu_ = function() {
   var domEl = goog.dom.createDom('div',
-                                   'pear-grid-header-cell-menu-title-filter');
+      'pear-grid-header-cell-menu-title-filter');
   goog.dom.appendChild(this.getElement(), domEl);
   this.filterInput_ = new goog.ui.LabelInput('Filter Text');
   this.filterInput_.render(domEl);
@@ -240,21 +249,22 @@ pear.plugin.FilterMenu.prototype.createFilterMenu_ = function() {
   fbClear.setTooltip('clear filter');
 
   goog.events.listen(fbApply, goog.ui.Component.EventType.ACTION,
-                                       this.handleApplyFilter_, false, this);
+      this.handleApplyFilter_, false, this);
   goog.events.listen(fbClear, goog.ui.Component.EventType.ACTION,
-                                       this.handleCancelFilter_, false, this);
+      this.handleCancelFilter_, false, this);
 };
+
 
 /**
  * Dispatch On Apply Filter Event and synchronize GridHeaderCell Menu slide
- * @param  {goog.events.BrowserEvent} be 
- * @private 
+ * @param  {goog.events.BrowserEvent} be
+ * @private
  */
 pear.plugin.FilterMenu.prototype.handleApplyFilter_ = function(be) {
   var evt = new pear.plugin.FilterMenuEvent(
-                          pear.plugin.FilterMenu.EventType.APPLY_FILTER,
-                          this.getGrid(),
-                          this.headerCell_, this.filterInput_.getValue());
+      pear.plugin.FilterMenu.EventType.APPLY_FILTER,
+      this.getGrid(),
+      this.headerCell_, this.filterInput_.getValue());
   this.dispatchEvent(evt);
 
   this.close_();
@@ -262,14 +272,15 @@ pear.plugin.FilterMenu.prototype.handleApplyFilter_ = function(be) {
   this.headerCell_.slideMenuOpen(false);
 };
 
+
 /**
  * Dispatch On Clear Filter Event and synchronize GridHeaderCell Menu slide
- * @param  {goog.events.BrowserEvent} be 
+ * @param  {goog.events.BrowserEvent} be
  * @private
  */
 pear.plugin.FilterMenu.prototype.handleCancelFilter_ = function(be) {
   var evt = new pear.plugin.FilterMenuEvent(
-                          pear.plugin.FilterMenu.EventType.CLEAR_FILTER,
+      pear.plugin.FilterMenu.EventType.CLEAR_FILTER,
       this.getGrid(), this.headerCell_, '');
   this.dispatchEvent(evt);
 
@@ -278,9 +289,10 @@ pear.plugin.FilterMenu.prototype.handleCancelFilter_ = function(be) {
   this.headerCell_.slideMenuOpen(false);
 };
 
+
 /**
  * Close the Filter UI
- * @private 
+ * @private
  */
 pear.plugin.FilterMenu.prototype.close_ = function() {
   goog.style.setElementShown(this.getElement(), '');
@@ -288,28 +300,31 @@ pear.plugin.FilterMenu.prototype.close_ = function() {
   this.headerCell_.slideMenuOpen(false);
 };
 
+
 /**
  * Show the filter UI - do positioning just below the GridHeaderCell
  * menu dropdown
- * @param  {goog.events.Event} ge 
- * @private 
+ * @param  {goog.events.Event} ge
+ * @private
  */
 pear.plugin.FilterMenu.prototype.showFilterUI_ = function(ge) {
 
   // Reset
-  
+
   var mb = (/** @type {pear.plugin.FilterMenuButton} */(ge.currentTarget));
 
   if (this.headerCell_ &&
-         this.headerCell_ !== mb.getHeaderCell()) {
+      this.headerCell_ !== mb.getHeaderCell()) {
     this.headerCell_.setMenuState(false);
     this.headerCell_.slideMenuOpen(false);
   }
 
   this.headerCell_ = mb.getHeaderCell();
   var menuElement = this.headerCell_.getMenuElement();
-  var menuPosition = goog.style.getRelativePosition(menuElement, this.getGrid().getElement());
-  menuPosition.y = menuPosition.y + goog.style.getSize(this.headerCell_.getMenuElement()).height;
+  var menuPosition = goog.style.getRelativePosition(
+      menuElement, this.getGrid().getElement());
+  menuPosition.y = menuPosition.y + goog.style.getSize(
+      this.headerCell_.getMenuElement()).height;
   var position = new goog.positioning.AbsolutePosition(menuPosition,
       goog.positioning.Corner.TOP_START);
 
@@ -326,11 +341,13 @@ pear.plugin.FilterMenu.prototype.showFilterUI_ = function(ge) {
 
   var text = dv.getColumnFilter(this.headerCell_.getDataColumn());
 
-  goog.dom.setTextContent(this.titleContent_, this.headerCell_.getContentText());
+  goog.dom.setTextContent(this.titleContent_,
+      this.headerCell_.getContentText());
   this.filterInput_.setValue(text);
-  
+
   ge.preventDefault();
 };
+
 
 /**
  * @return {string}
@@ -341,12 +358,9 @@ pear.plugin.FilterMenu.prototype.getCSSClassName = function() {
 
 
 
-
-
-
 /**
  * @classdesc Menu button to activate {@link pear.plugin.FilterMenu} UI
- * @param {string|Node|Array.<Node>|NodeList} content Text caption 
+ * @param {string|Node|Array.<Node>|NodeList} content Text caption
  * or DOM structure to display as the content of the control (if any).
  * @param {goog.ui.ControlRenderer=} opt_renderer Renderer used to render or
  *     decorate the component; defaults to {@link goog.ui.ControlRenderer}.
@@ -357,9 +371,10 @@ pear.plugin.FilterMenu.prototype.getCSSClassName = function() {
  */
 pear.plugin.FilterMenuButton = function(
     content, opt_renderer, opt_domHelper) {
-  goog.ui.Control.call(this, content, opt_renderer,opt_domHelper);
+  goog.ui.Control.call(this, content, opt_renderer, opt_domHelper);
 };
 goog.inherits(pear.plugin.FilterMenuButton, goog.ui.Control);
+
 
 /**
  * [cell_ description]
@@ -368,17 +383,19 @@ goog.inherits(pear.plugin.FilterMenuButton, goog.ui.Control);
  */
 pear.plugin.FilterMenuButton.prototype.cell_ = null;
 
+
 /**
  * [setHeaderCell description]
- * @param {pear.ui.GridHeaderCell} cell 
+ * @param {pear.ui.GridHeaderCell} cell
  */
 pear.plugin.FilterMenuButton.prototype.setHeaderCell = function(cell) {
   this.cell_ = cell;
 };
 
+
 /**
  * [getHeaderCell description]
- * @return {pear.ui.GridHeaderCell} 
+ * @return {pear.ui.GridHeaderCell}
  */
 pear.plugin.FilterMenuButton.prototype.getHeaderCell = function() {
   return this.cell_;
@@ -388,11 +405,11 @@ pear.plugin.FilterMenuButton.prototype.getHeaderCell = function() {
 
 /**
  * @classdesc FilterMenuEvent for {@link pear.plugin.FilterMenu}
- * @param {string} type       Event Type 
+ * @param {string} type       Event Type
  * @param {pear.ui.Grid} target     Grid
  * @param {pear.ui.GridHeaderCell} cell   GridHeaderCell on which the Filter
  *                                        plugin is activated
- * @param {string} filterText filter text 
+ * @param {string} filterText filter text
  * @constructor
  * @extends {goog.events.Event}
  */

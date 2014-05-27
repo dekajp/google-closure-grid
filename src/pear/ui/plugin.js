@@ -24,7 +24,7 @@ pear.ui.Plugin.prototype.grid_ = null;
 
 
 /**
- * Whether plugin is enabled or not 
+ * Whether plugin is enabled or not
  * @type {boolean}
  * @private
  */
@@ -52,7 +52,7 @@ pear.ui.Plugin.prototype.setGrid_ = function(grid) {
 
 /**
  * @param {pear.ui.Grid} grid
- * @public 
+ * @public
  */
 pear.ui.Plugin.prototype.registerGrid = function(grid) {
   this.setGrid_(grid);
@@ -62,7 +62,7 @@ pear.ui.Plugin.prototype.registerGrid = function(grid) {
 /**
  * disabling the plugin from the grid , this will call disable on the Plugin
  * @param {pear.ui.Grid} grid
- * 
+ *
  * @public
  */
 pear.ui.Plugin.prototype.unregisterGrid = function(grid) {
@@ -82,8 +82,7 @@ pear.ui.Plugin.prototype.enable = function(grid) {
   if (this.getGrid() == grid) {
     this.enabled_ = true;
   } else {
-    // goog.log.error(this.logger, 'Trying to enable an unregistered grid with ' +
-    //    'this plugin.');
+    // 'Trying to enable an unregistered grid with this plugin.'
   }
 };
 
@@ -96,8 +95,7 @@ pear.ui.Plugin.prototype.disable = function(grid) {
   if (this.getGrid() == grid) {
     this.enabled_ = false;
   } else {
-    // goog.log.error(this.logger, 'Trying to disable an unregistered grid ' +
-    //    'with this plugin.');
+    // 'Trying to enable an unregistered grid with this plugin.'
   }
 };
 
@@ -118,7 +116,7 @@ pear.ui.Plugin.prototype.disposeInternal = function() {
   if (this.getGrid()) {
     this.unregisterGrid(this.getGrid());
   }
-  delete this.enabled_ ;
+  delete this.enabled_;
   pear.ui.Plugin.superClass_.disposeInternal.call(this);
 };
 
@@ -128,6 +126,7 @@ pear.ui.Plugin.prototype.disposeInternal = function() {
  * @return {string}
  */
 pear.ui.Plugin.prototype.getClassId;
+
 
 /**
  * init method

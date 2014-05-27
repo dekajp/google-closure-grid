@@ -5,11 +5,12 @@ goog.require('goog.Disposable');
 goog.require('goog.ui.IdGenerator');
 
 
+
 /**
  * @class
  * @classdesc this represent a individual Row and Row state
- * @param {?string} rowid   
- * @param {?Array} rowdata 
+ * @param {?string} rowid
+ * @param {?Array} rowdata
  * @constructor
  * @extends {goog.Disposable}
  */
@@ -40,7 +41,7 @@ pear.data.RowView.prototype.rowId_ = '';
 
 /**
  * Row State , whether the row is selected or not
- * @todo  this should be enumerator 
+ * @todo  this should be enumerator
  * @type {boolean}
  * @private
  */
@@ -58,7 +59,7 @@ pear.data.RowView.prototype.getRowData = function() {
 
 
 /**
- * get Row Id 
+ * get Row Id
  * @return {string}
  * @public
  */
