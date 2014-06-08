@@ -1794,7 +1794,7 @@ pear.ui.Grid.prototype.setCSSRulesInDocument_ = function() {
   var domHelper = this.getDomHelper();
   var element = this.getElement();
   var uniqCssId = this.getUniqueRootCss_();
-  var cssText = '';
+  var styleElemInnerHtml = '';
   var styleElem = this.getStyleElement();
   //domHelper.setTextContent(styleElem,'');
   styleElem.textContent = '';
@@ -1802,12 +1802,14 @@ pear.ui.Grid.prototype.setCSSRulesInDocument_ = function() {
   goog.object.forEach(this.cssInternalRules_, function(cssinternalrule, key) {
     var cssText = this.transformInternalCSSRuleToCSSRule(key, cssinternalrule);
     this.setCSSRule(cssText);
+    styleElemInnerHtml = styleElemInnerHtml + ' ' + cssText;
   },this);
 
-
-  var text = goog.cssom.getAllCssText(this.getCSSStyleSheet());
-  //domHelper.setTextContent(styleElem,text);
-  styleElem.textContent = text;
+  // Chrome Browser - sometime does not immediately adds css text into
+  // Style Element
+  // var text = goog.cssom.getAllCssText(this.getCSSStyleSheet());
+  // domHelper.setTextContent(styleElem,text);
+  styleElem.textContent = styleElemInnerHtml;
 };
 
 
@@ -2059,6 +2061,9 @@ pear.ui.Grid.prototype.updateBodyCanvasHeight_ = function() {
     height = (this.getDataViewRowCount() * rowHeight);
   }
   goog.style.setHeight(this.bodyCanvas_.getElement(), height);
+
+  // cache size
+  var a = this.getBodyCanvasSize(true);
 };
 
 
@@ -2281,11 +2286,16 @@ pear.ui.Grid.prototype.getViewportSize = function() {
 
 /**
  * get size of Body Canvas
+ * @param { boolean=} opt_refresh Recalculate size
  * @return {goog.math.Size}
  */
-pear.ui.Grid.prototype.getBodyCanvasSize = function() {
-  this.bodyCanvasSize_ = this.bodyCanvasSize_ ||
-      goog.style.getSize(this.bodyCanvas_.getElement());
+pear.ui.Grid.prototype.getBodyCanvasSize = function(opt_refresh) {
+  if (opt_refresh) {
+    this.bodyCanvasSize_ = goog.style.getSize(this.bodyCanvas_.getElement());
+  }else {
+    this.bodyCanvasSize_ = this.bodyCanvasSize_ ||
+        goog.style.getSize(this.bodyCanvas_.getElement());
+  }
   return this.bodyCanvasSize_;
 };
 

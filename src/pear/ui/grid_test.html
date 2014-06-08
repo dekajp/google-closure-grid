@@ -240,6 +240,78 @@
       //assertEvaluatesToTrue("lastrow inDocument after full scroll",lastrow.isInDocument());
     }
 
+    function testBodyCanvasSize(){
+      
+      // Render Grid
+      columns = testData1Columns();
+      data = [];
+      grid.setWidth(800);
+      grid.setHeight(400);
+      grid.setColumns(columns);
+      grid.setDataRows(data);
+      grid.render(goog.dom.getElement('target1'));
+
+      var size = grid.getBodyCanvasSize();
+      assertEquals(size.height, 0);
+
+      data = testData1Rows(1);
+      grid.setDataRows(data);
+      grid.refresh();
+      size = grid.getBodyCanvasSize();
+      assertEquals(size.height, grid.getConfiguration().RowHeight);
+    }
+
+     function test_addDataRow(){
+      
+      // Render Grid
+      columns = testData1Columns();
+      data = [];
+      grid.setWidth(800);
+      grid.setHeight(400);
+      grid.setColumns(columns);
+      grid.setDataRows(data);
+      grid.render(goog.dom.getElement('target1'));
+
+      var size = grid.getBodyCanvasSize();
+      assertEquals(size.height, 0);
+
+      data = testData1Rows(1);
+      grid.addDataRow(data[0]);
+      grid.refresh();
+      size = grid.getBodyCanvasSize();
+      assertEquals(size.height, grid.getConfiguration().RowHeight);
+
+      firstrow = grid.getGridRowAt(0);
+      assertNotNullNorUndefined(firstrow);
+
+      var rowdata = firstrow.getDataRowView().getRowData();
+      assertEquals(data[0],rowdata)
+    }
+
+    function testgetGridRowAt(){
+      
+      // Render Grid
+      columns = testData1Columns();
+      data = [];
+      grid.setWidth(800);
+      grid.setHeight(400);
+      grid.setColumns(columns);
+      grid.setDataRows(data);
+      grid.render(goog.dom.getElement('target1'));
+
+      var firstrow = grid.getGridRowAt(0);
+      assertUndefined(firstrow);
+
+      data = testData1Rows(1);
+      grid.setDataRows(data);
+      grid.refresh();
+      firstrow = grid.getGridRowAt(0);
+      assertNotNullNorUndefined(firstrow);
+
+      var rowdata = firstrow.getDataRowView().getRowData();
+      assertEquals(data[0],rowdata)
+    }
+
     function testStyle(){
       // Each Grid Instance should have their own style attribute
       // Since grid is rendered on Target Element
