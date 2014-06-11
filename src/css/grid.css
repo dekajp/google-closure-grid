@@ -112,6 +112,12 @@
   background: #E0E5EB;
 }
 
+.pear-grid-row-detail{
+  border-right: 1px dotted silver;
+  border-top: 0px;
+  border-bottom: 0px;
+  width:100%;
+}
 .pear-grid-cell{
   position: absolute;
   -o-text-overflow: ellipsis;
@@ -122,8 +128,8 @@
   cursor: default;
   background-color: inherit;
   border-right: 1px dotted silver;
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
+  border-top-width: 1px;
+  border-top-style: solid;
 }
 
 .pear-grid-cell-frozen{

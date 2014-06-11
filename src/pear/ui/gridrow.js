@@ -24,7 +24,7 @@ goog.inherits(pear.ui.GridRow, pear.ui.Row);
 
 
 /**
- * Grid
+ * top position
  * @type {number}
  * @private
  */
@@ -57,7 +57,7 @@ pear.ui.GridRow.CSS_CLASS =
 
 
 /**
- * [getLocationTop description]
+ * Get Top Postion of Gridrow
  * @return {number}
  */
 pear.ui.GridRow.prototype.getLocationTop = function() {
@@ -66,11 +66,15 @@ pear.ui.GridRow.prototype.getLocationTop = function() {
 
 
 /**
- * [setLocationTop description]
+ * Set location top
  * @param {number} top
  */
 pear.ui.GridRow.prototype.setLocationTop = function(top) {
   this.top_ = top;
+
+  if (this.isInDocument()) {
+    goog.style.setStyle(this.getElement(), 'top', this.top_ + 'px');
+  }
 };
 
 
@@ -211,6 +215,38 @@ pear.ui.GridRow.prototype.enterDocument = function() {
 
 
 /**
+ * showGridRowDetailsContainer
+ * @param  {boolean} display
+ * @public
+ */
+pear.ui.GridRow.prototype.showGridRowDetailsContainer = function(display) {
+  var domHelper = this.getDomHelper();
+  if (display) {
+    this.gridRowDetails_ = new goog.ui.Component();
+
+    this.addChild(this.gridRowDetails_, true);
+    var elem = this.gridRowDetails_.getElement();
+
+    goog.dom.classes.add(elem, 'pear-grid-cell pear-grid-row-detail');
+    goog.style.setStyle(elem, 'border-top-width', '0px');
+    goog.style.setHeight(elem, this.getGrid().getGridRowDetailHeight());
+    goog.style.setPosition(elem, 0, this.getGrid().getComputedRowHeight());
+  }else {
+    this.removeChild(this.gridRowDetails_, true);
+  }
+};
+
+
+/**
+ * Get GridRow Details Container
+ * @return {goog.ui.Component} [description]
+ */
+pear.ui.GridRow.prototype.getGridRowDetailsContainer = function() {
+  return this.gridRowDetails_;
+};
+
+
+/**
  * [getDataRowId description]
  * @return {string}
  */
@@ -233,5 +269,8 @@ pear.ui.GridRow.prototype.isAllowAlternateRowHighlight = function() {
  * @override
  */
 pear.ui.GridRow.prototype.disposeInternal = function() {
+  if (this.gridRowDetails_) {
+    this.gridRowDetails_.dispose();
+  }
   pear.ui.GridRow.superClass_.disposeInternal.call(this);
 };
