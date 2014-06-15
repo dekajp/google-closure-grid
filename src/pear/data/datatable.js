@@ -176,12 +176,16 @@ pear.data.DataTable.prototype.addDataRow = function(row) {
 /**
  * Remove a single row
  * @todo Allow to remove multiple rows
- * @param  {?string} id - unique RowId
+ * @param  {?string} uniqueid - unique RowId
  * @public
  */
-pear.data.DataTable.prototype.removeDataRow = function(id) {
-  this.dataRowsMap_.remove(id);
-  this.dataRows_ = this.dataRowsMap_.getValues();
+pear.data.DataTable.prototype.removeDataRow = function(uniqueid) {
+  if (this.dataRowsMap_.get(uniqueid)) {
+    this.dataRowsMap_.remove(uniqueid);
+    this.dataRows_ = this.dataRowsMap_.getValues();
+  }else {
+    throw Error('Record Not found');
+  }
 };
 
 
@@ -192,8 +196,13 @@ pear.data.DataTable.prototype.removeDataRow = function(id) {
  * @public
  */
 pear.data.DataTable.prototype.updateDataRow = function(uniqueid, datarow) {
-  this.dataRowsMap_.set(uniqueid, datarow);
-  this.dataRows_ = this.dataRowsMap_.getValues();
+  if (this.dataRowsMap_.get(uniqueid)) {
+    this.dataRowsMap_.set(uniqueid, datarow);
+    this.dataRows_ = this.dataRowsMap_.getValues();
+  }else {
+    throw Error('Record Not found');
+  }
+
 };
 
 

@@ -38,10 +38,8 @@
     </div>
   </div>
   <script>
-    var grid;
-    var mockClock ;
-    var columns ;
-    var data ;
+  
+    var column ;
 
     function setUpPage() {
       
@@ -49,50 +47,13 @@
     }
 
     function setUp() {
-      clock = new goog.testing.MockClock(true);
-      grid = new pear.ui.Grid();
-      var config = {
-        AllowColumnResize: true,
-        AllowColumnHeaderMenu: true,
-        AllowPaging:true,
-        PageSize:50,
-        AllowAlternateRowHighlight: true
-      };
-      setConfiguration(config);
+     
     }
 
-    function setConfiguration(config){
-      grid.setConfiguration(config);
-    }
-    function renderGrid(){
-      columns = testData1Columns();
-      data = testData1Rows(500);
-
-      grid.setWidth(800);
-      grid.setHeight(400);
-      grid.setColumns(columns);
-      grid.setDataRows(data);
-      grid.render(goog.dom.getElement('target1'));
-    }
     function tearDown() {
-      grid.dispose();
-      grid = null;
-      data = null;
-      clock.dispose();
+      
     }
 
-    
-    function testColumnFormatter(){
-      // Test Column Formatter
-    };
-
-    function testFooterAggregate(){
-      // Test Footer Aggregate
-    };
-
-    function testColumnVisibility(){
-      // Test Footer Aggregate
-    };
   </script>
 </body>
 </html>

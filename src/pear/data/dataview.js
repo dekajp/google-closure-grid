@@ -364,6 +364,7 @@ pear.data.DataView.prototype.getGrid = function() {
  */
 pear.data.DataView.prototype.addDataRow = function(datarow) {
   this.dataTable_.addDataRow(datarow);
+  this.datasourceChanged_ = true;
   // assume there is undefined datarow - hence adding row means undefined to
   // defined row
   this.dispatchDataRowChange_(datarow);
@@ -371,6 +372,7 @@ pear.data.DataView.prototype.addDataRow = function(datarow) {
 
   this.updateDataRowViews_();
   this.dispatchDataViewChange_();
+
 
 };
 
@@ -382,6 +384,7 @@ pear.data.DataView.prototype.addDataRow = function(datarow) {
  */
 pear.data.DataView.prototype.removeDataRow = function(id) {
   this.dataTable_.removeDataRow(id);
+  this.datasourceChanged_ = true;
   this.dispatchDataSourceChange_();
 
   this.updateDataRowViews_();
@@ -398,6 +401,7 @@ pear.data.DataView.prototype.removeDataRow = function(id) {
  */
 pear.data.DataView.prototype.updateDataRow = function(uniqueid, datarow) {
   this.dataTable_.updateDataRow(uniqueid, datarow);
+  this.datasourceChanged_ = true;
   this.dispatchDataRowChange_(datarow);
   this.dispatchDataSourceChange_();
 
@@ -431,12 +435,12 @@ pear.data.DataView.prototype.addColumnFilter = function(dataColumn, filter) {
 /**
  * get fitler expression for the column
  * @param  {pear.data.Column} dataColumn
- * @return {string}
+ * @return {string?}
  * @public
  */
 pear.data.DataView.prototype.getColumnFilter = function(dataColumn) {
   var columns = this.getColumns();
-  var text = '';
+  var text = null;
   goog.array.forEach(columns, function(column, index) {
     if (column.getId() === dataColumn.getId()) {
       if (column.filter) {

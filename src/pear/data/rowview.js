@@ -80,6 +80,16 @@ pear.data.RowView.prototype.setSelected = function(select) {
 
 
 /**
+ * Is Row selected
+ * @return {boolean} select
+ * @public
+ */
+pear.data.RowView.prototype.isSelected = function() {
+  return this.selectState_;
+};
+
+
+/**
  * @override
  * @protected
  */

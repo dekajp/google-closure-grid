@@ -6,7 +6,10 @@
 
   <link rel="stylesheet" href="../../css/grid.css" />
   <script src="../../../lib/closure-library/closure/goog/base.js"></script>
+  
   <script src="../peardeps.js"></script>
+  <script src="../peartestdata.js"></script>
+
   <script>
     goog.require('goog.dom');
     goog.require('goog.testing.jsunit');
@@ -30,8 +33,9 @@
     var mockClock ;
     var columns ;
     var data ;
+    var dataview;
 
-   function setUp() {
+    function setUp() {
      
     }
 
@@ -39,28 +43,190 @@
       grid.setConfiguration(config);
     }
     function setUp() {
-     
+      columns = testData1Columns();
+      data = testData1Rows(1);
+
+      dataview = new pear.data.DataView(columns, data);
     }
 
     
     function tearDown() {
-     
       data = null;
-      clock.dispose();
+      goog.array.forEach(columns,function(c){
+        c.dispose();
+      });
+      columns = null;
+      dataview.dispose();
+      dataview=null;
     }
 
     
     function testConstructor(){
-
+      assertNotNull('Should have successful construction', dataview);
     };
 
-    function testFooterAggregate(){
-      // Test Footer Aggregate
+    function testFilters(){
+      var filter ="filter";
+      var col0 = columns[0];
+      dataview.addColumnFilter(col0,filter);
+      assertEquals ('test add column filter',dataview.getColumnFilter(col0),filter);
+
+      var called=0;
+      function applyfilterTest(rowview){
+        called++;
+        assertObjectEquals('test apply filter',data[0],rowview.getRowData());
+      }
+
+      dataview.applyFilter(applyfilterTest);
+      assertEquals ('test applyFilter',data.length ,called);
+
+      dataview.clearColumnFilter(col0);
+      assertNull ('test add column filter',dataview.getColumnFilter(col0));
     };
 
-    function testColumnVisibility(){
-      // Test Footer Aggregate
+    function testGetters (){
+      data = testData1Rows(10);
+      dataview.dispose();
+      dataview = new pear.data.DataView(columns, data);
+
+      assertEquals ('test getDataRows',data ,dataview.getDataRows());
+      assertEquals ('test getDataRowViews',data[0] ,dataview.getDataRowViews()[0].getRowData());
+      assertEquals ('test getDataRowViewCount',data.length ,dataview.getDataRowViewCount());
+      assertEquals ('test getRowCount',data.length ,dataview.getRowCount());
+      assertEquals ('test getColumns',columns,dataview.getColumns());
+    }
+
+    function testaddDataRow(){
+      dataview.dispose();
+      data = testData1Rows(1);
+      dataview = new pear.data.DataView(columns, []);
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.DATAROW_CHANGED,
+        function(ge){
+          assertObjectEquals('test event DATAROW_CHANGED',data[0],ge.dataRow);
+      });
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.DATAVIEW_CHANGED,
+        function(ge){
+          assertObjectEquals('test event DATAVIEW_CHANGED',data,ge.currentTarget.getDataRows());
+      });
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.DATASOURCE_CHANGED,
+        function(ge){
+          assertObjectEquals('test event DATASOURCE_CHANGED',data,ge.target.getDataRows());
+      });
+
+      dataview.addDataRow(data[0]);
+      assertEquals ('Total Number of Rows',data.length ,dataview.getDataRows().length);
+      var d = dataview.getDataRows();
+      assertObjectEquals('test getDataRows',data[0],d[0]);
     };
+
+    function testRemoveDataRow(){
+     
+      dataview = new pear.data.DataView(columns, data);
+      var rowid = dataview.getDataRowViews()[0].getRowId();
+      data = [];
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.DATAROW_CHANGED,
+        function(ge){
+          assertObjectEquals('test event DATAROW_CHANGED',removedRow,ge.dataRow);
+      });
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.DATAVIEW_CHANGED,
+        function(ge){
+          assertObjectEquals('test event DATAVIEW_CHANGED',data,ge.currentTarget.getDataRows());
+      });
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.DATASOURCE_CHANGED,
+        function(ge){
+          assertObjectEquals('test event DATASOURCE_CHANGED',data,ge.target.getDataRows());
+      });
+
+      dataview.removeDataRow(rowid);
+      assertEquals ('Total Number of Rows',data.length ,dataview.getDataRows().length);
+      var d = dataview.getDataRows();
+      assertObjectEquals('test getDataRows',data[0],d[0]);
+
+      assertThrows('throws record not found',function(){
+        dataview.removeDataRow(':not')});
+    };
+
+    function testUpdateDataRow(){
+      var rowid = dataview.getDataRowViews()[0].getRowId();
+      
+      var rowdata = dataview.getDataRowViews()[0].getRowData();
+      rowdata.item='test';
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.DATAROW_CHANGED,
+        function(ge){
+          assertObjectEquals('test event DATAROW_CHANGED',rowdata,ge.dataRow);
+      });
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.DATAVIEW_CHANGED,
+        function(ge){
+          assertObjectEquals('test event DATAVIEW_CHANGED',data,ge.currentTarget.getDataRows());
+      });
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.DATASOURCE_CHANGED,
+        function(ge){
+          assertObjectEquals('test event DATASOURCE_CHANGED',data,ge.target.getDataRows());
+      });
+
+      dataview.updateDataRow(rowid,rowdata);
+      assertEquals ('Total Number of Rows',data.length ,dataview.getDataRows().length);
+      var d = dataview.getDataRows();
+      assertObjectEquals('test getDataRows',data[0],d[0]);
+
+      assertThrows('throws record not found',function(){
+      dataview.updateDataRow(':not',rowdata)});
+        
+    };
+
+    function testisDatasourceChanged(){
+      var eventCallback =0
+      data = testData1Rows(1);
+      dataview.addDataRow(data[0]);
+      var rowid = dataview.getDataRowViews()[0].getRowId();
+      assertTrue('addDataRow - isDatasourceChanged',dataview.isDatasourceChanged());
+      dataview.resetDatasourceChangeIndicator();
+      assertFalse('test resetDatasourceChangeIndicator',dataview.isDatasourceChanged());
+    }
+    function testRowSelection(){
+      var rowview = dataview.getDataRowViews()[0];
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.ROWVIEW_SELECT,
+        function(ge){
+          assertObjectEquals('test event ROWVIEW_SELECT',rowview,ge.rowview);
+          assertTrue('test event ROWVIEW_SELECT',rowview.isSelected());
+      });
+
+      goog.events.listen(dataview,
+        pear.data.DataView.EventType.ROWVIEW_UNSELECT,
+        function(ge){
+          assertObjectEquals('test event ROWVIEW_UNSELECT',rowview,ge.rowview);
+          assertFalse('test event ROWVIEW_UNSELECT',rowview.isSelected());
+      });
+
+      dataview.selectRowView(rowview, true);
+      assertTrue('test event ROWVIEW_SELECT',rowview.isSelected());
+
+      dataview.selectRowView(rowview, false);
+      assertFalse('test event ROWVIEW_UNSELECT',rowview.isSelected());
+    };
+
+    function testSort(){
+      // Missing - todo
+    }
   </script>
 </body>
 </html>
