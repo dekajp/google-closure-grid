@@ -18,7 +18,8 @@ pear.data.RowView = function(rowid, rowdata) {
   goog.Disposable.call(this);
 
   this.rowdata_ = rowdata || [];
-  this.rowId_ = rowid || '';
+  this.rowId_ = rowid || goog.ui.IdGenerator.getInstance().getNextUniqueId();
+  this.selectState_=false;
 };
 goog.inherits(pear.data.RowView, goog.Disposable);
 
@@ -28,7 +29,7 @@ goog.inherits(pear.data.RowView, goog.Disposable);
  * @type {Object.<string,*>}
  * @private
  */
-pear.data.RowView.prototype.rowdata_ = null;
+pear.data.RowView.prototype.rowdata_;
 
 
 /**
@@ -36,7 +37,7 @@ pear.data.RowView.prototype.rowdata_ = null;
  * @type {string}
  * @private
  */
-pear.data.RowView.prototype.rowId_ = '';
+pear.data.RowView.prototype.rowId_;
 
 
 /**
@@ -45,7 +46,7 @@ pear.data.RowView.prototype.rowId_ = '';
  * @type {boolean}
  * @private
  */
-pear.data.RowView.prototype.selectState_ = false;
+pear.data.RowView.prototype.selectState_;
 
 
 /**
@@ -64,7 +65,7 @@ pear.data.RowView.prototype.getRowData = function() {
  * @public
  */
 pear.data.RowView.prototype.getRowId = function() {
-  return this.rowId_ || 'no-id';
+  return this.rowId_ ;
 };
 
 
@@ -95,6 +96,8 @@ pear.data.RowView.prototype.isSelected = function() {
  */
 pear.data.RowView.prototype.disposeInternal = function() {
   this.rowdata_ = null;
+  delete this.rowdata_;
   delete this.rowId_;
+  delete this.selectState_ ;
   pear.data.RowView.superClass_.disposeInternal.call(this);
 };

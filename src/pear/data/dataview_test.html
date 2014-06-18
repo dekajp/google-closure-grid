@@ -35,13 +35,7 @@
     var data ;
     var dataview;
 
-    function setUp() {
-     
-    }
 
-    function setConfiguration(config){
-      grid.setConfiguration(config);
-    }
     function setUp() {
       columns = testData1Columns();
       data = testData1Rows(1);
@@ -226,7 +220,17 @@
 
     function testSort(){
       // Missing - todo
-    }
+    };
+
+    function testDispose(){
+      dataview.dispose();
+      assertNull ('test getDataRows',dataview.getDataRows());
+      assertUndefined ('test getDataRowViews',dataview.getDataRowViews());
+      assertEquals ('test getDataRowViewCount',0,dataview.getDataRowViewCount());
+      assertEquals ('test getRowCount',0,dataview.getRowCount());
+      assertNull ('test getColumns',dataview.getColumns());
+    };
+
   </script>
 </body>
 </html>

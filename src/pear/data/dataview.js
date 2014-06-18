@@ -115,16 +115,16 @@ pear.data.DataView.EventType = {
 
 /**
  * @private
- * @type {?pear.data.DataTable}
+ * @type {pear.data.DataTable}
  */
-pear.data.DataView.prototype.dataTable_ = null;
+pear.data.DataView.prototype.dataTable_ ;
 
 
 /**
  * @private
- * @type {?pear.ui.Grid}
+ * @type {pear.ui.Grid}
  */
-pear.data.DataView.prototype.grid_ = null;
+pear.data.DataView.prototype.grid_ ;
 
 
 /**
@@ -136,14 +136,7 @@ pear.data.DataView.prototype.dataRowViews_;
 
 /**
  * @private
- * @type {Array.<pear.data.RowView>}
- */
-pear.data.DataView.prototype.originalDataRowViews_;
-
-
-/**
- * @private
- * @type {?Array.<string>}
+ * @type {Array.<string>}
  */
 pear.data.DataView.prototype.selectedRowViewsIds_;
 
@@ -152,7 +145,7 @@ pear.data.DataView.prototype.selectedRowViewsIds_;
  * @private
  * @type {boolean}
  */
-pear.data.DataView.prototype.datasourceChanged_ = false;
+pear.data.DataView.prototype.datasourceChanged_;
 
 
 /**
@@ -161,7 +154,7 @@ pear.data.DataView.prototype.datasourceChanged_ = false;
  * @public
  */
 pear.data.DataView.prototype.getColumns = function() {
-  return this.dataTable_.getColumns();
+  return this.dataTable_ ? this.dataTable_.getColumns() : null;
 };
 
 
@@ -200,7 +193,7 @@ pear.data.DataView.prototype.resetDatasourceChangeIndicator = function() {
  * @public
  */
 pear.data.DataView.prototype.getDataRows = function() {
-  return this.dataTable_.getDataRows();
+  return (this.dataTable_ ? this.dataTable_.getDataRows() : null);
 };
 
 
@@ -318,7 +311,8 @@ pear.data.DataView.prototype.clearSelectedRowViews = function() {
  * @public
  */
 pear.data.DataView.prototype.getRowCount = function() {
-  return this.dataTable_.getDataRows().length;
+  return this.dataTable_ && this.dataTable_.getDataRows() ?
+    this.dataTable_.getDataRows().length : 0;
 };
 
 
@@ -330,7 +324,7 @@ pear.data.DataView.prototype.getRowCount = function() {
  * @return {number}
  */
 pear.data.DataView.prototype.getDataRowViewCount = function() {
-  return this.dataRowViews_.length;
+  return this.dataRowViews_ ? this.dataRowViews_.length : 0;
 };
 
 
@@ -593,13 +587,24 @@ pear.data.DataView.prototype.sort = function(sortDirection, columnid) {
  * @protected
  */
 pear.data.DataView.prototype.disposeInternal = function() {
-  goog.array.forEach(this.dataRowViews_, function(rv) {
-    rv.dispose();
+  goog.array.forEach(this.dataRowViews_, function(drv) {
+    drv.dispose();
   });
 
   this.dataRowViews_ = null;
-  this.dataTable_.dispose();
+  delete this.dataRowViews_;
+  
+  if (this.dataTable_){
+    this.dataTable_.dispose();
+  }
+  delete this.dataTable_;
+  
   this.grid_ = null;
+  delete this.grid_;
+
+  delete this.selectedRowViewsIds_;
+  delete this.datasourceChanged_;
+
   pear.data.DataView.superClass_.disposeInternal.call(this);
 };
 

@@ -6,5 +6,6 @@ var _pearallTests = [
   'pear/plugin/filtermenu_test.html',
   'pear/plugin/columnmove_test.html',
   'pear/data/column_test.html',
-  'pear/data/dataview_test.html'
+  'pear/data/dataview_test.html',
+  'pear/data/rowview_test.html'
 ];

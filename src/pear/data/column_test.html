@@ -40,18 +40,59 @@
   <script>
   
     var column ;
-
+    var datafield ='orderno';
+    var id = 'id';
+    var headerText ='headertext';
+    var width = 70;
     function setUpPage() {
       
      
-    }
+    };
 
     function setUp() {
-     
-    }
+      column = new pear.data.Column(headerText, id,datafield,
+        width, pear.data.Column.DataType.NUMBER);
+    };
 
     function tearDown() {
-      
+      column.dispose();
+      column=null;
+    };
+
+    function testGetters(){
+      assertEquals('getAlign',pear.data.Column.Align.LEFT,column.getAlign());
+      assertEquals('getDataField',datafield,column.getDataField());
+      assertEquals('getid',id,column.getId());
+      assertEquals('getDataType',pear.data.Column.DataType.NUMBER,column.getDataType());
+      assertEquals('getHeaderText',headerText,column.getHeaderText());
+      assertEquals('getWidth',width,column.getWidth());
+
+    };
+
+    function testVisibility(){
+      assertTrue('getVisibility',column.getVisibility());
+      column.setVisibility(false);
+      assertFalse('getVisibility',column.getVisibility());
+      column.setVisibility(true);
+      assertTrue('getVisibility',column.getVisibility());
+    };
+
+    function testFreeze(){
+      assertFalse('isFrozen',column.isFrozen());
+      column.setFrozen(true);
+      assertTrue('isFrozen',column.isFrozen());
+      column.setFrozen(false);
+      assertFalse('isFrozen',column.isFrozen());
+    };
+
+    function testColumnFormatter(){
+      var formatter = function (){
+        return true;
+      };
+
+      column.setColumnFormatter(formatter);
+      var fn = column.getColumnFormatter().fn;
+      assertTrue(fn());
     }
 
   </script>

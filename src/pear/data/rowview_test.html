@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Closure Unit Tests - pear.ui.Grid</title>
+
+  <link rel="stylesheet" href="../../css/grid.css" />
+  <script src="../../../lib/closure-library/closure/goog/base.js"></script>
+  
+  <script src="../peardeps.js"></script>
+  <script src="../peartestdata.js"></script>
+
+  <script>
+    goog.require('goog.dom');
+    goog.require('goog.testing.jsunit');
+    goog.require('goog.testing.events');
+    goog.require('goog.testing.MockClock');
+    goog.require('pear.ui.Grid');
+    goog.require('pear.data.DataView');
+    
+  </script>
+  <style>
+    
+  </style>
+</head>
+<body>
+  <div id="content">
+    <div id="target1" style="width:800px;height:500px">
+    </div>
+  </div>
+  <script>
+    var rv ;
+    var data;
+    var id =':0';
+
+    function setUp() {
+      data = testData1Rows(1);
+      rv = new pear.data.RowView(id,data[0]);
+    };
+    
+    function tearDown() {
+      rv.dispose();
+      rv=null;
+    };
+
+    function testConstructor(){
+      assertNotNull('Should have successful construction', rv);
+    };
+
+    function testRowData(){
+      assertObjectEquals('test row data',data[0],rv.getRowData());
+    };
+
+    function testRowId(){
+      assertObjectEquals('test row id',id,rv.getRowId());
+    };
+
+    function testRowViewSelected(){
+      assertFalse('set selected default',rv.isSelected());
+      rv.setSelected(true);
+      assertTrue('set selected default',rv.isSelected());
+      rv.setSelected(false);
+      assertFalse('set selected default',rv.isSelected());
+    };
+
+    function testDispose(){
+      rv.dispose();
+      assertUndefined('getRowId',rv.getRowId());
+      assertUndefined('getRowData',rv.getRowData());
+      assertUndefined('isSelected',rv.isSelected());
+    };
+   
+  </script>
+</body>
+</html>
