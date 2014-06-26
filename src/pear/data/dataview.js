@@ -117,14 +117,14 @@ pear.data.DataView.EventType = {
  * @private
  * @type {pear.data.DataTable}
  */
-pear.data.DataView.prototype.dataTable_ ;
+pear.data.DataView.prototype.dataTable_;
 
 
 /**
  * @private
  * @type {pear.ui.Grid}
  */
-pear.data.DataView.prototype.grid_ ;
+pear.data.DataView.prototype.grid_;
 
 
 /**
@@ -312,7 +312,7 @@ pear.data.DataView.prototype.clearSelectedRowViews = function() {
  */
 pear.data.DataView.prototype.getRowCount = function() {
   return this.dataTable_ && this.dataTable_.getDataRows() ?
-    this.dataTable_.getDataRows().length : 0;
+      this.dataTable_.getDataRows().length : 0;
 };
 
 
@@ -593,12 +593,12 @@ pear.data.DataView.prototype.disposeInternal = function() {
 
   this.dataRowViews_ = null;
   delete this.dataRowViews_;
-  
-  if (this.dataTable_){
+
+  if (this.dataTable_) {
     this.dataTable_.dispose();
   }
   delete this.dataTable_;
-  
+
   this.grid_ = null;
   delete this.grid_;
 

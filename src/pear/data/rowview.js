@@ -19,7 +19,7 @@ pear.data.RowView = function(rowid, rowdata) {
 
   this.rowdata_ = rowdata || [];
   this.rowId_ = rowid || goog.ui.IdGenerator.getInstance().getNextUniqueId();
-  this.selectState_=false;
+  this.selectState_ = false;
 };
 goog.inherits(pear.data.RowView, goog.Disposable);
 
@@ -65,7 +65,7 @@ pear.data.RowView.prototype.getRowData = function() {
  * @public
  */
 pear.data.RowView.prototype.getRowId = function() {
-  return this.rowId_ ;
+  return this.rowId_;
 };
 
 
@@ -98,6 +98,6 @@ pear.data.RowView.prototype.disposeInternal = function() {
   this.rowdata_ = null;
   delete this.rowdata_;
   delete this.rowId_;
-  delete this.selectState_ ;
+  delete this.selectState_;
   pear.data.RowView.superClass_.disposeInternal.call(this);
 };

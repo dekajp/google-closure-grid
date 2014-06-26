@@ -132,16 +132,16 @@
   // Get Columns
   var columns = demoDataset1GetColumns();
 
-  var fnAggregate = function (datacolumn,dataview){
-    if (datacolumn.id === 'total' || datacolumn.id === 'quantity' ){
+  var fnAggregate = function (column,dataview){
+    if (column.getId() === 'total' || column.getId() === 'quantity' ){
       var total =0;
       goog.array.forEach(dataview.getDataRowViews(),function(row){
-        total = total + row.getRowData()[datacolumn.id];
+        total = total + row.getRowData()[column.getId()];
       });
 
       return total;
     }
-    if (datacolumn.id === 'orderno' ){
+    if (column.getId() === 'orderno' ){
       return 'Total';
     }
     
@@ -248,9 +248,9 @@
         var str;
         var filter = String(column.filter);
         if (column.formatter){
-          str = String(column.formatter(rowdata[column.id]));
+          str = String(column.formatter(rowdata[column.getId()]));
         }else{
-          str = String(rowdata[column.id]);
+          str = String(rowdata[column.getId()]);
         }
           
         if (str.toLowerCase().indexOf(filter.toLowerCase()) >=0) {

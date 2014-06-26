@@ -151,7 +151,9 @@
     grid = new pear.ui.Grid();
 
     var config = {
-      AllowColumnResize:true,
+      AllowColumnResize: true,
+      AllowAlternateRowHighlight: true,
+      ShowCellBorder:false,
       AllowSorting:true,
       SelectionMode: parseInt(goog.dom.forms.getValue(goog.dom.getElement('id_selectionmode')),10)
     };

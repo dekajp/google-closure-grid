@@ -128,8 +128,8 @@
   cursor: default;
   background-color: inherit;
   border-right: 1px dotted silver;
-  border-top-width: 1px;
-  border-top-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
 }
 
 .pear-grid-cell-frozen{
@@ -150,6 +150,13 @@
   border-top-style: solid;
   vertical-align: middle;
   text-align: left;
+}
+
+.pear-grid-cell-footer-content {
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 
 .pear-grid-cell-header-hover{

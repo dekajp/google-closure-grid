@@ -211,7 +211,7 @@ pear.data.DataTable.prototype.updateDataRow = function(uniqueid, datarow) {
  * @protected
  */
 pear.data.DataTable.prototype.disposeInternal = function() {
-   
+
   goog.array.forEach(this.dataColumns_, function(dc) {
     dc.dispose();
   });
@@ -219,12 +219,12 @@ pear.data.DataTable.prototype.disposeInternal = function() {
 
   this.dataColumns_ = null;
   this.dataRows_ = null;
-  
-  delete this.dataColumns_ ;
-  delete this.dataRows_ ;
 
-  
-  if (this.dataRowsMap_){
+  delete this.dataColumns_;
+  delete this.dataRows_;
+
+
+  if (this.dataRowsMap_) {
     this.dataRowsMap_.clear();
   }
   this.dataRowsMap_ = null;

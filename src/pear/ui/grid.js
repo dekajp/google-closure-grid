@@ -1638,7 +1638,7 @@ pear.ui.Grid.prototype.buildCSSRules = function() {
   if (this.getConfiguration().ShowCellBorder) {
     this.setInternalCSSRule_('.pear-grid-cell',
         {
-          'border-top-color': 'silver'
+          'border-bottom-color': 'silver'
         });
   }else {
     this.setInternalCSSRule_('.pear-grid-cell',
@@ -3457,9 +3457,11 @@ pear.ui.Grid.prototype.handleFocus = function(be) {
   if (be.defaultPrevented) return;
 
   var gridrow = this.getHighlightedGridRow();
-  this.setHighlighted_(gridrow, true, false);
-  this.setHighlightedCellByIndex(this.getHighlightedCellIndex());
-  this.scrollCellIntoView(gridrow);
+  if (gridrow) {
+    this.setHighlighted_(gridrow, true, false);
+    this.setHighlightedCellByIndex(this.getHighlightedCellIndex());
+    this.scrollCellIntoView(gridrow);
+  }
 };
 
 

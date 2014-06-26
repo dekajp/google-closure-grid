@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Closure Grid - pear.ui.Grid</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
+
+  <link rel="stylesheet" href="css/demo.css" />
+  <link rel="stylesheet" href="../src/css/grid.css" />
+  
+ 
+ <style>
+  body {
+  background-color: white;
+  font: normal 10pt Arial, sans-serif;
+  }
+
+ </style>
+  <script src="../lib/closure-library/closure/goog/base.js"></script>
+  <script src="../src/bin/release/pear.grid.js"></script>
+  <script>
+    goog.require('goog.debug.DivConsole');
+    goog.require('goog.debug.LogManager');
+    goog.require('goog.dom.forms');
+    goog.require('pear.ui.Grid');
+    
+  </script>
+
+  <style>
+    
+  </style>
+</head>
+<body>
+   <fieldset class="goog-debug-panel">
+    <legend>Hierarchial Records</legend>
+    <div id="">
+      <li>Hierarchial Records or Row Details</li>
+    </div>
+  </fieldset>
+
+  <!-- This div will have a Sample Component added to its contents. -->
+  <div id="target1">
+  </div>
+  <fieldset class="goog-debug-panel">
+    <legend>Event Log</legend>
+    <div id="log"></div>
+  </fieldset>
+  <div id="perf"></div>
+</body>
+
+ <script>
+
+
+  function getColumns(limit){
+    var c = [];
+    for (var j=0;j<limit;j++){
+      c[j] = new pear.data.Column('col-'+j,'col-'+j,'col-'+j,100,pear.data.Column.DataType.NUMBER);
+    }
+    return c;
+  }
+ 
+  var item = ['Xbox','Kindle DX','Kindle Fire','iPhone','Galaxy S3','Galaxy S4','Google Chromecast','PS3','Apple TV','Wii-u'];
+  var unitprice = [179.89,199.00,150.00,699.00,499.00,399.00,34.95,209.80,95.00,234.99];
+
+  var grid;
+  var NoOfRows=100;
+  var NoOfCols=10;
+
+  var setFrozenIndicators = function (headerCell,show){
+    if (!headerCell) return;
+    var icon ;
+    var contentIndicatorElem = headerCell.getContentIndicatorElement();
+    if (show){
+      if (goog.dom.getElementByClass('fa fa-thumb-tack',contentIndicatorElem)){
+        // icon exists
+      }else{
+        icon = goog.dom.createDom('i','fa fa-thumb-tack');
+        goog.dom.appendChild(contentIndicatorElem,icon);
+      }
+    }else{
+      // if other indicators present - then be specific
+      goog.dom.removeChildren(contentIndicatorElem);
+    }
+    headerCell.adjustContentCellSize();
+  };
+
+  var handleHeaderCellRender = function (evt){
+    setFrozenIndicators(evt.cell,evt.cell.getDataColumn().isFrozen());
+  };
+
+  var load = function () {
+    if (grid){
+      grid.dispose();
+    }
+    var data = [];
+    var temp;
+    for (var i = 0; i < parseInt(NoOfRows,10); i++) {
+      var c = {};
+      for (var j=0;j<NoOfCols;j++){
+        c['col-'+j] = 'data-r'+i+' c'+j;
+      }
+      data.push(c);
+    }
+
+    var start = +new Date();  // log start timestamp
+
+
+    grid = new pear.ui.Grid();
+    var config = {
+      AllowColumnResize: true,
+      AllowAlternateRowHighlight: false,
+      ShowCellBorder:true
+    };
+    config = grid.setConfiguration(config);
+
+    grid.setWidth(800);
+    grid.setHeight(400);
+    grid.setColumns(getColumns(NoOfCols));
+    grid.setDataRows(data);
+    
+    grid.render(goog.dom.getElement('target1'));
+    goog.events.listen(grid, pear.ui.Grid.EventType.AFTER_HEADERCELL_RENDER, handleHeaderCellRender);
+
+    grid.setFrozenColumns(2,true);
+    
+  };
+
+
+
+
+  load();
+  
+ </script>
+
+</html>
