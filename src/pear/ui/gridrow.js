@@ -136,7 +136,10 @@ pear.ui.GridRow.prototype.setHighlight = function(highlight) {
  */
 pear.ui.GridRow.prototype.clearHighlight = function() {
   this.forEachChild(function(child) {
-    child.setHighlight(false);
+    // child could be goog.ui.Component
+    if (child.setHighlight) {
+      child.setHighlight(false);
+    }
   });
   this.highlightedCellIndex_ = -1;
 };
@@ -229,10 +232,51 @@ pear.ui.GridRow.prototype.showGridRowDetailsContainer = function(display) {
 
     goog.dom.classes.add(elem, 'pear-grid-cell pear-grid-row-detail');
     goog.style.setStyle(elem, 'border-top-width', '0px');
-    goog.style.setHeight(elem, this.getGrid().getGridRowDetailHeight());
+    var grid = this.getGrid();
+    var desiredheight = grid.getGridRowDetailHeight();
+    var gridWidth = grid.getWidth() > grid.getGridRowWidth() ?
+        grid.getGridRowWidth() : grid.getWidth();
+
+    var paddingBox = goog.style.getPaddingBox(
+        this.gridRowDetails_.getElement());
+    var borderBox = goog.style.getBorderBox(this.gridRowDetails_.getElement());
+    var width = gridWidth - borderBox.left - paddingBox.left -
+        paddingBox.right - borderBox.right;
+
+    var height = desiredheight - borderBox.top - paddingBox.top -
+        paddingBox.bottom - borderBox.bottom;
+
+
+    goog.style.setHeight(elem, height);
+    goog.style.setWidth(elem, width);
+
     goog.style.setPosition(elem, 0, this.getGrid().getComputedRowHeight());
+
+    this.forEachChild(function(child) {
+      goog.dom.classes.add(child.getElement(), 'bottom-border');
+    });
   }else {
+    this.forEachChild(function(child) {
+      goog.dom.classes.remove(child.getElement(), 'bottom-border');
+    });
     this.removeChild(this.gridRowDetails_, true);
+  }
+};
+
+
+/**
+ * [applyBottomBorder description]
+ * @param  {boolean} display [description]
+ */
+pear.ui.GridRow.prototype.applyBottomBorder = function(display) {
+  if (display) {
+    this.forEachChild(function(child) {
+      goog.dom.classes.add(child.getElement(), 'bottom-border');
+    });
+  }else {
+    this.forEachChild(function(child) {
+      goog.dom.classes.remove(child.getElement(), 'bottom-border');
+    });
   }
 };
 

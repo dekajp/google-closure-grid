@@ -167,6 +167,9 @@ pear.plugin.Pager.prototype.createFooter_ = function() {
   }else {
     this.footer_ = goog.dom.createDom('div', 'pear-grid-footer-panel');
     goog.dom.insertSiblingAfter(this.footer_, parentElem);
+
+    // Set Width
+    goog.style.setWidth(this.footer_, grid.getWidth());
   }
 
   this.footerStatus_ = new goog.ui.Control(

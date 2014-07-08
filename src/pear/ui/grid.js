@@ -132,6 +132,7 @@ pear.ui.Grid = function(opt_domHelper) {
     cellIndex: -1
   };
 
+  this.activeGridRow_ = {};
   this.initConfiguration_();
 };
 goog.inherits(pear.ui.Grid, goog.ui.Component);
@@ -305,7 +306,13 @@ pear.ui.Grid.EventType = {
    * @todo - yet to define
    * @type {string}
    */
-  RENDERED: 'rendered'
+  RENDERED: 'rendered',
+
+  /**
+   * On Resizing columns
+   * @type {string}
+   */
+  ON_COLUMN_RESIZE: 'on-column-resize'
 
 
 };
@@ -423,14 +430,6 @@ pear.ui.Grid.prototype.cachedDataRowsViews_ = null;
 
 
 /**
- * Active Grid Row
- * @type {pear.ui.GridRow}
- * @private
- */
-pear.ui.Grid.prototype.activeGridRow_ = null;
-
-
-/**
  * GridRow Details Height
  * @type {number}
  * @private
@@ -452,6 +451,14 @@ pear.ui.Grid.prototype.title_ = '';
  * @private
  */
 pear.ui.Grid.prototype.Configuration_ = null;
+
+
+/**
+ * Active GridRow - for showing GridRowDetails
+ * @type {Object.<string,pear.ui.GridRow>}
+ * @private
+ */
+pear.ui.Grid.prototype.activeGridRow_;
 
 
 /**
@@ -1638,12 +1645,12 @@ pear.ui.Grid.prototype.buildCSSRules = function() {
   if (this.getConfiguration().ShowCellBorder) {
     this.setInternalCSSRule_('.pear-grid-cell',
         {
-          'border-bottom-color': 'silver'
+          'border-top-color': 'silver'
         });
   }else {
     this.setInternalCSSRule_('.pear-grid-cell',
         {
-          'border-bottom-color': 'transparent'
+          'border-top-color': 'transparent'
         });
   }
 
@@ -1691,15 +1698,15 @@ pear.ui.Grid.prototype.buildCSSRules = function() {
         'line-height': cellHeight + 'px'
       });
 
-  var totalRowWidth = this.buildColumnCSSRules_();
+  var rowWidth = this.buildColumnCSSRules_();
 
-  var maxWidth = (totalRowWidth + this.getScrollbarWidth()) > this.getWidth() ?
-      totalRowWidth + this.getScrollbarWidth() : this.getWidth();
+  var maxWidth = (rowWidth + this.getScrollbarWidth()) > this.getWidth() ?
+      rowWidth + this.getScrollbarWidth() : this.getWidth();
 
   // pear-grid-row
   this.setInternalCSSRule_('.pear-grid-row-data',
       {
-        width: totalRowWidth + 'px',
+        width: rowWidth + 'px',
         height: this.getComputedRowHeight() + 'px'
       });
 
@@ -1718,7 +1725,7 @@ pear.ui.Grid.prototype.buildCSSRules = function() {
       });
   this.setInternalCSSRule_('.pear-grid-body-canvas',
       {
-        width: totalRowWidth + 'px'
+        width: rowWidth + 'px'
       });
 };
 
@@ -1732,7 +1739,7 @@ pear.ui.Grid.prototype.buildColumnCSSRules_ = function() {
   var rootCss = this.getUniqueRootCss_();
   var cellBorderBox = this.getCellBorderBox(rootCss);
   var l = 0;
-  var totalRowWidth = 0;
+  var rowWidth = 0;
   goog.array.forEach(this.getColumns_(), function(col, index) {
     if (col.getVisibility()) {
       var w = col.getWidth();
@@ -1742,20 +1749,30 @@ pear.ui.Grid.prototype.buildColumnCSSRules_ = function() {
             left: l + 'px'
           });
       l = l + w + cellBorderBox.left + cellBorderBox.right;
-      totalRowWidth = totalRowWidth +
-                      w +
-                      cellBorderBox.left +
+      rowWidth = rowWidth +
+          w +
+          cellBorderBox.left +
                       cellBorderBox.right;
     }
   },this);
 
   this.setInternalCSSRule_('.pear-grid-row-data',
       {
-        width: totalRowWidth + 'px',
+        width: rowWidth + 'px',
         height: this.getComputedRowHeight() + 'px'
       });
 
-  return totalRowWidth;
+  this.gridRowWidth_ = rowWidth;
+  return this.gridRowWidth_;
+};
+
+
+/**
+ * [getGridRowWidth description]
+ * @return {number} [description]
+ */
+pear.ui.Grid.prototype.getGridRowWidth = function() {
+  return this.gridRowWidth_;
 };
 
 
@@ -2084,9 +2101,10 @@ pear.ui.Grid.prototype.updateBodyCanvasHeight_ = function() {
   }
 
   // TODO handle Paging
-  if (this.activeGridRow_) {
+  goog.object.forEach(this.activeGridRow_, function(gridrow) {
     height = height + this.getGridRowDetailHeight();
-  }
+  },this);
+
   goog.style.setHeight(this.bodyCanvas_.getElement(), height);
 
 
@@ -2185,7 +2203,7 @@ pear.ui.Grid.prototype.getComputedRowHeight = function() {
 
 
 /**
- * Is First Row of Grid
+ * Is first row of grid
  * @param  {pear.ui.GridRow}  gridrow
  * @return {boolean}   true, is first row , index equal 0
  * @public
@@ -2198,6 +2216,26 @@ pear.ui.Grid.prototype.isFirstRowInGrid = function(gridrow) {
     return ((position % pagesize) === 0);
   }else {
     return (position === 0);
+  }
+};
+
+
+/**
+ * Is last row of grid
+ * @param  {pear.ui.GridRow}  gridrow
+ * @return {boolean}   true, is first row , index equal 0
+ * @public
+ */
+pear.ui.Grid.prototype.isLastRowInGrid = function(gridrow) {
+  var pagesize = this.getPageSize();
+  var position = gridrow.getRowPosition();
+  var totalRows = this.getGridRowsCount_();
+
+  if (this.Configuration_.AllowPaging) {
+    // @todo - paging
+    return false;
+  }else {
+    return (position === (totalRows - 1));
   }
 };
 
@@ -2268,15 +2306,15 @@ pear.ui.Grid.prototype.showGridRowDetails = function(gridrow, display) {
   goog.array.forEach(gridrows, function(grow, index) {
     if (grow.getId() === gridrow.getId()) {
       grow.setHeight(display ? (rowHeight + rowDetailsHeight) : rowHeight);
-      this.activeGridRow_ = grow;
+      grow.showGridRowDetailsContainer(display);
     }
     this.setTopOfGridRow(grow);
   }, this);
 
-  this.activeGridRow_.showGridRowDetailsContainer(display);
-
-  if (!display) {
-    this.activeGridRow_ = null;
+  if (display) {
+    this.activeGridRow_[gridrow.getId()] = gridrow;
+  }else {
+    delete this.activeGridRow_[gridrow.getId()];
   }
 
   this.updateBodyCanvasHeight_();
@@ -2293,8 +2331,10 @@ pear.ui.Grid.prototype.restoreHighlightedRow_ = function() {
       this.highligtedGridrow_.rowIndex < this.getGridRowsCount_() &&
       this.getGridRowsCount_() > 0) {
     var gridrow = this.getGridRowAt(this.getHighlightedGridRowIndex());
-    this.setHighlighted_(gridrow, true, false);
-    this.setHighlightedCellByIndex(this.getHighlightedCellIndex());
+    if (gridrow && gridrow.isInDocument()) {
+      this.setHighlighted_(gridrow, true, false);
+      this.setHighlightedCellByIndex(this.getHighlightedCellIndex());
+    }
   }
 };
 
@@ -2328,7 +2368,8 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
   }
   goog.array.forEach(columns, function(datacolumn, index) {
     if (datacolumn.getVisibility()) {
-      var c = new pear.ui.GridCell(this.getDomHelper());
+      var c = new pear.ui.GridCell(this.getDomHelper(),
+          datacolumn.getGridCellRenderer());
       c.setDataColumn(datacolumn);
       c.setCellIndex(index);
       row.addCell(c, true);
@@ -2410,6 +2451,11 @@ pear.ui.Grid.prototype.calculateViewRange_ = function() {
   var rowCount = this.getDataViewRowCount();
   var rowHeight = this.getComputedRowHeight();
   var scrollTop = this.viewport_.getElement().scrollTop;
+
+  goog.object.forEach(this.activeGridRow_, function(grow) {
+    scrollTop = scrollTop - this.getGridRowDetailHeight();
+  },this);
+
   var canvasVisibleBeginPx = (scrollTop > (rowHeight * 10)) ?
       (scrollTop - (rowHeight * 10)) : 0;
   var size = this.getViewportSize();
@@ -2480,6 +2526,12 @@ pear.ui.Grid.prototype.renderCachedGridRowsInBodyCanvas_ =
     // Render Cell on Canvas on demand for Performance
     this.bodyCanvas_.addChild(gridrow, true);
     this.renderDataRowCells_(gridrow);
+
+    // LastRow - needs bottom border
+    if (this.isLastRowInGrid(gridrow)) {
+      gridrow.applyBottomBorder(true);
+    }
+
     this.renderedGridRowsCache_[index] = gridrow;
   },this);
   this.renderReadyGridRows_ = [];
@@ -2520,8 +2572,9 @@ pear.ui.Grid.prototype.refreshFooterRow = function() {
  * On columns width changed
  */
 pear.ui.Grid.prototype.refreshOnColumnResize = function() {
-  this.buildColumnCSSRules_();
+  var rowWidth = this.buildColumnCSSRules_();
   this.refreshCssStyle();
+  this.dispatchGridEvent_(pear.ui.Grid.EventType.ON_COLUMN_RESIZE);
 };
 
 
@@ -2770,9 +2823,9 @@ pear.ui.Grid.prototype.scrollCellIntoView = function(gridrow, opt_gridcell) {
  * @return {boolean}
  */
 pear.ui.Grid.prototype.isActiveGridRow = function(gridrow) {
-  var result = this.activeGridRow_ &&
-      this.activeGridRow_.getId() === gridrow.getId() &&
+  var result = this.activeGridRow_[gridrow.getId()] &&
       gridrow.isInDocument();
+
   return !!result;
 };
 
@@ -3457,7 +3510,7 @@ pear.ui.Grid.prototype.handleFocus = function(be) {
   if (be.defaultPrevented) return;
 
   var gridrow = this.getHighlightedGridRow();
-  if (gridrow) {
+  if (gridrow && gridrow.isInDocument()) {
     this.setHighlighted_(gridrow, true, false);
     this.setHighlightedCellByIndex(this.getHighlightedCellIndex());
     this.scrollCellIntoView(gridrow);
@@ -3471,6 +3524,11 @@ pear.ui.Grid.prototype.handleFocus = function(be) {
  */
 pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
   logger.info('handleBodyCanvasScroll Received event ' + e.type);
+
+  if (e.defaultPrevented) {
+    return;
+  }
+
   if (this.previousScrollTop_ <= this.viewport_.getElement().scrollTop) {
     this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.DOWN;
   }else {
@@ -3499,9 +3557,7 @@ pear.ui.Grid.prototype.handleBodyCanvasScroll = function(e) {
   this.bodyScrollTriggerDirection_ = pear.ui.Grid.ScrollDirection.NONE;
   this.previousScrollTop_ = this.viewport_.getElement().scrollTop;
 
-  if (e) {
-    e.preventDefault();
-  }
+  e.preventDefault();
 };
 
 
@@ -3713,9 +3769,7 @@ pear.ui.Grid.prototype.handleKeyEventInternal = function(e) {
       this.highlightPreviousCell();
       break;
     case goog.events.KeyCodes.ENTER:
-      if (this.isSelectionModeOn()) {
-        this.selectGridRow();
-      }
+      this.handleDataCellAction(this.getHighlightedCell());
       break;
     case goog.events.KeyCodes.F2:
       this.showCellEditor(this.getHighlightedCell());
@@ -3751,6 +3805,8 @@ pear.ui.Grid.prototype.disposeInternal = function() {
     value.dispose();
   });
   this.gridRows_ = null;
+
+  this.activeGridRow_ = null;
 
   if (this.viewport_) {
     this.viewport_.dispose();

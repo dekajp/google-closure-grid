@@ -339,7 +339,7 @@ pear.plugin.FilterMenu.prototype.showFilterUI_ = function(ge) {
   var grid = this.getGrid();
   var dv = grid.getDataView();
 
-  var text = dv.getColumnFilter(this.headerCell_.getDataColumn());
+  var text = dv.getColumnFilter(this.headerCell_.getDataColumn())|| '';
 
   goog.dom.setTextContent(this.titleContent_,
       this.headerCell_.getContentText());

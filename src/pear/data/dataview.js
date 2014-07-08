@@ -219,7 +219,7 @@ pear.data.DataView.prototype.getDataRows = function() {
  */
 pear.data.DataView.prototype.setDataRows = function(data) {
   this.dataTable_.setDataRows(data);
-  this.datasourceChanged = true;
+  this.datasourceChanged_ = true;
   this.dispatchDataSourceChange_();
   this.initDataRowViews_();
   this.dispatchDataViewChange_();
@@ -256,7 +256,7 @@ pear.data.DataView.prototype.initDataRowViews_ = function() {
  */
 pear.data.DataView.prototype.setDataRowViews = function(rowViews) {
   this.dataRowViews_ = rowViews;
-  this.datasourceChanged = true;
+  this.datasourceChanged_ = true;
   this.dispatchDataViewChange_();
 };
 

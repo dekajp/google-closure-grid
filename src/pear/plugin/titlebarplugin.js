@@ -49,7 +49,10 @@ pear.plugin.TitleBar.prototype.init = function() {
  */
 pear.plugin.TitleBar.prototype.getElement = function() {
   this.element_ = this.element_ ||
-      goog.dom.createDom('div', 'pear-grid-titlebar floatLeft');
+      goog.dom.createDom('div', {
+        'class': 'pear-grid-titlebar floatLeft',
+        'style': 'width:' + this.getGrid().getWidth() + 'px'
+      });
   return this.element_;
 };
 

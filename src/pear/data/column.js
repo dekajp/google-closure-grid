@@ -22,12 +22,12 @@ goog.require('goog.ui.IdGenerator');
  * is pear.data.Column.DataType.TEXT
  * @param {pear.data.Column.Align=} opt_align    text Align of column data ,
  * defaults to pear.data.Column.Align.LEFT
-
+ * @param {pear.ui.GridCellRenderer=} opt_renderer Optional GridCellRenderer
  * @constructor
  * @extends {goog.events.EventTarget}
  */
 pear.data.Column = function(content, id, opt_datafield, opt_width,
-    opt_datatype, opt_align) {
+    opt_datatype, opt_align, opt_renderer) {
   goog.Disposable.call(this);
   this.headerText_ = content;
   this.id_ = id;
@@ -35,6 +35,7 @@ pear.data.Column = function(content, id, opt_datafield, opt_width,
   this.width_ = opt_width || 75;
   this.align_ = opt_align || pear.data.Column.Align.LEFT;
   this.dataField_ = opt_datafield || this.id_;
+  this.renderer_ = opt_renderer || pear.ui.GridCellRenderer.getInstance();
 };
 goog.inherits(pear.data.Column, goog.events.EventTarget);
 
@@ -146,6 +147,14 @@ pear.data.Column.prototype.formatterFn_ = null;
  * @private
  */
 pear.data.Column.prototype.formatterFnScope_ = null;
+
+
+/**
+ * Renderer for GridCell.  Defaults to {@link pear.ui.GridCellRenderer}.
+ * @type {pear.ui.GridCellRenderer?}
+ * @private
+ */
+pear.data.Column.prototype.renderer_;
 
 
 /**
@@ -313,6 +322,25 @@ pear.data.Column.prototype.setColumnFooterAggregatesFn = function(fn) {
  */
 pear.data.Column.prototype.getColumnFooterAggregatesFn = function() {
   return this.fnFooterAggregate_;
+};
+
+
+/**
+ * getGridCellRenderer
+ * @return {pear.ui.GridCellRenderer?}  column renderer
+ */
+pear.data.Column.prototype.getGridCellRenderer = function() {
+  return this.renderer_;
+};
+
+
+/**
+ * setGridCellRenderer
+ * @param {pear.ui.GridCellRenderer?} renderer GridCell Renderer
+ * @return {pear.ui.GridCellRenderer } [description]
+ */
+pear.data.Column.prototype.setGridCellRenderer = function(renderer) {
+  return this.renderer_ = renderer;
 };
 
 

@@ -124,11 +124,24 @@ pear.data.DataTable.prototype.getDataRows = function() {
  *  // Set DataRows
  *  mydataTable.setDataRows(data);
  *
- * @param {Array.<Object.<string,*>>} rows
+ * @param {Array.<Object.<string,*>> | Array.<Array.<string>> } rows
  */
 pear.data.DataTable.prototype.setDataRows = function(rows) {
-  this.dataRows_ = rows;
+  if (Object.prototype.toString.call(rows[0]) === '[object Array]') {
+    var rowsObj = [];
+    goog.array.forEach(rows, function(row) {
+      var o = goog.array.toObject(row, function(value, index) {
+                return this.getColumns()[index].getId();
+              },this);
+      rowsObj.push(o);
+    },this);
+    this.dataRows_ = rowsObj;
+  }else {
+    this.dataRows_ = rows;
+  }
+
   this.init_();
+
 };
 
 

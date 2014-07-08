@@ -1,6 +1,7 @@
 goog.provide('pear.ui.GridCell');
 
 goog.require('pear.ui.Cell');
+goog.require('pear.ui.GridCellRenderer');
 
 
 
@@ -9,11 +10,13 @@ goog.require('pear.ui.Cell');
  *
  * @param {goog.dom.DomHelper=} opt_domHelper Optional DOM helper, used for
  *     document interaction.
+ * @param {pear.ui.GridCellRenderer=} opt_renderer Optional GridCellRenderer
  * @constructor
  * @extends {pear.ui.Cell}
  */
-pear.ui.GridCell = function(opt_domHelper) {
+pear.ui.GridCell = function(opt_domHelper, opt_renderer) {
   pear.ui.Cell.call(this, opt_domHelper);
+  this.renderer_ = opt_renderer || pear.ui.GridCellRenderer.getInstance();
 };
 goog.inherits(pear.ui.GridCell, pear.ui.Cell);
 
@@ -134,12 +137,8 @@ pear.ui.GridCell.prototype.removeContent = function() {
  * Create Content Element
  */
 pear.ui.GridCell.prototype.createContentElement = function() {
-  var cellElement = this.getDomHelper().createDom(
-      'div',
-      ' ' +
-      goog.getCssName(pear.ui.GridCell.CSS_CLASS, 'content') +
-      '  overflowhidden',
-      this.getContent());
+
+  var cellElement = this.renderer_.createDom(this);
 
   var align = this.getDataColumn().getAlign();
   var aligncss = (align === pear.data.Column.Align.LEFT) ?
@@ -149,7 +148,7 @@ pear.ui.GridCell.prototype.createContentElement = function() {
   goog.dom.classes.add(cellElement, aligncss);
   this.getDomHelper().appendChild(this.getElement(), cellElement);
 
-  this.setContentElement(cellElement);
+  this.setContentElement(/** @type {Element} */(cellElement));
 };
 
 
