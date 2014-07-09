@@ -2364,7 +2364,10 @@ pear.ui.Grid.prototype.renderDataRowCells_ = function(row) {
   var columns = this.getColumns_();
   // TODO : remove children , necessary ?
   if (row.getChildCount() > 0) {
-    row.removeChildren(true);
+    var childrens = row.removeChildren(true);
+    goog.array.forEach(childrens, function(child) {
+      child.dispose();
+    },this);
   }
   goog.array.forEach(columns, function(datacolumn, index) {
     if (datacolumn.getVisibility()) {
@@ -2393,7 +2396,8 @@ pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
         // Row is Active Editor or Active
       }else {
         //this.renderedGridRowsCache_[i].removeChildren(true);
-        this.bodyCanvas_.removeChild(this.renderedGridRowsCache_[i], true);
+        var child =
+            this.bodyCanvas_.removeChild(this.renderedGridRowsCache_[i], true);
         delete this.renderedGridRowsCache_[i];
       }
     }

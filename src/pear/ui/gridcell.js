@@ -126,6 +126,19 @@ pear.ui.GridCell.prototype.enterDocument = function() {
 
 
 /**
+ * Configures the component after its DOM has been rendered, and sets up event
+ * handling.  Overrides {@link goog.ui.Component#enterDocument}.
+ * @override
+ */
+pear.ui.GridCell.prototype.exitDocument = function() {
+  pear.ui.GridCell.superClass_.exitDocument.call(this);
+
+  this.removeContent();
+  this.contentElement_ = null;
+};
+
+
+/**
  * Remove Content Element
  */
 pear.ui.GridCell.prototype.removeContent = function() {
@@ -157,5 +170,7 @@ pear.ui.GridCell.prototype.createContentElement = function() {
  * @inheritDoc
  */
 pear.ui.GridCell.prototype.disposeInternal = function() {
+  this.removeContent();
+  this.contentElement_ = null;
   pear.ui.GridCell.superClass_.disposeInternal.call(this);
 };

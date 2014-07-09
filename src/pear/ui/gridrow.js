@@ -218,6 +218,21 @@ pear.ui.GridRow.prototype.enterDocument = function() {
 
 
 /**
+ * Configures the component after its DOM has been rendered, and sets up event
+ * handling.  Overrides {@link goog.ui.Component#exitDocument}.
+ * @override
+ */
+pear.ui.GridRow.prototype.exitDocument = function() {
+  pear.ui.GridRow.superClass_.exitDocument.call(this);
+
+  // TODO : temporary arrangment to avoid Detached DOM - HEAP Snapshot
+  this.children_ = null;
+  this.childIndex_ = null;
+  this.element_ = null;
+};
+
+
+/**
  * showGridRowDetailsContainer
  * @param  {boolean} display
  * @public
