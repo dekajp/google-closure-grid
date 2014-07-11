@@ -226,9 +226,9 @@ pear.ui.GridRow.prototype.exitDocument = function() {
   pear.ui.GridRow.superClass_.exitDocument.call(this);
 
   // TODO : temporary arrangment to avoid Detached DOM - HEAP Snapshot
-  this.children_ = null;
-  this.childIndex_ = null;
-  this.element_ = null;
+  //this.children_ = null;
+  //this.childIndex_ = null;
+  this.setElementInternal(null);
 };
 
 

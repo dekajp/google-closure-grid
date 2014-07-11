@@ -386,7 +386,7 @@ pear.ui.Grid.prototype.sortColumnId_ = '';
  * @private
  * @type {number}
  */
-pear.ui.Grid.prototype.currentPageIndex_ = -1;
+pear.ui.Grid.prototype.currentPageIndex_ = 0;
 
 
 /**
@@ -2322,6 +2322,19 @@ pear.ui.Grid.prototype.showGridRowDetails = function(gridrow, display) {
 
 
 /**
+ * Close All GridRow Details
+ * @public
+ */
+pear.ui.Grid.prototype.closeAllGridRowDetails = function() {
+  goog.object.forEach(this.activeGridRow_, function(grow) {
+    this.showGridRowDetails(grow, false);
+  }, this);
+
+  this.activeGridRow_ = {};
+};
+
+
+/**
  * Restore the highlighted row
  * @private
  */
@@ -2652,6 +2665,7 @@ pear.ui.Grid.prototype.refreshBody_ = function(opt_keepeditoralive) {
   if (opt_keepeditoralive) {
     this.closeActiveEditor();
   }
+  this.closeAllGridRowDetails();
   this.cachedDataRowsViews_ = null;
   this.transformDataRowsToGridRows_();
   this.refreshCanvasView_(true);
