@@ -380,6 +380,8 @@ pear.data.Column.prototype.disposeInternal = function() {
   delete this.id_;
   delete this.dataType_;
   delete this.align_;
+  delete this.renderer_;
+  delete this.cssClasses_;
 
   this.formatter_ = null;
   this.formatterFn_ = null;
