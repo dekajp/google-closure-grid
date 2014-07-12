@@ -86,6 +86,10 @@
     /*.pear-grid-row-data-even{
       background-color: lightyellow;
     }*/
+
+    .zero-border-right{
+      border-right:0px;
+    }
   </style>
 </head>
 <body>
@@ -126,8 +130,7 @@
     var cellElement = domhelper.createDom(
         'div',
         ' ' +goog.getCssName(pear.ui.GridCell.CSS_CLASS, 'content') +'  overflowhidden',
-          domhelper.createDom('i',{'class':'fa fa-plus-square-o fa-1' }),
-          domhelper.createDom('span',{'style':'padding-left:5px;'},gridcell.getContent())
+          domhelper.createDom('i',{'class':'fa fa-chevron-right fa-1' })
         );
 
     
@@ -188,18 +191,20 @@
     var grd = ge.target;
     var gridrow = cell.getRow();
     var renderer = cell.getDataColumn().getGridCellRenderer();
-    var elem = renderer.getPlusMinusElement(cell);
-    if (grd.isActiveGridRow(gridrow)){
-      grd.showGridRowDetails(gridrow,false);
-      goog.dom.classes.remove(elem, 'fa-minus-square-o');
-      goog.dom.classes.add(elem, 'fa-plus-square-o');
-    }else{
-      grd.showGridRowDetails(gridrow,true);
-      goog.dom.classes.remove(elem, 'fa-plus-square-o');
-      goog.dom.classes.add(elem, 'fa-minus-square-o');
-      showGridDetails(gridrow);
+    var elem ;
+    if (cell.getDataColumn().getId()==='indicator'){
+      elem = renderer.getPlusMinusElement(cell);
+      if (grd.isActiveGridRow(gridrow)){
+        grd.showGridRowDetails(gridrow,false);
+        goog.dom.classes.remove(elem, 'fa-chevron-down');
+        goog.dom.classes.add(elem, 'fa-chevron-right');
+      }else{
+        grd.showGridRowDetails(gridrow,true);
+        goog.dom.classes.remove(elem, 'fa-chevron-right');
+        goog.dom.classes.add(elem, 'fa-chevron-down');
+        showGridDetails(gridrow);
+      }
     }
-
   }
 
   var showGridDetails = function(gridrow){
@@ -302,6 +307,7 @@
     
     goog.object.forEach(athleteHash, function(value,key){
       var r = [];
+      r.push('');
       r.push(key);
       r.push(value);
       athleteRows.push(r);
@@ -330,9 +336,15 @@
   }
 
   var columns = [];
-  var c1 = new pear.data.Column('Athlete','Athlete','Athlete',705,pear.data.Column.DataType.TEXT);
-      c1.setGridCellRenderer(SampleGridCellRenderer.getInstance());
-      columns.push(c1);
+
+  var c0 = new pear.data.Column('','indicator','indicator',20,pear.data.Column.DataType.TEXT);
+      c0.setGridCellRenderer(SampleGridCellRenderer.getInstance());
+      c0.setExtraCSSClasses(['zero-border-right']);
+      columns.push(c0);
+
+  var c1 = new pear.data.Column('Athlete','Athlete','Athlete',685,pear.data.Column.DataType.TEXT);
+     columns.push(c1);
+
   var c2 = new pear.data.Column('Total','Total','Total',75,pear.data.Column.DataType.TEXT);
       columns.push(c2);
 

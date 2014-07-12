@@ -218,12 +218,19 @@ pear.ui.GridHeaderCell.prototype.clearContent = function() {
 pear.ui.GridHeaderCell.prototype.enterDocument = function() {
   pear.ui.GridHeaderCell.superClass_.enterDocument.call(this);
 
+  this.splitHeaderCell_();
+  this.registerEvent_(true);
+};
+
+
+/**
+ *
+ * @protected
+ */
+pear.ui.GridHeaderCell.prototype.decorateElementWithClasses = function() {
   goog.dom.classes.add(this.getElement(), pear.ui.GridHeaderCell.CSS_CLASS);
   goog.dom.classes.add(this.getElement(), 'col' + this.getCellIndex());
   goog.dom.classes.add(this.getElement(), 'overflowhidden');
-
-  this.splitHeaderCell_();
-  this.registerEvent_(true);
 };
 
 

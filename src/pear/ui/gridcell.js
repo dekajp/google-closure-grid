@@ -115,13 +115,20 @@ pear.ui.GridCell.prototype.setHighlight = function(highlight) {
 pear.ui.GridCell.prototype.enterDocument = function() {
   pear.ui.GridCell.superClass_.enterDocument.call(this);
 
-  goog.dom.classes.add(this.getElement(), pear.ui.GridCell.CSS_CLASS);
-  goog.dom.classes.add(this.getElement(), 'col' + this.getCellIndex());
-
   this.createContentElement();
 
   // Set Size of Content Element
   this.applyFormatting();
+};
+
+
+/**
+ *
+ * @protected
+ */
+pear.ui.GridCell.prototype.decorateElementWithClasses = function() {
+  goog.dom.classes.add(this.getElement(), pear.ui.GridCell.CSS_CLASS);
+  goog.dom.classes.add(this.getElement(), 'col' + this.getCellIndex());
 };
 
 

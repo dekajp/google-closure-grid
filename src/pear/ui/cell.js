@@ -90,9 +90,26 @@ pear.ui.Cell.prototype.enterDocument = function() {
         goog.getCssName(pear.ui.Cell.CSS_CLASS, 'frozen'));
   }
 
+  this.decorateElementWithClasses();
+
+  var classes = this.getDataColumn().getExtraCSSClasses();
+  if (classes) {
+    goog.array.forEach(classes, function(value) {
+      goog.dom.classes.add(this.getElement(), value);
+    },this);
+  }
 
   var id = this.getId();
   this.getElement().id = id;
+};
+
+
+/**
+ *
+ * @protected
+ */
+pear.ui.Cell.prototype.decorateElementWithClasses = function() {
+  // nothing in base class
 };
 
 

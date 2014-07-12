@@ -158,6 +158,14 @@ pear.data.Column.prototype.renderer_;
 
 
 /**
+ * Extra CSS Class Names
+ * @type {Array.<string>?}
+ * @private
+ */
+pear.data.Column.prototype.cssClasses_;
+
+
+/**
  * get Header Text of Column
  * @return {string} header text of column
  * @public
@@ -341,6 +349,24 @@ pear.data.Column.prototype.getGridCellRenderer = function() {
  */
 pear.data.Column.prototype.setGridCellRenderer = function(renderer) {
   return this.renderer_ = renderer;
+};
+
+
+/**
+ * Extra CSS Classes
+ * @return {Array.<string>?}
+ */
+pear.data.Column.prototype.getExtraCSSClasses = function() {
+  return this.cssClasses_;
+};
+
+
+/**
+ * Extra CSS Classes
+ * @param {Array.<string>?}  classes
+ */
+pear.data.Column.prototype.setExtraCSSClasses = function(classes) {
+  this.cssClasses_ = classes;
 };
 
 

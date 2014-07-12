@@ -121,9 +121,6 @@ pear.ui.GridFooterCell.prototype.enterDocument = function() {
   pear.ui.GridFooterCell.superClass_.enterDocument.call(this);
 
 
-  goog.dom.classes.add(this.getElement(), pear.ui.GridFooterCell.CSS_CLASS);
-  goog.dom.classes.add(this.getElement(), 'col' + this.getCellIndex());
-
   var cellElement = this.getDomHelper().createDom(
       'div',
       ' ' +
@@ -141,6 +138,16 @@ pear.ui.GridFooterCell.prototype.enterDocument = function() {
   this.getDomHelper().appendChild(this.getElement(), cellElement);
   // Set Size of Content Element
   this.applyFormatting();
+};
+
+
+/**
+ *
+ * @protected
+ */
+pear.ui.GridFooterCell.prototype.decorateElementWithClasses = function() {
+  goog.dom.classes.add(this.getElement(), pear.ui.GridFooterCell.CSS_CLASS);
+  goog.dom.classes.add(this.getElement(), 'col' + this.getCellIndex());
 };
 
 
