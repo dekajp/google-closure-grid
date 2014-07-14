@@ -19,6 +19,8 @@ version 0.1
 * Column Move
 * Sticky Footer / Aggregates
 * Customizable Cell Editors
+* Subgrids / Hierarchial Records
+* Column Renderer ( For Column Templating)
 * ... more coming (please feel free to raise feature [request](https://github.com/dekajp/google-closure-grid/issues) in Github)
 
 ##Credits 
