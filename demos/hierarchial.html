@@ -88,16 +88,16 @@
     }*/
 
     .zero-border-right{
-      border-right:0px;
+      border-right: 1px solid transparent;
     }
   </style>
 </head>
 <body>
    <fieldset class="goog-debug-panel">
-    <legend>Hierarchial Records <b>( Currently under Development)</b> </legend>
+    <legend>Hierarchial Records  </legend>
     <div id="">
       <li>Hierarchial Records or Row Details</li>
-      <li> Async Load CSV data  ( data file hosted in dropbox)</li>
+      <li> Async Load CSV data  ( data file hosted in dropbox) Data Source : <a href="http://www.tableausoftware.com/public/community/sample-data-sets#medals" >link</a></li>
     </div>
   </fieldset>
   <div id="progressbar"> </div>
@@ -145,7 +145,7 @@
 
   function getColumns(limit){
    
-  }
+  };
  
   
 
@@ -161,7 +161,7 @@
       pb.setValue(last);
     });
     timer.start();
-  }
+  };
 
   var handlesort = function(ge){
     var grid = ge.target;
@@ -171,17 +171,17 @@
     var columnid = headerCell.getColumnId();
 
     dv.sort(sortDirection,columnid);
-  }
+  };
 
   var handleRowViewsChanged = function (ge){
     var dv = ge.target;
     var grid = dv.getGrid();
     grid.refresh();
-  }
+  };
 
 
 
-  var handleCellAction = function(ge){
+  var handleCellActionOnFirstGrid = function(ge){
     if (ge.defaultPrevented || grid.getId() != ge.target.getId()) {
      return;
     }
@@ -202,16 +202,86 @@
         grd.showGridRowDetails(gridrow,true);
         goog.dom.classes.remove(elem, 'fa-chevron-right');
         goog.dom.classes.add(elem, 'fa-chevron-down');
-        showGridDetails(gridrow);
+        showCountryGridDetails(gridrow);
       }
     }
-  }
+  };
 
-  var showGridDetails = function(gridrow){
+  var handleCellActionOnSubgrid = function(ge){
+    if (ge.defaultPrevented ) {
+     return;
+    }
+
+
+    var cell = ge.cell;
+    var grd = ge.target;
+    var gridrow = cell.getRow();
+    var renderer = cell.getDataColumn().getGridCellRenderer();
+    var elem ;
+    if (cell.getDataColumn().getId()==='indicator'){
+      elem = renderer.getPlusMinusElement(cell);
+      if (grd.isActiveGridRow(gridrow)){
+        grd.showGridRowDetails(gridrow,false);
+        goog.dom.classes.remove(elem, 'fa-chevron-down');
+        goog.dom.classes.add(elem, 'fa-chevron-right');
+      }else{
+        grd.showGridRowDetails(gridrow,true);
+        goog.dom.classes.remove(elem, 'fa-chevron-right');
+        goog.dom.classes.add(elem, 'fa-chevron-down');
+        showAthleteDetails(gridrow);
+      }
+    }
+  };
+
+  var showCountryGridDetails = function (gridrow){
+    var container = gridrow.getGridRowDetailsContainer();
+    var cols = [];
+    var country = gridrow.getModel().getRowData().Country;
+    var filteredRows = filterAthletesByCountry(country);
+    var parentGrid = gridrow.getGrid();
+
+    var columns = [];
+
+    var c0 = new pear.data.Column('','indicator','indicator',20,pear.data.Column.DataType.TEXT);
+        c0.setGridCellRenderer(SampleGridCellRenderer.getInstance());
+        c0.setExtraCSSClasses(['zero-border-right']);
+        columns.push(c0);
+
+    var c1 = new pear.data.Column('Athlete','Athlete','Athlete',620,pear.data.Column.DataType.TEXT);
+       columns.push(c1);
+
+    var c2 = new pear.data.Column('Total','Total','Total',75,pear.data.Column.DataType.TEXT);
+        columns.push(c2);
+
+    var childgrid = new pear.ui.Grid();
+    var config = {
+      AllowColumnResize: false,
+      AllowAlternateRowHighlight: true,
+      ShowCellBorder:true,
+      AllowSorting:false
+     // AllowPaging:true,
+      //PageSize:50
+    };
+    config = childgrid.setConfiguration(config);
+
+    childgrid.setWidth(parentGrid.getWidth()-50);
+    childgrid.setHeight(parentGrid.getGridRowDetailHeight()-50);
+    childgrid.setColumns(columns);
+    childgrid.setDataRows(filteredRows);
+    childgrid.registerPlugin( new pear.plugin.FooterStatus());
+    container.addChild(childgrid,true);
+    childgrid.setGridRowDetailHeight(150);
+
+    goog.events.listen(childgrid, pear.ui.Grid.EventType.DATACELL_ON_ACTION, handleCellActionOnSubgrid,false,this);
+
+  };
+
+  var showAthleteDetails = function(gridrow){
     var container = gridrow.getGridRowDetailsContainer();
     var filteredRows = [];
     var cols = [];
     var athlete = gridrow.getModel().getRowData().Athlete;
+    var parentGrid = gridrow.getGrid();
 
     goog.array.forEach (csvData,function(value){
       if (athlete===value[0]){
@@ -230,22 +300,23 @@
       AllowColumnResize: true,
       AllowAlternateRowHighlight: false,
       ShowCellBorder:true,
-      AllowSorting:false
+      AllowSorting:true
      // AllowPaging:true,
       //PageSize:50
     };
     config = childgrid.setConfiguration(config);
 
-    childgrid.setWidth(grid.getWidth()-50);
-    childgrid.setHeight(grid.getGridRowDetailHeight()-50);
+    childgrid.setWidth(parentGrid.getWidth()-50);
+    childgrid.setHeight(parentGrid.getGridRowDetailHeight()-50);
     childgrid.setColumns(cols);
     childgrid.setDataRows(filteredRows);
     childgrid.registerPlugin( new pear.plugin.FooterStatus());
     container.addChild(childgrid,true);
 
+    
   };
 
-  var init = function (columns,data){
+  var initFirstGrid = function (data){
 
 
     if (grid){
@@ -253,6 +324,18 @@
     }
     var start = +new Date();  // log start timestamp
 
+    var columns = [];
+
+    var c0 = new pear.data.Column('','indicator','indicator',20,pear.data.Column.DataType.TEXT);
+        c0.setGridCellRenderer(SampleGridCellRenderer.getInstance());
+        c0.setExtraCSSClasses(['zero-border-right']);
+        columns.push(c0);
+
+    var c1 = new pear.data.Column('Country','Country','Country',685,pear.data.Column.DataType.TEXT);
+       columns.push(c1);
+
+    var c2 = new pear.data.Column('Total','Total','Total',75,pear.data.Column.DataType.TEXT);
+        columns.push(c2);
 
     grid = new pear.ui.Grid();
     var config = {
@@ -267,23 +350,23 @@
     config = grid.setConfiguration(config);
 
     grid.setWidth(800);
-    grid.setHeight(400);
+    grid.setHeight(600);
+    grid.setGridRowDetailHeight(300);
     grid.setColumns(columns);
     grid.setDataRows(data);
+
     //grid.registerPlugin( new pear.plugin.Pager());
     grid.render(goog.dom.getElement('target1'));
     goog.events.listen(grid, pear.ui.Grid.EventType.SORT, handlesort);
-    goog.events.listen(grid, pear.ui.Grid.EventType.DATACELL_ON_ACTION, handleCellAction,false,this);
+    goog.events.listen(grid, pear.ui.Grid.EventType.DATACELL_ON_ACTION, handleCellActionOnFirstGrid,false,this);
     goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, handleRowViewsChanged);
-
-   
   };
 
   var load = function(data) {
     
     grid.setDataRows(data);
     grid.refresh();
-  }
+  };
 
   var xhr = new goog.net.XhrIo();
   
@@ -291,19 +374,52 @@
     var d= goog.labs.format.csv.parse(xhr.getResponseText());
     
     csvColumns = d[0];
-    csvData =d.slice(1);
+    csvData = d.slice(1);
+    timer.stop();
 
-    var athleteHash = {};
+    load(filterCountries());
+    pb.dispose();
 
-    goog.array.forEach (csvData,function(value){
-      if (Object.prototype.hasOwnProperty.call(athleteHash, value[0])){
-        athleteHash[value[0]] = athleteHash[value[0]] + parseInt(value[9],10);
+  },false,this);
+
+  function filterCountries (){
+    var countryhash = {};
+    var countryrows =[];
+    var uniqcountry = goog.array.filter(csvData, function(row){
+      if (Object.prototype.hasOwnProperty.call(countryhash, row[2]) ){
+        countryhash[row[2]] = countryhash[row[2]] + parseInt(row[9],10);
       }else{
-        athleteHash[value[0]]= parseInt(value[9],10);
+        countryhash[row[2]]= 1;
+      }
+    }, this);
+
+    goog.object.forEach(countryhash, function(value,key){
+      var r = [];
+      r.push('');
+      r.push(key);
+      r.push(value);
+      countryrows.push(r);
+    },this);
+
+    return countryrows;
+  };
+
+  function filterAthletesByCountry(country){
+    var athleteHash = {};
+    var athleteRows =[];
+    
+
+    goog.array.forEach (csvData,function(row){
+      if (country === row[2]){
+        if (Object.prototype.hasOwnProperty.call(athleteHash, row[0])){
+          athleteHash[row[0]] = athleteHash[row[0]] + parseInt(row[9],10);
+        }else{
+          athleteHash[row[0]]= parseInt(row[9],10);
+        }
       }
     },this);
 
-    var athleteRows =[];
+    
     
     goog.object.forEach(athleteHash, function(value,key){
       var r = [];
@@ -312,16 +428,9 @@
       r.push(value);
       athleteRows.push(r);
     },this);
-
-
-   
     
-    load(athleteRows);
-
-    timer.stop();
-    pb.dispose();
-
-  },false,this);
+    return athleteRows;
+  };
     
   function getData(dataUrl) {
 
@@ -333,23 +442,10 @@
     });
     startProgress();
     xhr.send(dataUrl);
-  }
-
-  var columns = [];
-
-  var c0 = new pear.data.Column('','indicator','indicator',20,pear.data.Column.DataType.TEXT);
-      c0.setGridCellRenderer(SampleGridCellRenderer.getInstance());
-      c0.setExtraCSSClasses(['zero-border-right']);
-      columns.push(c0);
-
-  var c1 = new pear.data.Column('Athlete','Athlete','Athlete',685,pear.data.Column.DataType.TEXT);
-     columns.push(c1);
-
-  var c2 = new pear.data.Column('Total','Total','Total',75,pear.data.Column.DataType.TEXT);
-      columns.push(c2);
+  };
 
 
-  init(columns,[]);
+  initFirstGrid([]);
   getData('https://dl.dropboxusercontent.com/u/20245900/OlympicAthletes_0.csv');
   
  </script>

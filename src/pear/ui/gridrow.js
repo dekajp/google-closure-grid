@@ -228,7 +228,7 @@ pear.ui.GridRow.prototype.exitDocument = function() {
   // TODO : temporary arrangment to avoid Detached DOM - HEAP Snapshot
   //this.children_ = null;
   //this.childIndex_ = null;
-  this.setElementInternal(null);
+  //this.setElementInternal(null);
 };
 
 
@@ -275,6 +275,7 @@ pear.ui.GridRow.prototype.showGridRowDetailsContainer = function(display) {
       goog.dom.classes.remove(child.getElement(), 'bottom-border');
     });
     this.removeChild(this.gridRowDetails_, true);
+    this.gridRowDetails_.dispose();
   }
 };
 

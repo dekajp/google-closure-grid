@@ -2279,6 +2279,8 @@ pear.ui.Grid.prototype.transformDataRowsToGridRows_ = function() {
   }, this);
 };
 
+// SubGrid / Row Details
+
 
 /**
  * Get GridRow Details Height , if height is not set than it returns
@@ -2289,6 +2291,15 @@ pear.ui.Grid.prototype.transformDataRowsToGridRows_ = function() {
 pear.ui.Grid.prototype.getGridRowDetailHeight = function() {
   return (this.gridrowDetailsHeight_ < 0 ?
       Math.abs(this.getHeight() / 3) : this.gridrowDetailsHeight_);
+};
+
+
+/**
+ * [setGridRowDetailHeight description]
+ * @param {number} height [description]
+ */
+pear.ui.Grid.prototype.setGridRowDetailHeight = function(height) {
+  this.gridrowDetailsHeight_ = height;
 };
 
 
@@ -2409,8 +2420,7 @@ pear.ui.Grid.prototype.removeRowsFromRowModelCache_ = function(start, end) {
         // Row is Active Editor or Active
       }else {
         //this.renderedGridRowsCache_[i].removeChildren(true);
-        var child =
-            this.bodyCanvas_.removeChild(this.renderedGridRowsCache_[i], true);
+        this.bodyCanvas_.removeChild(this.renderedGridRowsCache_[i], true);
         delete this.renderedGridRowsCache_[i];
       }
     }
@@ -2463,6 +2473,10 @@ pear.ui.Grid.prototype.getBodyCanvasSize = function(opt_refresh) {
  * calculate Start and End Row index - depends on viewport within BodyCanvas
  * @return {Object} [description]
  * @private
+ * @todo  - in case of subgrid this calculation of start and end index
+ * needs to be optimized. otherwise there are edge cases which will not 
+ * render properly . for instance if you subgrid is open for couple bottom 
+ * most rows , then virtual rendering might fail
  */
 pear.ui.Grid.prototype.calculateViewRange_ = function() {
   var rowCount = this.getDataViewRowCount();
