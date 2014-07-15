@@ -2500,6 +2500,23 @@ pear.ui.Grid.prototype.findGridRowIndexByViewport_ =
 
 
 /**
+ * Calculates number of rows needed for virtual rendering
+ * @param  {boolean=} opt_reset  if true, recalculates
+ * @protected
+ * @return {number} [description]
+ */
+pear.ui.Grid.prototype.getMaxAllowableRowsVirtualRender = function(opt_reset) {
+  if (opt_reset || !this.maxVirtualRenderCount_) {
+    var size = this.getViewportSize();
+    var rowheight = this.getComputedRowHeight();
+    this.maxVirtualRenderCount_ = Math.ceil(size.height / rowheight);
+    this.maxVirtualRenderCount_ = this.maxVirtualRenderCount_ * 2;
+  }
+  return this.maxVirtualRenderCount_;
+};
+
+
+/**
  * calculate Start and End Row index - depends on viewport within BodyCanvas
  * @return {Object} [description]
  * @private
@@ -2511,25 +2528,28 @@ pear.ui.Grid.prototype.findGridRowIndexByViewport_ =
 pear.ui.Grid.prototype.calculateViewRange_ = function() {
   var rowCount = this.getDataViewRowCount();
   var scrollTop = this.viewport_.getElement().scrollTop;
-
+  var vRenderRowcount = this.getMaxAllowableRowsVirtualRender();
 
 
   var index = this.findGridRowIndexByViewport_(scrollTop, 0,
       this.getGridRowsCount_() - 1);
 
   var startIndex = 0;
-  startIndex = ((index - 25) < 0) ? 0 : (index - 25);
+  startIndex = ((index - vRenderRowcount) < 0) ?
+      0 : (index - vRenderRowcount);
 
   var endIndex = 0;
-  endIndex = ((index + 25) > rowCount) ? rowCount : (index + 25);
+  endIndex = ((index + vRenderRowcount) > rowCount) ?
+      rowCount : (index + vRenderRowcount);
 
   // Add debug info in Focus element
   var comment = document.createComment(
       'ScrollTop:' + scrollTop +
       ', Rendering Start:' + startIndex +
       ' End:' + endIndex +
-      ' Total Rows:' + (endIndex - startIndex) +
-      ' MidpointIndex: ' + index);
+      ', vRenderMaxRows:' + vRenderRowcount +
+      ', Total Rows:' + (endIndex - startIndex) +
+      ', MidpointIndex: ' + index);
   goog.dom.removeChildren(this.focusElem_);
   this.focusElem_.appendChild(comment);
   return { 'startRowIndex': startIndex, 'endRowIndex': endIndex};
@@ -3885,6 +3905,7 @@ pear.ui.Grid.prototype.disposeInternal = function() {
     this.dataview_.dispose();
   }
 
+  delete this.maxVirtualRenderCount_;
   // goog.math.Box does not inherit goog.disposable
   this.contentCellPaddingBox_ = null;
   this.cellBorderBox_ = null;
