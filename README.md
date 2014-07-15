@@ -4,6 +4,7 @@ version 0.1
 
 * Demo : http://dekajp.github.io/demos/index.html
 * API  : http://dekajp.github.io/docs/ 
+* Grid : http://dekajp.github.io/docs/pear.ui.html#Grid
 
 ##Features
 
