@@ -2100,7 +2100,7 @@ pear.ui.Grid.prototype.updateBodyCanvasHeight_ = function() {
     height = (this.getDataViewRowCount() * rowHeight);
   }
 
-  // TODO handle Paging
+  // @todo handle paging
   goog.object.forEach(this.activeGridRow_, function(gridrow) {
     height = height + this.getGridRowDetailHeight();
   },this);
@@ -2470,42 +2470,68 @@ pear.ui.Grid.prototype.getBodyCanvasSize = function(opt_refresh) {
 
 
 /**
+ * Find the Index of gridrow - for the value of scrolltop
+ * @param  {number} scrolltop [description]
+ * @param  {number} low       [description]
+ * @param  {number} high      [description]
+ * @return {number}           [description]
+ * @private
+ */
+pear.ui.Grid.prototype.findGridRowIndexByViewport_ =
+    function(scrolltop, low, high) {
+  var med = Math.floor((low + high) / 2);
+  var gridrowlow = this.getGridRowAt(low);
+  var gridrowhigh = this.getGridRowAt(high);
+  var gridrowmed = this.getGridRowAt(med);
+
+
+  if (med <= low) {
+    return med;
+  }else if (scrolltop >= gridrowlow.getLocationTop() &&
+          scrolltop < gridrowmed.getLocationTop()) {
+    return this.findGridRowIndexByViewport_(scrolltop, low, med);
+  }else if (scrolltop >= gridrowmed.getLocationTop() &&
+      scrolltop <= gridrowhigh.getLocationTop()) {
+    return this.findGridRowIndexByViewport_(scrolltop, med, high);
+  }else {
+    throw new Error('failed to find index for scrolltop:' + scrolltop);
+  }
+};
+
+
+/**
  * calculate Start and End Row index - depends on viewport within BodyCanvas
  * @return {Object} [description]
  * @private
  * @todo  - in case of subgrid this calculation of start and end index
- * needs to be optimized. otherwise there are edge cases which will not 
- * render properly . for instance if you subgrid is open for couple bottom 
+ * needs to be optimized. otherwise there are edge cases which will not
+ * render properly . for instance if you subgrid is open for couple bottom
  * most rows , then virtual rendering might fail
  */
 pear.ui.Grid.prototype.calculateViewRange_ = function() {
   var rowCount = this.getDataViewRowCount();
-  var rowHeight = this.getComputedRowHeight();
   var scrollTop = this.viewport_.getElement().scrollTop;
 
-  goog.object.forEach(this.activeGridRow_, function(grow) {
-    scrollTop = scrollTop - this.getGridRowDetailHeight();
-  },this);
 
-  var canvasVisibleBeginPx = (scrollTop > (rowHeight * 10)) ?
-      (scrollTop - (rowHeight * 10)) : 0;
-  var size = this.getViewportSize();
-  var canvasSize = this.getBodyCanvasSize();
 
-  var modulo = canvasVisibleBeginPx % rowHeight;
-  canvasVisibleBeginPx = canvasVisibleBeginPx - modulo;
-  var canvasVisibleEndPx = canvasVisibleBeginPx + size.height +
-      (rowHeight * 30);
-  canvasVisibleEndPx = (canvasVisibleEndPx > canvasSize.height) ?
-      canvasSize.height : canvasVisibleEndPx;
+  var index = this.findGridRowIndexByViewport_(scrollTop, 0,
+      this.getGridRowsCount_() - 1);
 
-  var startIndex = 0 , endIndex = 0;
-  startIndex = parseInt(canvasVisibleBeginPx / rowHeight, 10);
-  startIndex = (startIndex < 0) ? 0 : startIndex;
+  var startIndex = 0;
+  startIndex = ((index - 25) < 0) ? 0 : (index - 25);
 
-  endIndex = parseInt(canvasVisibleEndPx / rowHeight, 10);
-  endIndex = (endIndex > rowCount) ? rowCount : endIndex;
+  var endIndex = 0;
+  endIndex = ((index + 25) > rowCount) ? rowCount : (index + 25);
 
+  // Add debug info in Focus element
+  var comment = document.createComment(
+      'ScrollTop:' + scrollTop +
+      ', Rendering Start:' + startIndex +
+      ' End:' + endIndex +
+      ' Total Rows:' + (endIndex - startIndex) +
+      ' MidpointIndex: ' + index);
+  goog.dom.removeChildren(this.focusElem_);
+  this.focusElem_.appendChild(comment);
   return { 'startRowIndex': startIndex, 'endRowIndex': endIndex};
 };
 

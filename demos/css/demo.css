@@ -16,3 +16,7 @@ input[type="button"].config-item:hover {
   border-color: blue;
   cursor:pointer;
 }
+
+.goog-debug-panel > div{
+  width:800px;
+}

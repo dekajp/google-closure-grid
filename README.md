@@ -7,7 +7,7 @@ version 0.1
 
 ##Features
 
-* Data Virtualization ~ 100,000 Rows
+* Row Virtualization ~ 100,000 Rows
 * Active Cell and Active Row Highlight
 * Sorting
 * Column Move & Resizing
@@ -26,6 +26,14 @@ version 0.1
 ##Credits 
 * pear.ui.Grid borrows concepts and inspiration from [Slickgrid](https://github.com/mleibman/SlickGrid)
 * [Google-Closure-Library](https://code.google.com/p/closure-library/)
+
+## More on Row Virtualization
+Row virtualization -  referring to the concept where the rows 
+of the table/ul/div are not visible or rendered at all as long as they are 
+not scrolled into the view. Basically, the point is to eliminate rendering 
+if the item is never shown (behind a scroll). 
+Source Stackoverflow : http://goo.gl/rYsY88
+more discussion on this thread - http://goo.gl/3hlK6z
 
 ##License
 MIT-License

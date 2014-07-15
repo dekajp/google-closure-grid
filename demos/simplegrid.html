@@ -37,9 +37,15 @@
    <fieldset class="goog-debug-panel">
     <legend>Simple Grid</legend>
     <div id="">
-      <li> Load grid with 1000 - 50K records </li>
+      <li> Load grid with 1000 - 50K records (There should be no performance degrade)</li>
       <li> Use Keyboard (Arrow Keys) and TAB For Navigation</li>
       <li> Resize Columns </li>
+      <li> Row virtualization -  referring to the concept where the rows <br/> 
+      of the table/ul/div are not visible or rendered at all as long as they are <br/>
+      not scrolled into the view. Basically, the point is to eliminate rendering <br/>
+      if the item is never shown (behind a scroll). 
+      Source Stackoverflow : http://goo.gl/rYsY88
+      more discussion on this thread - http://goo.gl/3hlK6z</li>
     </div>
   </fieldset>
 
