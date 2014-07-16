@@ -9,6 +9,7 @@ import shutil, errno
 
 # Matches a .js file path.
 _JS_FILE_REGEX = re.compile(r'^.+\.js$')
+_SOY_FILE_REGEX = re.compile(r'^.+\.soy$') 
  
 
 _ROOTDIR = str(os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..','..','..')))
@@ -60,6 +61,25 @@ subprocess.call(['python',
     '--root_with_prefix','src/pear ../../../../src/pear'],
     stdout=f1)
 
+
+print '========================================================================'
+print 'SOY Templating Process '
+print '========================================================================'
+
+#delete js file from demo soy
+for i in ScanTree(str(_ROOTDIR+'/demos/soy'),path_filter=_JS_FILE_REGEX):
+  os.remove(i)
+
+# Generate Demo Soy Templates
+for i in ScanTree(str(_ROOTDIR+'/demos/soy'),path_filter=_SOY_FILE_REGEX):
+  subprocess.call(["java",
+    "-jar",
+    str(_ROOTDIR + '/src/bin/build/soy/SoyToJsSrcCompiler.jar'),
+    "--outputPathFormat",
+    i.rsplit( ".", 1 )[ 0 ]+'.js',
+    "--srcs",
+    i])
+  
 print '========================================================================'
 print 'BUILD PROCESS '
 print '========================================================================'
