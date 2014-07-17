@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Closure Grid - pear.ui.Grid</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../lib/font-awesome-4.0.3/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/demos/css/demo.css" />
+
+ <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menu.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuitem.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menuseparator.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/menubutton.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/combobox.css" />
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/roundedtab.css">
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/tab.css">
+  <link rel="stylesheet" href="../lib/closure-library/closure/goog/css/tabbar.css">
+  <style>
+    fieldset {
+      padding: 10px;
+      border: 1px solid #369;
+    }
+
+    .goog-tab-content {
+      height: 225px;
+      margin: 0;
+      border: 1px solid #6b90da;
+      border-top: 0;
+      padding: 4px 8px;
+      background: #fff;
+      overflow: auto;
+    }
+  </style>
+  <link rel="stylesheet" href="../src/css/grid.css" />
+  <link rel="stylesheet" href="../src/css/plugin/pagerplugin.css" />
+  <link rel="stylesheet" href="../src/css/plugin/footerstatusplugin.css" />
+  
+ 
+ <style>
+  body {
+  background-color: white;
+  font: normal 10pt Arial, sans-serif;
+  }
+
+ </style>
+  <script src="../lib/closure-library/closure/goog/base.js"></script>
+  <script src="../src/bin/release/pear.grid.js"></script>
+  <script>
+    goog.require('goog.debug.DivConsole');
+    goog.require('goog.debug.LogManager');
+    goog.require('goog.dom.forms');
+    goog.require('goog.labs.format.csv');
+    goog.require('goog.labs.format.csv.ParseError');
+    goog.require('goog.labs.format.csv.Token');
+    goog.require('goog.fs.FileReader');
+    goog.require('goog.fs.FileReader.EventType');
+    goog.require('goog.fs.FileReader.ReadyState');
+    goog.require('goog.net.XhrIo');
+    goog.require('goog.ui.ProgressBar');
+    goog.require('goog.ui.TabBar');
+
+    goog.require('pear.ui.Grid');
+    
+  </script>
+
+  <style>
+   .progress-bar-vertical,
+    .progress-bar-horizontal {
+      position: relative;
+      border: 1px solid #949dad;
+      background: white;
+      padding: 1px;
+      overflow: hidden;
+      margin: 2px;
+    }
+
+    .progress-bar-horizontal {
+      width: 800px;
+      height: 14px;
+    }
+
+    .progress-bar-vertical {
+      width: 14px;
+      height: 200px;
+    }
+
+    .progress-bar-thumb {
+      position: relative;
+      background: #d4e4ff;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+
+
+    .pear-grid-row-detail{
+      padding-top: 10px;
+      padding-bottom: 10px;
+      padding-right: 25px;
+      padding-left: 10px;
+    }
+
+    .pear-grid-viewport{
+      background-color: white;
+    }
+    /*.pear-grid-row-data-even{
+      background-color: lightyellow;
+    }*/
+
+    .zero-border-right{
+      border-right: 1px solid transparent;
+    }
+    .warning {
+      color:red;
+    }
+  </style>
+</head>
+<body>
+   <fieldset class="goog-debug-panel">
+    <legend>Hierarchial Records</legend>
+    <div id="">
+      <li>Hierarchial Records or Row Details , goog.ui.TabBar inside Row Details</li>
+      <li> Async Load CSV data  ( data file hosted in dropbox) Data Source : <a href="http://www.tableausoftware.com/public/community/sample-data-sets#medals" >link</a></li>
+      <!--<li class="warning">Note : Fix (under development) for Virtual Rendering when multiple Row details are opened</li>-->
+    </div>
+  </fieldset>
+  <div id="progressbar"> </div>
+  <!-- This div will have a Sample Component added to its contents. -->
+  <div id="target1" style="width:800px;height:500px">
+  </div>
+  <fieldset class="goog-debug-panel">
+    <legend>Event Log</legend>
+    <div id="log"></div>
+  </fieldset>
+  <div id="perf"></div>
+</body>
+
+ <script>
+
+  var grid=null;;
+  var csvColumns =[];
+  var csvData =[];
+  var timer ;
+  var pb ;
+
+  function SampleGridCellRenderer () {
+
+  };
+  goog.addSingletonGetter(SampleGridCellRenderer);
+
+
+  SampleGridCellRenderer.prototype.createDom = function(gridcell) {
+    var domhelper = gridcell.getDomHelper();
+    var cellElement = domhelper.createDom(
+        'div',
+        ' ' +goog.getCssName(pear.ui.GridCell.CSS_CLASS, 'content') +'  overflowhidden',
+          domhelper.createDom('i',{'class':'fa fa-chevron-right fa-1' })
+        );
+
+    
+    return cellElement;
+  };
+
+  SampleGridCellRenderer.prototype.getPlusMinusElement = function(gridcell) {
+    var domhelper = gridcell.getDomHelper();
+    var el = domhelper.getElementByClass('fa',gridcell.getElement());
+    return el;
+  };
+
+  function getColumns(limit){
+   
+  };
+ 
+  
+
+  function startProgress(){
+    var last = 0;
+    var delta = 1;
+    timer = new goog.Timer(1);
+    timer.addEventListener('tick', function(e) {
+      if (last > 100 || last < 0) {
+        delta = -delta;
+      }
+      last += delta;
+      pb.setValue(last);
+    });
+    timer.start();
+  };
+
+  var handlesort = function(ge){
+    var grid = ge.target;
+    var dv = grid.getDataView();
+    var sortDirection = ge.sortDirection;
+    var headerCell = ge.sortCell;
+    var columnid = headerCell.getColumnId();
+
+    dv.sort(sortDirection,columnid);
+  };
+
+  var handleRowViewsChanged = function (ge){
+    var dv = ge.target;
+    var grid = dv.getGrid();
+    grid.refresh();
+  };
+
+
+
+  var handleCellActionOnFirstGrid = function(ge){
+    if (ge.defaultPrevented || grid.getId() != ge.target.getId()) {
+     return;
+    }
+
+
+    var cell = ge.cell;
+    var grd = ge.target;
+    var gridrow = cell.getRow();
+    var renderer = cell.getDataColumn().getGridCellRenderer();
+    var elem ;
+    if (cell.getDataColumn().getId()==='indicator'){
+      elem = renderer.getPlusMinusElement(cell);
+      if (grd.isActiveGridRow(gridrow)){
+        grd.showGridRowDetails(gridrow,false);
+        goog.dom.classes.remove(elem, 'fa-chevron-down');
+        goog.dom.classes.add(elem, 'fa-chevron-right');
+      }else{
+        grd.showGridRowDetails(gridrow,true);
+        goog.dom.classes.remove(elem, 'fa-chevron-right');
+        goog.dom.classes.add(elem, 'fa-chevron-down');
+        showCountryGridDetails(gridrow);
+      }
+    }
+  };
+
+  var handleCellActionOnSubgrid = function(ge){
+    if (ge.defaultPrevented ) {
+     return;
+    }
+
+
+    var cell = ge.cell;
+    var grd = ge.target;
+    var gridrow = cell.getRow();
+    var renderer = cell.getDataColumn().getGridCellRenderer();
+    var elem ;
+    if (cell.getDataColumn().getId()==='indicator'){
+      elem = renderer.getPlusMinusElement(cell);
+      if (grd.isActiveGridRow(gridrow)){
+        grd.showGridRowDetails(gridrow,false);
+        goog.dom.classes.remove(elem, 'fa-chevron-down');
+        goog.dom.classes.add(elem, 'fa-chevron-right');
+      }else{
+        grd.showGridRowDetails(gridrow,true);
+        goog.dom.classes.remove(elem, 'fa-chevron-right');
+        goog.dom.classes.add(elem, 'fa-chevron-down');
+        showAthleteDetails(gridrow);
+      }
+    }
+  };
+
+  var showCountryGridDetails = function (gridrow){
+    var container = gridrow.getGridRowDetailsContainer();
+    
+    var tabbar = new goog.ui.TabBar(goog.ui.TabBar.Location.TOP);
+    //var sports = filterSports();
+    var sports = ['Swimming','Gymnastics','Speed Skating','Cycling','Diving','Athletics','Canoeing'];
+    var html = [];
+    html.push('<div id="top" class="goog-tab-bar goog-tab-bar-top">');
+    goog.array.forEach(sports,function(value,index){
+      if (index===0){
+        html.push("<div class='goog-tab goog-tab-selected'>"+value+"</div>");
+      }else{
+         html.push("<div class='goog-tab'>"+value+"</div>");
+      } 
+    });
+    html.push('</div>');
+    html.push('<div class="goog-tab-bar-clear"></div><div id="top_content" class="goog-tab-content"></div>')
+    
+    var node = goog.dom.htmlToDocumentFragment(html.join(' '));
+    goog.dom.appendChild(container.getElement(),node);
+    tabbar.decorate(goog.dom.getFirstElementChild(container.getElement()));
+
+    var content = goog.dom.getElementsByClass('goog-tab-content',container.getElement());
+
+    goog.events.listen(tabbar, goog.ui.Component.EventType.SELECT,
+            function(e) {
+              var tabSelected = e.target;
+              var contentElement = goog.dom.getElement(tabbar.getId() +
+                  '_content');
+              goog.dom.setTextContent(contentElement,
+                  'Render any control derived from goog.ui.Component.You selected the "' + tabSelected.getCaption() + '" tab.');
+            });
+
+
+  };
+
+  var showAthleteDetails = function(gridrow){
+    var container = gridrow.getGridRowDetailsContainer();
+    var filteredRows = [];
+    var cols = [];
+    var athlete = gridrow.getModel().getRowData().Athlete;
+    var parentGrid = gridrow.getGrid();
+
+    goog.array.forEach (csvData,function(value){
+      if (athlete===value[0]){
+        filteredRows.push(value);
+      }
+    },this);
+
+    goog.array.forEach (csvColumns,function(value){
+      var c = new pear.data.Column(value,value,value,65,pear.data.Column.DataType.TEXT); 
+      cols.push(c);
+    },this);
+    
+
+    var childgrid = new pear.ui.Grid();
+    var config = {
+      AllowColumnResize: true,
+      AllowAlternateRowHighlight: false,
+      ShowCellBorder:true,
+      AllowSorting:true
+     // AllowPaging:true,
+      //PageSize:50
+    };
+    config = childgrid.setConfiguration(config);
+
+    childgrid.setWidth(parentGrid.getWidth()-50);
+    childgrid.setHeight(parentGrid.getGridRowDetailHeight()-50);
+    childgrid.setColumns(cols);
+    childgrid.setDataRows(filteredRows);
+    childgrid.registerPlugin( new pear.plugin.FooterStatus());
+    container.addChild(childgrid,true);
+
+    
+  };
+
+  var initFirstGrid = function (data){
+
+
+    if (grid){
+      grid.dispose();
+    }
+    var start = +new Date();  // log start timestamp
+
+    var columns = [];
+
+    var c0 = new pear.data.Column('','indicator','indicator',20,pear.data.Column.DataType.TEXT);
+        c0.setGridCellRenderer(SampleGridCellRenderer.getInstance());
+        c0.setExtraCSSClasses(['zero-border-right']);
+        columns.push(c0);
+
+    var c1 = new pear.data.Column('Country','Country','Country',685,pear.data.Column.DataType.TEXT);
+       columns.push(c1);
+
+    var c2 = new pear.data.Column('Total','Total','Total',75,pear.data.Column.DataType.TEXT);
+        columns.push(c2);
+
+    grid = new pear.ui.Grid();
+    var config = {
+      AllowColumnResize: false,
+      AllowAlternateRowHighlight: true,
+      ShowCellBorder:true,
+      AllowSorting:false,
+      ShowCellBorder:false
+     // AllowPaging:true,
+      //PageSize:50
+    };
+    config = grid.setConfiguration(config);
+
+    grid.setWidth(800);
+    grid.setHeight(600);
+    grid.setGridRowDetailHeight(300);
+    grid.setColumns(columns);
+    grid.setDataRows(data);
+
+    //grid.registerPlugin( new pear.plugin.Pager());
+    grid.render(goog.dom.getElement('target1'));
+    goog.events.listen(grid, pear.ui.Grid.EventType.SORT, handlesort);
+    goog.events.listen(grid, pear.ui.Grid.EventType.DATACELL_ON_ACTION, handleCellActionOnFirstGrid,false,this);
+    goog.events.listen(grid.getDataView(), pear.data.DataView.EventType.DATAVIEW_CHANGED, handleRowViewsChanged);
+  };
+
+  var load = function(data) {
+    
+    grid.setDataRows(data);
+    grid.refresh();
+  };
+
+  var xhr = new goog.net.XhrIo();
+  
+  goog.events.listen(xhr, goog.net.EventType.COMPLETE, function(e) {
+    var d= goog.labs.format.csv.parse(xhr.getResponseText());
+    
+    csvColumns = d[0];
+    csvData = d.slice(1);
+    timer.stop();
+
+    load(filterCountries());
+    pb.dispose();
+
+  },false,this);
+
+  function filterCountries (){
+    var countryhash = {};
+    var countryrows =[];
+    var uniqcountry = goog.array.filter(csvData, function(row){
+      if (Object.prototype.hasOwnProperty.call(countryhash, row[2]) ){
+        countryhash[row[2]] = countryhash[row[2]] + parseInt(row[9],10);
+      }else{
+        countryhash[row[2]]= 1;
+      }
+    }, this);
+
+    goog.object.forEach(countryhash, function(value,key){
+      var r = [];
+      r.push('');
+      r.push(key);
+      r.push(value);
+      countryrows.push(r);
+    },this);
+
+    return countryrows;
+  };
+
+  function filterSports (){
+    var hash = {};
+    var rows =[];
+    var uniq = goog.array.filter(csvData, function(row){
+      if (Object.prototype.hasOwnProperty.call(hash, row[5]) ){
+        
+      }else{
+        hash[row[5]] = row[5] ;
+      }
+    }, this);
+
+    goog.object.forEach(hash, function(value){
+      rows.push(value);
+    })
+
+    return rows;
+  };
+
+  function filterAthletesByCountry(country){
+    var athleteHash = {};
+    var athleteRows =[];
+    
+
+    goog.array.forEach (csvData,function(row){
+      if (country === row[2]){
+        if (Object.prototype.hasOwnProperty.call(athleteHash, row[0])){
+          athleteHash[row[0]] = athleteHash[row[0]] + parseInt(row[9],10);
+        }else{
+          athleteHash[row[0]]= parseInt(row[9],10);
+        }
+      }
+    },this);
+
+    
+    
+    goog.object.forEach(athleteHash, function(value,key){
+      var r = [];
+      r.push('');
+      r.push(key);
+      r.push(value);
+      athleteRows.push(r);
+    },this);
+    
+    return athleteRows;
+  };
+    
+  function getData(dataUrl) {
+
+    pb = new goog.ui.ProgressBar;
+    pb.setOrientation(goog.ui.ProgressBar.Orientation.HORIZONTAL);
+    pb.render(goog.dom.getElement('progressbar'));
+    pb.addEventListener(goog.ui.Component.EventType.CHANGE, function(e) {
+      
+    });
+    startProgress();
+    xhr.send(dataUrl);
+  };
+
+
+  initFirstGrid([]);
+  getData('https://dl.dropboxusercontent.com/u/20245900/OlympicAthletes_0.csv');
+  
+ </script>
+
+</html>
