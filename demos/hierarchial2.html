@@ -263,7 +263,7 @@
     //var sports = filterSports();
     var sports = ['Swimming','Gymnastics','Speed Skating','Cycling','Diving','Athletics','Canoeing'];
     var html = [];
-    html.push('<div id="top" class="goog-tab-bar goog-tab-bar-top">');
+    html.push('<div  class="goog-tab-bar goog-tab-bar-top">');
     goog.array.forEach(sports,function(value,index){
       if (index===0){
         html.push("<div class='goog-tab goog-tab-selected'>"+value+"</div>");
@@ -277,14 +277,14 @@
     var node = goog.dom.htmlToDocumentFragment(html.join(' '));
     goog.dom.appendChild(container.getElement(),node);
     tabbar.decorate(goog.dom.getFirstElementChild(container.getElement()));
+    tabbar.setParent(container);
 
-    var content = goog.dom.getElementsByClass('goog-tab-content',container.getElement());
-
+   
     goog.events.listen(tabbar, goog.ui.Component.EventType.SELECT,
             function(e) {
               var tabSelected = e.target;
-              var contentElement = goog.dom.getElement(tabbar.getId() +
-                  '_content');
+              var rowdetail = tabSelected.getParent().getParent();
+              var contentElement = goog.dom.getElementByClass ('goog-tab-content',rowdetail.getElement());
               goog.dom.setTextContent(contentElement,
                   'Render any control derived from goog.ui.Component.You selected the "' + tabSelected.getCaption() + '" tab.');
             });
