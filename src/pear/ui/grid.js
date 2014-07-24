@@ -827,15 +827,15 @@ pear.ui.Grid.prototype.getCellContentPaddingBox = function(uniqClass) {
 
     // Cell
     var innerDiv = goog.dom.createElement('div');
-    goog.dom.classes.add(innerDiv, pear.ui.Cell.CSS_CLASS);
-    goog.dom.classes.add(innerDiv, pear.ui.GridCell.CSS_CLASS);
+    goog.dom.classlist.add(innerDiv, pear.ui.Cell.CSS_CLASS);
+    goog.dom.classlist.add(innerDiv, pear.ui.GridCell.CSS_CLASS);
     goog.style.setSize(innerDiv, '25px', '25px');
     outerDiv.appendChild(innerDiv);
     goog.dom.appendChild(goog.dom.getDocument().body, outerDiv);
 
     // Cell Content
     var cellContentDiv = goog.dom.createElement('div');
-    goog.dom.classes.add(cellContentDiv,
+    goog.dom.classlist.add(cellContentDiv,
         pear.ui.GridCell.CSS_CLASS + '-content');
     goog.style.setSize(innerDiv, '20px', '20px');
     innerDiv.appendChild(cellContentDiv);
@@ -1518,9 +1518,9 @@ pear.ui.Grid.prototype.getStyleElement = function() {
  */
 pear.ui.Grid.prototype.applyCSSStyleToGrid_ = function() {
   var element = this.getElement();
-  goog.dom.classes.add(element, this.getUniqueId());
-  goog.dom.classes.add(element, 'pear-grid');
-  goog.dom.classes.add(element, 'unselectable');
+  goog.dom.classlist.add(element, this.getUniqueId());
+  goog.dom.classlist.add(element, 'pear-grid');
+  goog.dom.classlist.add(element, 'unselectable');
 
 };
 
@@ -2064,7 +2064,7 @@ pear.ui.Grid.prototype.renderviewport_ = function() {
   this.viewport_ = new goog.ui.Component();
   this.addChild(this.viewport_, true);
 
-  goog.dom.classes.set(this.viewport_.getElement(), 'pear-grid-viewport');
+  goog.dom.classlist.set(this.viewport_.getElement(), 'pear-grid-viewport');
 
   this.registerEventsOnViewport();
 };
@@ -2079,7 +2079,7 @@ pear.ui.Grid.prototype.renderBodyCanvas_ = function() {
   this.viewport_.addChild(this.bodyCanvas_, true);
 
   var elem = this.bodyCanvas_.getElement();
-  goog.dom.classes.set(elem, 'pear-grid-body-canvas');
+  goog.dom.classlist.set(elem, 'pear-grid-body-canvas');
 
   this.registerEventsOnBodyCanvas();
 };

@@ -81,7 +81,7 @@ pear.ui.Row.prototype.getHeaderCellByDataField = function(fieldName) {
  */
 pear.ui.GridHeaderRow.prototype.enterDocument = function() {
   pear.ui.GridHeaderRow.superClass_.enterDocument.call(this);
-  goog.dom.classes.add(this.getElement(), pear.ui.GridHeaderRow.CSS_CLASS);
+  goog.dom.classlist.add(this.getElement(), pear.ui.GridHeaderRow.CSS_CLASS);
 };
 
 

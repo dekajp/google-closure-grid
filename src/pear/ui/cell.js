@@ -80,13 +80,13 @@ pear.ui.Cell.prototype.disposeInternal = function() {
  * @override
  */
 pear.ui.Cell.prototype.enterDocument = function() {
-  goog.dom.classes.add(this.getElement(), pear.ui.Cell.CSS_CLASS);
+  goog.dom.classlist.add(this.getElement(), pear.ui.Cell.CSS_CLASS);
   pear.ui.Cell.superClass_.
       enterDocument.call(this);
 
   // Frozen Column
   if (this.getDataColumn().isFrozen()) {
-    goog.dom.classes.add(this.getElement(),
+    goog.dom.classlist.add(this.getElement(),
         goog.getCssName(pear.ui.Cell.CSS_CLASS, 'frozen'));
   }
 
@@ -95,7 +95,7 @@ pear.ui.Cell.prototype.enterDocument = function() {
   var classes = this.getDataColumn().getExtraCSSClasses();
   if (classes) {
     goog.array.forEach(classes, function(value) {
-      goog.dom.classes.add(this.getElement(), value);
+      goog.dom.classlist.add(this.getElement(), value);
     },this);
   }
 

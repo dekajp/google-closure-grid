@@ -23,6 +23,6 @@ pear.ui.Header.prototype.createDom = function() {
   pear.ui.Grid.superClass_.createDom.call(this);
   var elem = this.getElement();
 
-  goog.dom.classes.set(elem, 'pear-grid-header');
+  goog.dom.classlist.set(elem, 'pear-grid-header');
 };
 

@@ -70,6 +70,6 @@ pear.ui.GridFooterRow.prototype.enterDocument = function() {
   var elem = this.getElement();
   var baseClass = pear.ui.GridFooterRow.CSS_CLASS;
 
-  goog.dom.classes.add(elem, pear.ui.GridFooterRow.CSS_CLASS);
+  goog.dom.classlist.add(elem, pear.ui.GridFooterRow.CSS_CLASS);
 };
 

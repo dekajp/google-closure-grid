@@ -132,7 +132,7 @@ pear.ui.GridFooterCell.prototype.enterDocument = function() {
   var aligncss = (align === pear.data.Column.Align.LEFT) ?
       goog.getCssName(pear.ui.GridCell.CSS_CLASS, 'left') :
       goog.getCssName(pear.ui.GridCell.CSS_CLASS, 'right');
-  goog.dom.classes.add(cellElement, aligncss);
+  goog.dom.classlist.add(cellElement, aligncss);
 
   this.setContentElement(cellElement);
   this.getDomHelper().appendChild(this.getElement(), cellElement);
@@ -146,8 +146,8 @@ pear.ui.GridFooterCell.prototype.enterDocument = function() {
  * @protected
  */
 pear.ui.GridFooterCell.prototype.decorateElementWithClasses = function() {
-  goog.dom.classes.add(this.getElement(), pear.ui.GridFooterCell.CSS_CLASS);
-  goog.dom.classes.add(this.getElement(), 'col' + this.getCellIndex());
+  goog.dom.classlist.add(this.getElement(), pear.ui.GridFooterCell.CSS_CLASS);
+  goog.dom.classlist.add(this.getElement(), 'col' + this.getCellIndex());
 };
 
 

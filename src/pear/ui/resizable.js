@@ -188,7 +188,7 @@ pear.ui.Resizable.prototype.addResizableHandler_ =
   var dom = this.getDomHelper();
   var handle = dom.createDom('div');
   goog.array.forEach(classNames, function(value) {
-    goog.dom.classes.add(handle, this.getCSSClassName() + '-' + value);
+    goog.dom.classlist.add(handle, this.getCSSClassName() + '-' + value);
   },this);
   this.rootElement_.appendChild(handle);
 

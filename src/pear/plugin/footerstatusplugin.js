@@ -60,7 +60,7 @@ pear.plugin.FooterStatus.prototype.createFooterStatus_ = function() {
   var parentElem = grid.getElement();
   this.footer_ = goog.dom.getNextElementSibling(grid.getElement());
   if (this.footer_ &&
-      goog.dom.classes.has(this.footer_, 'pear-grid-footer-panel')) {
+      goog.dom.classlist.contains(this.footer_, 'pear-grid-footer-panel')) {
 
   }else {
     this.footer_ = goog.dom.createDom('div', 'pear-grid-footer-panel');

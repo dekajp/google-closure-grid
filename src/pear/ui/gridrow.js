@@ -121,10 +121,10 @@ pear.ui.GridRow.prototype.isEnabled = function() {
 pear.ui.GridRow.prototype.setHighlight = function(highlight) {
 
   if (highlight) {
-    goog.dom.classes.add(this.getElement(), 'pear-grid-row-highlight');
+    goog.dom.classlist.add(this.getElement(), 'pear-grid-row-highlight');
     this.highlighted_ = true;
   }else {
-    goog.dom.classes.remove(this.getElement(), 'pear-grid-row-highlight');
+    goog.dom.classlist.remove(this.getElement(), 'pear-grid-row-highlight');
     this.highlighted_ = false;
     this.clearHighlight();
   }
@@ -164,9 +164,9 @@ pear.ui.GridRow.prototype.highlightChildAt = function(index) {
 pear.ui.GridRow.prototype.setSelect = function(select) {
   if (select) {
     this.selected_ = true;
-    goog.dom.classes.add(this.getElement(), 'pear-grid-row-select');
+    goog.dom.classlist.add(this.getElement(), 'pear-grid-row-select');
   }else {
-    goog.dom.classes.remove(this.getElement(), 'pear-grid-row-select');
+    goog.dom.classlist.remove(this.getElement(), 'pear-grid-row-select');
     // No need to removing highlight cell - current focus cell should always
     // be highlighted as a part of navigation
     // this.setHighlightedIndex(-1);
@@ -195,18 +195,18 @@ pear.ui.GridRow.prototype.enterDocument = function() {
   var elem = this.getElement();
   var baseClass = pear.ui.GridRow.CSS_CLASS;
 
-  goog.dom.classes.add(elem, pear.ui.GridRow.CSS_CLASS);
+  goog.dom.classlist.add(elem, pear.ui.GridRow.CSS_CLASS);
 
   var even = this.getRowPosition() % 2 == 0;
   if (this.isAllowAlternateRowHighlight()) {
-    goog.dom.classes.add(elem, even ? goog.getCssName(baseClass, 'even') :
+    goog.dom.classlist.add(elem, even ? goog.getCssName(baseClass, 'even') :
         goog.getCssName(baseClass, 'odd'));
   }else {
     // No Alternate Color Highlight
   }
 
   // if (!this.isEnabled()) {
-  //  goog.dom.classes.add(elem,goog.getCssName(baseClass, 'disabled'));
+  //  goog.dom.classlist.add(elem,goog.getCssName(baseClass, 'disabled'));
   //}
 
   this.setPosition();
@@ -245,7 +245,7 @@ pear.ui.GridRow.prototype.showGridRowDetailsContainer = function(display) {
     this.addChild(this.gridRowDetails_, true);
     var elem = this.gridRowDetails_.getElement();
 
-    goog.dom.classes.add(elem, 'pear-grid-cell pear-grid-row-detail');
+    goog.dom.classlist.add(elem, 'pear-grid-cell pear-grid-row-detail');
     goog.style.setStyle(elem, 'border-top-width', '0px');
     var grid = this.getGrid();
     var desiredheight = grid.getGridRowDetailHeight();
@@ -268,11 +268,11 @@ pear.ui.GridRow.prototype.showGridRowDetailsContainer = function(display) {
     goog.style.setPosition(elem, 0, this.getGrid().getComputedRowHeight());
 
     this.forEachChild(function(child) {
-      goog.dom.classes.add(child.getElement(), 'bottom-border');
+      goog.dom.classlist.add(child.getElement(), 'bottom-border');
     });
   }else {
     this.forEachChild(function(child) {
-      goog.dom.classes.remove(child.getElement(), 'bottom-border');
+      goog.dom.classlist.remove(child.getElement(), 'bottom-border');
     });
     this.removeChild(this.gridRowDetails_, true);
     this.gridRowDetails_.dispose();
@@ -287,11 +287,11 @@ pear.ui.GridRow.prototype.showGridRowDetailsContainer = function(display) {
 pear.ui.GridRow.prototype.applyBottomBorder = function(display) {
   if (display) {
     this.forEachChild(function(child) {
-      goog.dom.classes.add(child.getElement(), 'bottom-border');
+      goog.dom.classlist.add(child.getElement(), 'bottom-border');
     });
   }else {
     this.forEachChild(function(child) {
-      goog.dom.classes.remove(child.getElement(), 'bottom-border');
+      goog.dom.classlist.remove(child.getElement(), 'bottom-border');
     });
   }
 };

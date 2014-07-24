@@ -228,9 +228,9 @@ pear.ui.GridHeaderCell.prototype.enterDocument = function() {
  * @protected
  */
 pear.ui.GridHeaderCell.prototype.decorateElementWithClasses = function() {
-  goog.dom.classes.add(this.getElement(), pear.ui.GridHeaderCell.CSS_CLASS);
-  goog.dom.classes.add(this.getElement(), 'col' + this.getCellIndex());
-  goog.dom.classes.add(this.getElement(), 'overflowhidden');
+  goog.dom.classlist.add(this.getElement(), pear.ui.GridHeaderCell.CSS_CLASS);
+  goog.dom.classlist.add(this.getElement(), 'col' + this.getCellIndex());
+  goog.dom.classlist.add(this.getElement(), 'overflowhidden');
 };
 
 
@@ -350,7 +350,7 @@ pear.ui.GridHeaderCell.prototype.createHeaderCellContent_ = function() {
       goog.getCssName(pear.ui.GridHeaderCell.CSS_CLASS, 'left') :
       goog.getCssName(pear.ui.GridHeaderCell.CSS_CLASS, 'right');
 
-  goog.dom.classes.add(contentElem, aligncss);
+  goog.dom.classlist.add(contentElem, aligncss);
 
   if (align === pear.data.Column.Align.RIGHT) {
     this.contentCell_ = (/**@type {Element} */ (

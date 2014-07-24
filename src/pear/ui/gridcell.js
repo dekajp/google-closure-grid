@@ -96,11 +96,11 @@ pear.ui.GridCell.prototype.applyFormatting = function() {
  */
 pear.ui.GridCell.prototype.setHighlight = function(highlight) {
   if (highlight) {
-    goog.dom.classes.add(this.getElement(),
+    goog.dom.classlist.add(this.getElement(),
         pear.ui.GridCell.CSS_CLASS + '-highlight');
     this.highlighted_ = true;
   }else {
-    goog.dom.classes.remove(this.getElement(),
+    goog.dom.classlist.remove(this.getElement(),
         pear.ui.GridCell.CSS_CLASS + '-highlight');
     this.highlighted_ = false;
   }
@@ -127,8 +127,8 @@ pear.ui.GridCell.prototype.enterDocument = function() {
  * @protected
  */
 pear.ui.GridCell.prototype.decorateElementWithClasses = function() {
-  goog.dom.classes.add(this.getElement(), pear.ui.GridCell.CSS_CLASS);
-  goog.dom.classes.add(this.getElement(), 'col' + this.getCellIndex());
+  goog.dom.classlist.add(this.getElement(), pear.ui.GridCell.CSS_CLASS);
+  goog.dom.classlist.add(this.getElement(), 'col' + this.getCellIndex());
 };
 
 
@@ -165,7 +165,7 @@ pear.ui.GridCell.prototype.createContentElement = function() {
       goog.getCssName(pear.ui.GridCell.CSS_CLASS, 'left') :
       goog.getCssName(pear.ui.GridCell.CSS_CLASS, 'right');
 
-  goog.dom.classes.add(cellElement, aligncss);
+  goog.dom.classlist.add((/** @type {Element} */(cellElement)), aligncss);
   this.getDomHelper().appendChild(this.getElement(), cellElement);
 
   this.setContentElement(/** @type {Element} */(cellElement));

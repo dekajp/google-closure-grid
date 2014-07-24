@@ -67,7 +67,7 @@ pear.ui.Row.prototype.enterDocument = function() {
   var elem = this.getElement();
 
   this.setPosition();
-  goog.dom.classes.add(elem, pear.ui.Row.CSS_CLASS);
+  goog.dom.classlist.add(elem, pear.ui.Row.CSS_CLASS);
 };
 
 

@@ -24,6 +24,6 @@ pear.ui.Footer.prototype.createDom = function() {
   pear.ui.Grid.superClass_.createDom.call(this);
   var elem = this.getElement();
 
-  goog.dom.classes.set(elem, 'pear-grid-footer');
+  goog.dom.classlist.set(elem, 'pear-grid-footer');
 };
 
