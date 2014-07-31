@@ -200,12 +200,12 @@
       elem = renderer.getPlusMinusElement(cell);
       if (grd.isActiveGridRow(gridrow)){
         grd.showGridRowDetails(gridrow,false);
-        goog.dom.classes.remove(elem, 'fa-chevron-down');
-        goog.dom.classes.add(elem, 'fa-chevron-right');
+        goog.dom.classlist.remove(elem, 'fa-chevron-down');
+        goog.dom.classlist.add(elem, 'fa-chevron-right');
       }else{
         grd.showGridRowDetails(gridrow,true);
-        goog.dom.classes.remove(elem, 'fa-chevron-right');
-        goog.dom.classes.add(elem, 'fa-chevron-down');
+        goog.dom.classlist.remove(elem, 'fa-chevron-right');
+        goog.dom.classlist.add(elem, 'fa-chevron-down');
         showCountryGridDetails(gridrow);
       }
     }
@@ -226,12 +226,12 @@
       elem = renderer.getPlusMinusElement(cell);
       if (grd.isActiveGridRow(gridrow)){
         grd.showGridRowDetails(gridrow,false);
-        goog.dom.classes.remove(elem, 'fa-chevron-down');
-        goog.dom.classes.add(elem, 'fa-chevron-right');
+        goog.dom.classlist.remove(elem, 'fa-chevron-down');
+        goog.dom.classlist.add(elem, 'fa-chevron-right');
       }else{
         grd.showGridRowDetails(gridrow,true);
-        goog.dom.classes.remove(elem, 'fa-chevron-right');
-        goog.dom.classes.add(elem, 'fa-chevron-down');
+        goog.dom.classlist.remove(elem, 'fa-chevron-right');
+        goog.dom.classlist.add(elem, 'fa-chevron-down');
         showAthleteDetails(gridrow);
       }
     }

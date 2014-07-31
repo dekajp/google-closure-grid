@@ -245,7 +245,7 @@ pear.ui.GridRow.prototype.showGridRowDetailsContainer = function(display) {
     this.addChild(this.gridRowDetails_, true);
     var elem = this.gridRowDetails_.getElement();
 
-    goog.dom.classlist.add(elem, 'pear-grid-cell pear-grid-row-detail');
+    goog.dom.classlist.addAll(elem, ['pear-grid-cell', 'pear-grid-row-detail']);
     goog.style.setStyle(elem, 'border-top-width', '0px');
     var grid = this.getGrid();
     var desiredheight = grid.getGridRowDetailHeight();
