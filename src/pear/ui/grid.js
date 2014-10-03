@@ -3493,14 +3493,12 @@ pear.ui.Grid.prototype.registerEventsOnGrid = function() {
   var handler = this.getHandler();
   var fh = this.getFocusHandler();
 
-  this.getHandler().
-      listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSOUT,
-      this.handleBlur, false, this).
-      listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSIN,
-          this.handleFocus, false, this).
-      listenOnce(
-      this.getElement(), goog.events.EventType.CLICK,
-          this.handleFocus, false, this);
+  handler.listen(fh, goog.events.FocusHandler.EventType.FOCUSOUT,
+      this.handleBlur, false);
+  handler.listen(fh, goog.events.FocusHandler.EventType.FOCUSIN,
+      this.handleFocus, false);
+  handler.listenOnce(this.getElement(), goog.events.EventType.CLICK,
+      this.handleFocus, false);
 };
 
 
