@@ -3493,14 +3493,12 @@ pear.ui.Grid.prototype.registerEventsOnGrid = function() {
   var handler = this.getHandler();
   var fh = this.getFocusHandler();
 
-  this.getHandler().
-      listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSOUT,
-      this.handleBlur, false, this).
-      listenWithScope(fh, goog.events.FocusHandler.EventType.FOCUSIN,
-          this.handleFocus, false, this).
-      listenOnce(
-      this.getElement(), goog.events.EventType.CLICK,
-          this.handleFocus, false, this);
+  handler.listen(fh, goog.events.FocusHandler.EventType.FOCUSOUT,
+      this.handleBlur, false);
+  handler.listen(fh, goog.events.FocusHandler.EventType.FOCUSIN,
+      this.handleFocus, false);
+  handler.listenOnce(this.getElement(), goog.events.EventType.CLICK,
+      this.handleFocus, false);
 };
 
 
@@ -3512,12 +3510,12 @@ pear.ui.Grid.prototype.registerEventsOnHeaderRow = function() {
   this.headerRow_.forEachChild(function(cell) {
     if (this.Configuration_.AllowSorting) {
       this.getHandler().
-          listenWithScope(cell, goog.ui.Component.EventType.ACTION,
-          this.handleHeaderCellClick, false, this);
+          listen(cell, goog.ui.Component.EventType.ACTION,
+          this.handleHeaderCellClick, false);
     }
     this.getHandler().
-        listenWithScope(cell, pear.ui.Cell.EventType.OPTION_CLICK,
-        this.handleHeaderCellOptionClick, false, this);
+        listen(cell, pear.ui.Cell.EventType.OPTION_CLICK,
+        this.handleHeaderCellOptionClick, false);
   }, this);
 };
 
@@ -3542,8 +3540,8 @@ pear.ui.Grid.prototype.registerEventsOnGridRow = function(row) {
 pear.ui.Grid.prototype.registerEventsOnViewport = function() {
   // Capture Scroll Event on the Body Canvas Element for Virtualization
   this.getHandler().
-      listenWithScope(this.viewport_.getElement(), goog.events.EventType.SCROLL,
-          this.handleBodyCanvasScroll, false, this);
+      listen(this.viewport_.getElement(), goog.events.EventType.SCROLL,
+          this.handleBodyCanvasScroll, false);
 };
 
 
@@ -3552,17 +3550,16 @@ pear.ui.Grid.prototype.registerEventsOnViewport = function() {
  * @protected
  */
 pear.ui.Grid.prototype.registerEventsOnBodyCanvas = function() {
-  var self = this;
   this.getHandler().
-      listenWithScope(this.getKeyHandler(),
+      listen(this.getKeyHandler(),
           goog.events.KeyHandler.EventType.KEY,
-      this.handleKeyEventOnBodyCanvas, false, this).
-      listenWithScope(this.bodyCanvas_.getElement(),
+      this.handleKeyEventOnBodyCanvas, false).
+      listen(this.bodyCanvas_.getElement(),
           'click',
-      this.handleAction, false, self).
-      listenWithScope(this.bodyCanvas_.getElement(),
+      this.handleAction, false).
+      listen(this.bodyCanvas_.getElement(),
           goog.events.EventType.DBLCLICK,
-      this.handleDoubleClick, false, self);
+      this.handleDoubleClick, false);
 };
 
 

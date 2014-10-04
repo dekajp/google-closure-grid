@@ -405,10 +405,10 @@ pear.ui.GridHeaderCell.prototype.createResizeHandle_ = function() {
 
   this.resizable_ = new pear.ui.Resizable(this.getElement(), resizeData);
   this.getHandler().
-      listenWithScope(this.resizable_, pear.ui.Resizable.EventType.RESIZE,
-          this.handleResize_, false, this).
-      listenWithScope(this.resizable_, pear.ui.Resizable.EventType.END_RESIZE,
-          this.handleResizeEnd_, false, this);
+      listen(this.resizable_, pear.ui.Resizable.EventType.RESIZE,
+          this.handleResize_, false).
+      listen(this.resizable_, pear.ui.Resizable.EventType.END_RESIZE,
+          this.handleResizeEnd_, false);
 };
 
 
