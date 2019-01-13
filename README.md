@@ -1,4 +1,4 @@
-#google-closure-grid (pear.ui.Grid)
+# google-closure-grid (pear.ui.Grid)
 
 version 0.1
 
@@ -6,7 +6,7 @@ version 0.1
 * API  : http://dekajp.github.io/docs/ 
 * Grid : http://dekajp.github.io/docs/pear.ui.html#Grid
 
-##Features
+## Features
 
 * Row Virtualization ~ 100,000 Rows
 * Active Cell and Active Row Highlight
@@ -24,7 +24,7 @@ version 0.1
 * Column Renderer ( For Column Templating)
 * ... more coming (please feel free to raise feature [request](https://github.com/dekajp/google-closure-grid/issues) in Github)
 
-##Credits 
+## Credits 
 * pear.ui.Grid borrows concepts and inspiration from [Slickgrid](https://github.com/mleibman/SlickGrid)
 * [Google-Closure-Library](https://code.google.com/p/closure-library/)
 
@@ -36,11 +36,11 @@ if the item is never shown (behind a scroll).
 Source Stackoverflow : http://goo.gl/rYsY88
 more discussion on this thread - http://goo.gl/3hlK6z
 
-##License
+## License
 MIT-License
 
 
-##Build
+## Build
 * gjslint and fixjsstyle [more](https://developers.google.com/closure/utilities/docs/linter_howto)
 
 * $/python src/bin/build/pearbuildlint.py
